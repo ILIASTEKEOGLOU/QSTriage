@@ -1,0 +1,7 @@
+outputs:
+  report_path: reports/qstriage_report.md
+  scores_path: reports/scores.json
+  simulations_path: reports/simulations.json
+
+exports:
+  default_format: json

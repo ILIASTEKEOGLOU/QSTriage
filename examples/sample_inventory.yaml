@@ -1,0 +1,138 @@
+assets:
+  - id: public-api-gateway
+    name: Public API Gateway
+    environment: production
+    asset_type: web_gateway
+    protocol: TLS1.3
+    algorithm: ECDHE_RSA
+    key_size_bits: 2048
+    data_class: customer_pii
+    retention_years: 10
+    exposure: public_internet
+    criticality: high
+    local_blast_radius: high
+    migration_effort: medium
+    notes: "Public-facing gateway protecting customer data."
+
+  - id: auth-service
+    name: Authentication Service
+    environment: production
+    asset_type: identity_service
+    protocol: HTTPS/TLS1.3
+    algorithm: ECDSA_P256
+    key_size_bits: 256
+    data_class: identity_tokens
+    retention_years: 5
+    exposure: internal
+    criticality: critical
+    local_blast_radius: critical
+    migration_effort: medium
+    notes: "Issues and validates authentication tokens."
+
+  - id: customer-db
+    name: Customer Database
+    environment: production
+    asset_type: database
+    protocol: mTLS
+    algorithm: RSA
+    key_size_bits: 2048
+    data_class: customer_pii
+    retention_years: 15
+    exposure: internal
+    criticality: critical
+    local_blast_radius: critical
+    migration_effort: high
+    notes: "Stores long-lived customer personal data."
+
+  - id: payments-api
+    name: Payments API
+    environment: production
+    asset_type: api_service
+    protocol: TLS1.3
+    algorithm: ECDHE_RSA
+    key_size_bits: 2048
+    data_class: payment_metadata
+    retention_years: 7
+    exposure: partner_network
+    criticality: high
+    local_blast_radius: high
+    migration_effort: high
+    notes: "Handles payment-related API calls."
+
+  - id: ot-gateway
+    name: OT Gateway
+    environment: staging
+    asset_type: industrial_gateway
+    protocol: MQTT/TLS
+    algorithm: RSA
+    key_size_bits: 2048
+    data_class: telemetry
+    retention_years: 3
+    exposure: restricted_network
+    criticality: high
+    local_blast_radius: high
+    migration_effort: critical
+    notes: "Represents a constrained OT-style gateway for future simulation tests."
+
+dependencies:
+  - id: dep-api-auth
+    source: public-api-gateway
+    target: auth-service
+    direction: outbound
+    dependency_type: auth
+    protocol: HTTPS/TLS1.3
+    weight: 0.90
+    criticality: high
+    carries_crypto_context: true
+    notes: "API Gateway depends on Auth Service for token validation."
+
+  - id: dep-api-payments
+    source: public-api-gateway
+    target: payments-api
+    direction: outbound
+    dependency_type: api_call
+    protocol: HTTPS/TLS1.3
+    weight: 0.75
+    criticality: high
+    carries_crypto_context: true
+    notes: "API Gateway forwards payment-related requests."
+
+  - id: dep-auth-db
+    source: auth-service
+    target: customer-db
+    direction: outbound
+    dependency_type: database
+    protocol: mTLS
+    weight: 0.80
+    criticality: critical
+    carries_crypto_context: true
+    notes: "Auth Service reads identity data from Customer Database."
+
+  - id: dep-payments-db
+    source: payments-api
+    target: customer-db
+    direction: outbound
+    dependency_type: database
+    protocol: mTLS
+    weight: 0.70
+    criticality: high
+    carries_crypto_context: true
+    notes: "Payments API stores payment metadata in Customer Database."
+
+  - id: dep-ot-api
+    source: ot-gateway
+    target: public-api-gateway
+    direction: outbound
+    dependency_type: telemetry_upload
+    protocol: MQTT/TLS
+    weight: 0.55
+    criticality: medium
+    carries_crypto_context: true
+    notes: "OT Gateway sends telemetry through the public API path."
+
+scenarios:
+  - id: hybrid-kem
+    name: Hybrid ML-KEM migration path
+    pqc_profile: ML-KEM-768 + X25519
+    mtu_bytes: 1500
+    notes: "Initial scenario for estimating handshake growth and fragmentation risk."

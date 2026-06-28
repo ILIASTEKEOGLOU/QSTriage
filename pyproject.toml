@@ -1,0 +1,25 @@
+[project]
+name = "qstriage"
+version = "0.1.0"
+description = "Explainable PQC Migration Decision Engine"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.8",
+    "pyyaml>=6.0",
+    "networkx>=3.3",
+    "typer>=0.12",
+    "rich>=13.7"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2"
+]
+
+[project.scripts]
+qstriage = "qstriage.cli:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
