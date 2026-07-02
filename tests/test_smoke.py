@@ -8,4 +8,4 @@ def test_version_command() -> None:
     result = runner.invoke(app, ["version"])
 
     assert result.exit_code == 0
-    assert "QSTriage 0.3.0" in result.output
+    assert "QSTriage 0.4.0" in result.output

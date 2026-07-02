@@ -13,6 +13,7 @@ It turns cryptographic inventories into:
 - standards-backed algorithm classification evidence
 - JSON and CSV exports
 - CycloneDX CBOM JSON import lite
+- CBOM algorithm identifier normalization for registry-ready imports
 - config-driven default output paths
 
 ## MVP scope
@@ -79,6 +80,8 @@ qstriage import cbom tests/fixtures/sample_cbom.json --output reports/imported_i
 ```
 
 CBOM imports are intentionally conservative. Imported cryptographic assets become QSTriage assets, but CBOM dependency relationships are not automatically treated as QSTriage business/security blast-radius dependencies.
+
+During import, QSTriage normalizes split CBOM crypto metadata into stronger algorithm identifiers when possible. For example, `algorithmFamily=ML-KEM` with `parameterSetIdentifier=768` becomes `ML-KEM-768`, `algorithmFamily=RSA` with `keySize=2048` becomes `RSA-2048`, and `algorithmFamily=AES` with `keyLength=256` becomes `AES-256`.
 
 ## Standards-aware classification
 

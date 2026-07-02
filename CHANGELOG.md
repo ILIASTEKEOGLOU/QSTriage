@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.4.0 - CBOM algorithm normalization
+
+### Added
+
+- CBOM algorithm identifier normalization for registry-ready imports.
+- Integration smoke tests proving normalized CBOM metadata flows into report registry evidence and scoring explanations.
+
+### Changed
+
+- CBOM import now normalizes split crypto metadata into stronger algorithm identifiers when possible.
+- Split `algorithmFamily=ML-KEM` and `parameterSetIdentifier=768` imports as `ML-KEM-768`.
+- Split `algorithmFamily=RSA` and `keySize=2048` imports as `RSA-2048`.
+- Split `algorithmFamily=AES` and `keyLength=256` imports as `AES-256`.
+
+### Validation
+
+- Full test suite passes with 82 tests.
+- End-to-end integration smoke covers CBOM split metadata -> QSTriage inventory -> standards registry -> report/scoring evidence.
+
 ## v0.3.0 - Standards-aware algorithm classification
 
 ### Added

@@ -53,6 +53,18 @@ Import behavior is intentionally conservative:
 - Imported assets include review-required notes because scanners cannot know business context such as data shelf life, criticality, exposure, and migration effort.
 - Generated inventories use `dependencies: []` unless QSTriage-specific business/security dependencies are added later.
 
+### CBOM algorithm normalization
+
+QSTriage normalizes split CBOM crypto metadata into registry-ready algorithm identifiers when possible.
+
+Examples:
+
+- `algorithmFamily=ML-KEM` with `parameterSetIdentifier=768` becomes `ML-KEM-768`.
+- `algorithmFamily=RSA` with `keySize=2048` becomes `RSA-2048`.
+- `algorithmFamily=AES` with `keyLength=256` becomes `AES-256`.
+
+This improves the path from CBOM import to standards-backed registry classification, scoring explanations, and report evidence.
+
 After import, validate the generated inventory:
 
 ```bash
