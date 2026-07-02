@@ -5,7 +5,7 @@ QSTriage is a local-first command line tool for explainable post-quantum cryptog
 It follows a conservative workflow:
 
 ```text
-inventory -> dependency graph -> explainable scoring -> impact simulation -> narrative report -> structured exports
+inventory -> dependency graph -> standards-backed algorithm classification -> explainable scoring -> impact simulation -> narrative report -> structured exports
 ```
 
 QSTriage is designed for judgment before automation. It does not modify production systems.
@@ -79,7 +79,33 @@ This prints a prioritized migration backlog with:
 rank -> asset -> score -> band -> recommended action
 ```
 
-The score is explainable and combines cryptographic risk, shelf-life risk, exposure, criticality, graph-amplified blast radius, deadline pressure, and migration effort.
+The score is explainable and combines standards-aware cryptographic risk, shelf-life risk, exposure, criticality, graph-amplified blast radius, deadline pressure, and migration effort.
+
+## Algorithm classification
+
+QSTriage includes a standards-backed algorithm registry used by scoring and reports.
+
+The registry classifies common classical, PQC, symmetric, and hash algorithm strings, including:
+
+- RSA, DH, ECDH, ECDHE, ECDSA, X25519, Ed25519
+- ML-KEM, ML-DSA, SLH-DSA
+- AES
+- SHA-1, SHA-2, SHA-3, SHAKE
+
+Unknown algorithm strings are not guessed as safe. They are classified as requiring manual review.
+
+Markdown reports include per-asset algorithm evidence:
+
+```text
+Algorithm classification:
+- Input algorithm: `RSA-2048`
+- Algorithm family: RSA
+- Primitive: public_key_encryption_or_signature
+- Quantum status: quantum_vulnerable
+- Standard status: classical_public_key
+- Registry action: migrate_to_hybrid_or_pqc_path
+- Registry sources: NIST-IR-8547-IPD
+```
 
 ## Render a dependency graph
 
@@ -100,6 +126,8 @@ The generated report includes:
 - executive summary
 - priority backlog
 - asset-level findings
+- standards-backed algorithm classification evidence
+- registry source IDs for classification rationale
 - PQC impact simulation warnings
 - dependency graph views
 - method notes

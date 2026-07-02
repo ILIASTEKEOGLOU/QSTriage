@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.3.0 - Standards-aware algorithm classification
+
+### Added
+
+- Source lock for v0.3.0 standards and implementation authority.
+- Standards-backed algorithm classification registry.
+- Algorithm classification evidence in Markdown reports.
+- Registry source IDs for explainable classification output.
+- Compound TLS/public-key identifier handling for algorithm strings such as `ECDHE_RSA`.
+- Tests for classical public-key, PQC, symmetric, hash, compound, and unknown algorithm classifications.
+
+### Changed
+
+- Cryptographic scoring now uses the algorithm registry instead of standalone string-only heuristics.
+- Score explanations now include registry classification and recommended registry action.
+- Reports now show algorithm family, primitive, quantum status, standard status, registry action, rationale, and registry sources for each asset.
+
+### Classification semantics
+
+- RSA, finite-field DH, ECC, ECDH, ECDHE, ECDSA, X25519, Ed25519, and classical public-key composites are classified as quantum-vulnerable public-key cryptography for PQC migration planning.
+- ML-KEM is classified as standardized PQC key encapsulation.
+- ML-DSA is classified as standardized PQC digital signature.
+- SLH-DSA is classified as standardized stateless hash-based PQC digital signature with operational review preserved for later reporting.
+- AES is classified as symmetric encryption, separate from Shor-broken public-key migration targets.
+- SHA-1, SHA-2, SHA-3, and SHAKE are classified as hash/XOF families, separate from key establishment and signature migration targets.
+- Unknown algorithms are classified conservatively as requiring manual review.
+
+### Validation
+
+- Full test suite passes with 77 tests.
+
 ## v0.2.0 - CBOM import lite
 
 ### Added
