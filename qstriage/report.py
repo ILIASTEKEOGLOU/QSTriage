@@ -5,7 +5,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from qstriage.graph import build_dependency_graph, render_text_graph
-from qstriage.models import Inventory, load_inventory
+from qstriage.models import CryptographicAsset, Inventory, load_inventory
+from qstriage.standards import classify_algorithm
 from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.simulator import ImpactSimulationResult, simulate_inventory
 
@@ -16,6 +17,7 @@ def generate_markdown_report(inventory: Inventory) -> str:
     simulations = simulate_inventory(inventory)
 
     simulation_by_asset = _simulation_by_asset(simulations)
+    asset_by_id = inventory.asset_by_id()
 
     lines: list[str] = []
 
@@ -57,7 +59,13 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append("")
 
     for score in scores:
-        lines.extend(_render_asset_finding(score, simulation_by_asset.get(score.asset_id, [])))
+        lines.extend(
+            _render_asset_finding(
+                score,
+                asset_by_id[score.asset_id],
+                simulation_by_asset.get(score.asset_id, []),
+            )
+        )
 
     lines.append("## Dependency Graph Views")
     lines.append("")
@@ -100,6 +108,7 @@ def write_markdown_report(inventory_path: str | Path, output_path: str | Path) -
 
 def _render_asset_finding(
     score: ScoreResult,
+    asset: CryptographicAsset,
     simulations: list[ImpactSimulationResult],
 ) -> list[str]:
     lines: list[str] = []
@@ -111,6 +120,19 @@ def _render_asset_finding(
     lines.append(f"- Priority band: **{score.priority_band}**")
     lines.append(f"- Confidence: {score.confidence}")
     lines.append(f"- Recommended action: {score.recommended_action}")
+    lines.append("")
+
+    classification = classify_algorithm(asset.algorithm)
+    lines.append("Algorithm classification:")
+    lines.append("")
+    lines.append(f"- Input algorithm: `{classification.input_algorithm}`")
+    lines.append(f"- Algorithm family: {classification.algorithm_family}")
+    lines.append(f"- Primitive: {classification.primitive}")
+    lines.append(f"- Quantum status: {classification.quantum_status}")
+    lines.append(f"- Standard status: {classification.standard_status}")
+    lines.append(f"- Registry action: {classification.recommended_action}")
+    lines.append(f"- Registry rationale: {classification.rationale}")
+    lines.append(f"- Registry sources: {', '.join(classification.source_ids)}")
     lines.append("")
     lines.append("Score breakdown:")
     lines.append("")
