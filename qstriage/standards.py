@@ -79,6 +79,22 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
             source_ids=(SOURCE_FIPS_205,),
         )
 
+    if _matches_classical_public_key_combo(normalized):
+        return AlgorithmClassification(
+            input_algorithm=original,
+            algorithm_family="classical_public_key_composite",
+            primitive="key_establishment_and_signature",
+            quantum_status="quantum_vulnerable",
+            standard_status="classical_public_key",
+            recommended_action="migrate_to_hybrid_or_pqc_path",
+            rationale=(
+                "The algorithm string combines classical public-key key establishment "
+                "and/or signature components and is classified as quantum-vulnerable "
+                "for PQC migration planning."
+            ),
+            source_ids=(SOURCE_NIST_IR_8547,),
+        )
+
     if _matches_rsa(normalized):
         return AlgorithmClassification(
             input_algorithm=original,
@@ -208,6 +224,15 @@ def _matches_ml_dsa(normalized: str) -> bool:
 
 def _matches_slh_dsa(normalized: str) -> bool:
     return normalized == "SLH-DSA" or normalized.startswith("SLH-DSA-")
+
+
+def _matches_classical_public_key_combo(normalized: str) -> bool:
+    key_establishment_markers = ("ECDHE", "ECDH", "X25519", "CURVE25519")
+    signature_or_auth_markers = ("RSA", "ECDSA", "ED25519")
+
+    return any(marker in normalized for marker in key_establishment_markers) and any(
+        marker in normalized for marker in signature_or_auth_markers
+    )
 
 
 def _matches_rsa(normalized: str) -> bool:

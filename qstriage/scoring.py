@@ -6,6 +6,7 @@ import networkx as nx
 
 from qstriage.graph import build_dependency_graph, calculate_graph_amplified_blast_radius
 from qstriage.models import CryptographicAsset, Inventory, RiskLevel
+from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 
 @dataclass(frozen=True)
@@ -39,12 +40,17 @@ def score_inventory(inventory: Inventory) -> list[ScoreResult]:
 
 
 def score_asset(asset: CryptographicAsset, graph: nx.DiGraph) -> ScoreResult:
-    cryptographic_risk = _cryptographic_risk(asset.algorithm, asset.key_size_bits)
+    classification = classify_algorithm(asset.algorithm)
+    cryptographic_risk = _cryptographic_risk(
+        asset.algorithm,
+        asset.key_size_bits,
+        classification,
+    )
     shelf_life_risk = _shelf_life_risk(asset.retention_years, asset.data_class)
     exposure_risk = _exposure_risk(asset.exposure)
     criticality_score = _risk_level_score(asset.criticality)
     blast_radius = calculate_graph_amplified_blast_radius(graph, asset.id).total_score
-    deadline_pressure = _deadline_pressure(asset)
+    deadline_pressure = _deadline_pressure(asset, classification)
     effort_penalty = _effort_penalty(asset.migration_effort)
 
     raw_total = (
@@ -73,7 +79,13 @@ def score_asset(asset: CryptographicAsset, graph: nx.DiGraph) -> ScoreResult:
         total=priority_score,
     )
 
-    explanation = _explain(asset, breakdown, priority_band, recommended_action)
+    explanation = _explain(
+        asset,
+        breakdown,
+        priority_band,
+        recommended_action,
+        classification,
+    )
 
     return ScoreResult(
         asset_id=asset.id,
@@ -87,28 +99,32 @@ def score_asset(asset: CryptographicAsset, graph: nx.DiGraph) -> ScoreResult:
     )
 
 
-def _cryptographic_risk(algorithm: str, key_size_bits: int | None) -> float:
-    normalized = algorithm.upper().replace("-", "_")
+def _cryptographic_risk(
+    algorithm: str,
+    key_size_bits: int | None,
+    classification: AlgorithmClassification | None = None,
+) -> float:
+    classification = classification or classify_algorithm(algorithm)
 
-    if "RSA" in normalized:
-        if key_size_bits is None:
-            return 8.0
-        if key_size_bits <= 2048:
-            return 9.0
-        if key_size_bits <= 3072:
-            return 8.0
-        return 7.0
+    if classification.quantum_status == "quantum_vulnerable":
+        if classification.algorithm_family == "RSA":
+            if key_size_bits is None:
+                return 8.0
+            if key_size_bits <= 2048:
+                return 9.0
+            if key_size_bits <= 3072:
+                return 8.0
+            return 7.0
 
-    if "ECDSA" in normalized or "ECDHE" in normalized or "ECDH" in normalized:
+        if classification.algorithm_family == "DH":
+            return 8.0
+
         return 8.5
 
-    if "DH" in normalized:
-        return 8.0
-
-    if "ML_KEM" in normalized or "ML_DSA" in normalized or "SLH_DSA" in normalized:
+    if classification.quantum_status == "quantum_resistant":
         return 1.5
 
-    if "AES" in normalized or "CHACHA" in normalized:
+    if classification.primitive in {"symmetric_encryption", "hash", "hash_or_xof"}:
         return 2.0
 
     return 5.0
@@ -151,8 +167,15 @@ def _exposure_risk(exposure: str) -> float:
     return 5.0
 
 
-def _deadline_pressure(asset: CryptographicAsset) -> float:
-    if asset.retention_years >= 10 and _cryptographic_risk(asset.algorithm, asset.key_size_bits) >= 8.0:
+def _deadline_pressure(
+    asset: CryptographicAsset,
+    classification: AlgorithmClassification | None = None,
+) -> float:
+    if asset.retention_years >= 10 and _cryptographic_risk(
+        asset.algorithm,
+        asset.key_size_bits,
+        classification,
+    ) >= 8.0:
         return 5.0
 
     if asset.retention_years >= 5 and asset.exposure in {"public_internet", "partner_network"}:
@@ -222,10 +245,12 @@ def _explain(
     breakdown: ScoreBreakdown,
     priority_band: str,
     recommended_action: str,
+    classification: AlgorithmClassification,
 ) -> list[str]:
     lines = [
         f"{asset.name} is rated {priority_band} with score {breakdown.total}.",
         f"Cryptographic risk is {breakdown.cryptographic_risk} because the asset uses {asset.algorithm}.",
+        f"Algorithm registry classifies {classification.algorithm_family} as {classification.quantum_status}; registry action is {classification.recommended_action}.",
         f"Shelf-life risk is {breakdown.shelf_life_risk} because data retention is {asset.retention_years} years for {asset.data_class}.",
         f"Graph-amplified blast radius is {breakdown.graph_blast_radius}, reflecting local and downstream dependency impact.",
         f"Recommended action: {recommended_action}.",

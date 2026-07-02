@@ -120,3 +120,13 @@ def test_normalizes_case_underscores_and_spaces() -> None:
 
     assert classification.algorithm_family == "ML-KEM"
     assert classification.source_ids == (SOURCE_FIPS_203,)
+
+
+def test_classifies_compound_tls_public_key_identifier_as_quantum_vulnerable() -> None:
+    classification = classify_algorithm("ECDHE_RSA")
+
+    assert classification.algorithm_family == "classical_public_key_composite"
+    assert classification.primitive == "key_establishment_and_signature"
+    assert classification.quantum_status == "quantum_vulnerable"
+    assert classification.recommended_action == "migrate_to_hybrid_or_pqc_path"
+    assert classification.source_ids == (SOURCE_NIST_IR_8547,)

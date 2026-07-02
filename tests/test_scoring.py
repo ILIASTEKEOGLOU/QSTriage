@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from qstriage.models import load_inventory
+from qstriage.models import CryptographicAsset, Inventory, RiskLevel, load_inventory
 from qstriage.scoring import score_inventory
 
 
@@ -53,3 +53,76 @@ def test_explanation_contains_human_readable_reasons() -> None:
     assert "Cryptographic risk" in joined
     assert "Shelf-life risk" in joined
     assert "Recommended action" in joined
+
+
+def test_scoring_explanation_uses_algorithm_registry_classification() -> None:
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+
+    results = score_inventory(inventory)
+    by_id = {result.asset_id: result for result in results}
+
+    customer_db = by_id["customer-db"]
+    joined = "\n".join(customer_db.explanation)
+
+    assert "Algorithm registry classifies RSA as quantum_vulnerable" in joined
+    assert "registry action is migrate_to_hybrid_or_pqc_path" in joined
+
+
+def test_scoring_treats_standardized_pqc_as_low_cryptographic_risk() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="pqc-kem",
+                name="PQC KEM",
+                environment="test",
+                asset_type="service",
+                protocol="TLS1.3",
+                algorithm="ML-KEM-768",
+                key_size_bits=768,
+                data_class="internal",
+                retention_years=1,
+                exposure="internal",
+                criticality=RiskLevel.medium,
+                local_blast_radius=RiskLevel.low,
+                migration_effort=RiskLevel.low,
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    result = score_inventory(inventory)[0]
+
+    assert result.breakdown.cryptographic_risk == 1.5
+    assert any("ML-KEM" in line and "quantum_resistant" in line for line in result.explanation)
+
+
+def test_scoring_keeps_unknown_algorithm_as_conservative_medium_risk() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="unknown-crypto",
+                name="Unknown Crypto",
+                environment="test",
+                asset_type="service",
+                protocol="custom",
+                algorithm="MysteryCrypto-1",
+                key_size_bits=None,
+                data_class="internal",
+                retention_years=1,
+                exposure="internal",
+                criticality=RiskLevel.medium,
+                local_blast_radius=RiskLevel.low,
+                migration_effort=RiskLevel.low,
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    result = score_inventory(inventory)[0]
+    joined = "\n".join(result.explanation)
+
+    assert result.breakdown.cryptographic_risk == 5.0
+    assert "Algorithm registry classifies unknown as unknown" in joined
+    assert "registry action is manual_review_required" in joined
