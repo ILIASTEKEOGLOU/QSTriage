@@ -38,6 +38,35 @@ QSTriage prints friendly validation errors for malformed YAML and invalid invent
 Missing required field `assets[0].environment`.
 ```
 
+## Import a CycloneDX CBOM inventory
+
+```bash
+qstriage import cbom tests/fixtures/sample_cbom.json --output reports/imported_inventory.yaml
+```
+
+This creates a valid QSTriage YAML inventory from CycloneDX-style CBOM JSON.
+
+Import behavior is intentionally conservative:
+
+- CBOM cryptographic assets are imported as QSTriage assets.
+- CBOM dependency relationships are not imported as QSTriage blast-radius dependencies.
+- Imported assets include review-required notes because scanners cannot know business context such as data shelf life, criticality, exposure, and migration effort.
+- Generated inventories use `dependencies: []` unless QSTriage-specific business/security dependencies are added later.
+
+After import, validate the generated inventory:
+
+```bash
+qstriage validate reports/imported_inventory.yaml
+```
+
+Then generate a report:
+
+```bash
+qstriage report reports/imported_inventory.yaml --output reports/imported_report.md
+```
+
+Reports warn when graph-amplified blast radius is limited because no QSTriage dependencies were declared.
+
 ## Score an inventory
 
 ```bash

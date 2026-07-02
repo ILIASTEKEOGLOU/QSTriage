@@ -81,6 +81,16 @@ Candidate message:
 Graph-amplified blast radius is limited because no QSTriage business dependencies were declared. CBOM dependency relationships, if present, are not treated as QSTriage blast-radius dependencies.
 ```
 
+## Implementation status
+
+Implemented on `feature/v0-2-cbom-import-lite`:
+
+- CBOM import core.
+- `qstriage import cbom` CLI command.
+- Conservative partial-import semantics.
+- Report transparency for missing QSTriage dependencies.
+- End-to-end smoke path from CBOM JSON to imported report.
+
 ## Deferred candidates
 
 ### Standards mapping layer

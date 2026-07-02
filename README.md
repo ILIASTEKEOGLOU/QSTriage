@@ -11,6 +11,7 @@ It turns cryptographic inventories into:
 - hybrid PQC migration impact warnings
 - narrative Markdown migration reports
 - JSON and CSV exports
+- CycloneDX CBOM JSON import lite
 - config-driven default output paths
 
 ## MVP scope
@@ -69,6 +70,14 @@ Export score results:
 ```bash
 qstriage export scores examples/sample_inventory.yaml --format json --output reports/scores.json
 ```
+
+Import a CycloneDX CBOM JSON file as a partial QSTriage inventory:
+
+```bash
+qstriage import cbom tests/fixtures/sample_cbom.json --output reports/imported_inventory.yaml
+```
+
+CBOM imports are intentionally conservative. Imported cryptographic assets become QSTriage assets, but CBOM dependency relationships are not automatically treated as QSTriage business/security blast-radius dependencies.
 
 Use configuration defaults:
 

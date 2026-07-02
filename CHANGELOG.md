@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.2.0 - CBOM import lite
+
+### Added
+
+- CycloneDX-style CBOM JSON import core.
+- `qstriage import cbom` CLI command.
+- Sample CBOM JSON fixture for import testing.
+- Valid QSTriage YAML generation from imported CBOM cryptographic assets.
+- Report warning when no QSTriage business/security dependencies are declared.
+- Tests for CBOM import core, CLI import workflow, and dependency-scope report transparency.
+
+### Import semantics
+
+- Imported CBOM cryptographic assets become QSTriage assets.
+- CBOM dependency relationships are not automatically converted into QSTriage blast-radius dependencies.
+- Imported assets are marked as requiring human review for business context.
+- Generated imported inventories use `dependencies: []` unless QSTriage-specific dependencies are added later.
+
+### Validation
+
+- End-to-end smoke tested: CBOM JSON -> QSTriage YAML -> validate -> report.
+- Full test suite passes with 59 tests.
+
 ## v0.1.0 - Initial public baseline
 
 ### Added
