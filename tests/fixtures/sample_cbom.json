@@ -1,0 +1,49 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto-rsa-2048",
+      "name": "Customer API RSA Signing Key",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "algorithmFamily": "RSA",
+          "parameterSetIdentifier": "RSA-2048",
+          "classicalSecurityLevel": 112,
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto-ml-kem-768",
+      "name": "Hybrid KEM Profile",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "algorithmFamily": "ML-KEM",
+          "parameterSetIdentifier": "ML-KEM-768",
+          "nistQuantumSecurityLevel": 3
+        }
+      }
+    },
+    {
+      "type": "library",
+      "bom-ref": "web-app",
+      "name": "Non-cryptographic component"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "web-app",
+      "dependsOn": [
+        "crypto-rsa-2048"
+      ]
+    }
+  ]
+}
