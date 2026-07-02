@@ -73,7 +73,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.4.0")
+    typer.echo("QSTriage 0.5.0")
 
 
 @app.command("validate")

@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.5.0 - Decision context review
+
+### Added
+
+- Decision context review core for identifying incomplete business context.
+- `qstriage review context` CLI command.
+- Decision Context Review section in Markdown reports.
+- Tests for complete hand-written inventories and incomplete CBOM-imported inventories.
+
+### Changed
+
+- Reports now state whether the supplied inventory appears decision-grade under the current review rules.
+- CBOM-imported inventories now surface missing or defaulted business context directly in CLI review output and reports.
+
+### Review semantics
+
+- Assets with `data_class=unknown`, `retention_years=0`, or `exposure=unknown` are flagged as incomplete.
+- CBOM-imported assets using default `criticality=medium`, `local_blast_radius=medium`, or `migration_effort=medium` are flagged for business review.
+- Inventories with no QSTriage business/security dependencies are flagged because graph-amplified blast radius may be limited.
+- QSTriage does not change the score automatically; it explains whether the score should be treated as decision-grade.
+
+### Validation
+
+- Full test suite passes with 89 tests.
+- Manual smoke verified sample inventory review status is complete.
+- Manual smoke verified CBOM-imported inventory review status is incomplete.
+- Manual smoke verified generated reports include Decision Context Review.
+
 ## v0.4.0 - CBOM algorithm normalization
 
 ### Added

@@ -11,6 +11,7 @@ It turns cryptographic inventories into:
 - hybrid PQC migration impact warnings
 - narrative Markdown migration reports
 - standards-backed algorithm classification evidence
+- decision context review for business-context completeness
 - JSON and CSV exports
 - CycloneDX CBOM JSON import lite
 - CBOM algorithm identifier normalization for registry-ready imports
@@ -73,6 +74,12 @@ Export score results:
 qstriage export scores examples/sample_inventory.yaml --format json --output reports/scores.json
 ```
 
+Review whether an inventory has enough business context for decision-grade scoring:
+
+```bash
+qstriage review context examples/sample_inventory.yaml
+```
+
 Import a CycloneDX CBOM JSON file as a partial QSTriage inventory:
 
 ```bash
@@ -128,6 +135,7 @@ The generated report includes:
 - ranked migration backlog
 - asset-level scoring explanations
 - standards-backed algorithm classification evidence
+- decision context review for business-context completeness
 - registry source IDs for classification rationale
 - PQC impact simulation warnings
 - text dependency graph views

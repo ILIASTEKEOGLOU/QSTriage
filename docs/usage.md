@@ -79,6 +79,16 @@ qstriage report reports/imported_inventory.yaml --output reports/imported_report
 
 Reports warn when graph-amplified blast radius is limited because no QSTriage dependencies were declared.
 
+## Review decision context
+
+Run `qstriage review context examples/sample_inventory.yaml`.
+
+This checks whether the inventory has enough business context for decision-grade scoring.
+
+The review flags missing or defaulted context such as unknown data class, zero retention years, unknown exposure, CBOM import defaults for criticality, local blast radius, migration effort, and inventories with no QSTriage business/security dependencies.
+
+QSTriage does not change the score automatically. It explains whether the score should be treated as decision-grade or whether business context should be added first.
+
 ## Score an inventory
 
 ```bash
@@ -140,6 +150,7 @@ The generated report includes:
 - asset-level findings
 - standards-backed algorithm classification evidence
 - registry source IDs for classification rationale
+- decision context review
 - PQC impact simulation warnings
 - dependency graph views
 - method notes
