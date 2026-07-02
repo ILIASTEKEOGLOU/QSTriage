@@ -66,3 +66,93 @@ def test_write_imported_inventory_outputs_valid_qstriage_yaml(tmp_path: Path) ->
 
     assert len(loaded_inventory.assets) == 2
     assert loaded_inventory.dependencies == []
+
+
+def test_cbom_import_normalizes_split_ml_kem_metadata_for_registry() -> None:
+    cbom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "components": [
+            {
+                "type": "cryptographic-asset",
+                "bom-ref": "split-ml-kem",
+                "name": "Split ML-KEM Asset",
+                "cryptoProperties": {
+                    "assetType": "algorithm",
+                    "algorithmProperties": {
+                        "primitive": "kem",
+                        "algorithmFamily": "ML-KEM",
+                        "parameterSetIdentifier": "768",
+                        "nistQuantumSecurityLevel": 3,
+                    },
+                },
+            }
+        ],
+    }
+
+    inventory = inventory_from_cbom(cbom)
+
+    asset = inventory.assets[0]
+
+    assert asset.algorithm == "ML-KEM-768"
+    assert asset.key_size_bits == 768
+
+
+def test_cbom_import_normalizes_rsa_family_and_key_size_for_registry() -> None:
+    cbom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "components": [
+            {
+                "type": "cryptographic-asset",
+                "bom-ref": "rsa-family-only",
+                "name": "RSA Family Asset",
+                "cryptoProperties": {
+                    "assetType": "algorithm",
+                    "algorithmProperties": {
+                        "primitive": "signature",
+                        "algorithmFamily": "RSA",
+                        "keySize": 2048,
+                        "classicalSecurityLevel": 112,
+                        "nistQuantumSecurityLevel": 0,
+                    },
+                },
+            }
+        ],
+    }
+
+    inventory = inventory_from_cbom(cbom)
+
+    asset = inventory.assets[0]
+
+    assert asset.algorithm == "RSA-2048"
+    assert asset.key_size_bits == 2048
+
+
+def test_cbom_import_normalizes_aes_family_and_key_size_for_registry() -> None:
+    cbom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "components": [
+            {
+                "type": "cryptographic-asset",
+                "bom-ref": "aes-family-only",
+                "name": "AES Family Asset",
+                "cryptoProperties": {
+                    "assetType": "algorithm",
+                    "algorithmProperties": {
+                        "primitive": "symmetric-encryption",
+                        "algorithmFamily": "AES",
+                        "keyLength": "256",
+                    },
+                },
+            }
+        ],
+    }
+
+    inventory = inventory_from_cbom(cbom)
+
+    asset = inventory.assets[0]
+
+    assert asset.algorithm == "AES-256"
+    assert asset.key_size_bits == 256

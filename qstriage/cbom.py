@@ -61,13 +61,7 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
     crypto_properties = component.get("cryptoProperties") or {}
     algorithm_properties = crypto_properties.get("algorithmProperties") or {}
 
-    algorithm = _first_non_empty(
-        algorithm_properties.get("parameterSetIdentifier"),
-        algorithm_properties.get("algorithm"),
-        algorithm_properties.get("algorithmFamily"),
-        component.get("name"),
-        "unknown",
-    )
+    algorithm = _cbom_algorithm_identifier(algorithm_properties, component)
 
     primitive = _first_non_empty(
         algorithm_properties.get("primitive"),
@@ -97,6 +91,75 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
         migration_effort="medium",
         notes=_build_notes(algorithm_properties),
     )
+
+
+def _cbom_algorithm_identifier(
+    algorithm_properties: dict[str, Any],
+    component: dict[str, Any],
+) -> str:
+    parameter_set = _string_or_none(algorithm_properties.get("parameterSetIdentifier"))
+    algorithm = _string_or_none(algorithm_properties.get("algorithm"))
+    family = _string_or_none(algorithm_properties.get("algorithmFamily"))
+    component_name = _string_or_none(component.get("name"))
+
+    key_size_bits = _extract_key_size_bits(
+        algorithm_properties,
+        " ".join(value for value in (parameter_set, algorithm, family, component_name) if value),
+    )
+
+    for value in (parameter_set, algorithm):
+        if value:
+            return _normalize_cbom_algorithm_string(value, family, key_size_bits)
+
+    if family:
+        return _normalize_cbom_algorithm_string(family, family, key_size_bits)
+
+    if component_name:
+        return _normalize_cbom_algorithm_string(component_name, None, key_size_bits)
+
+    return "unknown"
+
+
+def _normalize_cbom_algorithm_string(
+    value: str,
+    family: str | None,
+    key_size_bits: int | None,
+) -> str:
+    cleaned = value.strip()
+    family_cleaned = family.strip() if family else ""
+    cleaned_upper = cleaned.upper().replace("_", "-")
+    family_upper = family_cleaned.upper().replace("_", "-")
+
+    if family_upper and cleaned_upper.isdigit():
+        return f"{family_cleaned}-{cleaned}"
+
+    if family_upper and cleaned_upper.startswith(f"{family_upper}-"):
+        return cleaned
+
+    if family_upper == "ML-KEM" and cleaned_upper in {"512", "768", "1024"}:
+        return f"ML-KEM-{cleaned}"
+
+    if family_upper == "ML-DSA" and cleaned_upper in {"44", "65", "87"}:
+        return f"ML-DSA-{cleaned}"
+
+    if family_upper == "RSA" and key_size_bits is not None and cleaned_upper == "RSA":
+        return f"RSA-{key_size_bits}"
+
+    if family_upper == "AES" and key_size_bits is not None and cleaned_upper == "AES":
+        return f"AES-{key_size_bits}"
+
+    return cleaned
+
+
+def _string_or_none(value: Any) -> str | None:
+    if value is None:
+        return None
+
+    cleaned = str(value).strip()
+    if not cleaned:
+        return None
+
+    return cleaned
 
 
 def _normalize_asset_id(component: dict[str, Any]) -> str:
