@@ -32,6 +32,12 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append("")
     lines.append(f"- Assets analyzed: {len(inventory.assets)}")
     lines.append(f"- Dependencies analyzed: {len(inventory.dependencies)}")
+    if not inventory.dependencies:
+        lines.append(
+            "- Dependency scope warning: Graph-amplified blast radius is limited "
+            "because no QSTriage business dependencies were declared. CBOM dependency "
+            "relationships, if present, are not treated as QSTriage blast-radius dependencies."
+        )
     lines.append(f"- Migration scenarios analyzed: {max(1, len(inventory.scenarios))}")
     lines.append(f"- Highest priority asset: {scores[0].asset_name} ({scores[0].priority_score})")
     lines.append("")
