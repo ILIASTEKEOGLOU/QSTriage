@@ -6,6 +6,7 @@ from pathlib import Path
 
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import CryptographicAsset, Inventory, load_inventory
+from qstriage.review import InventoryContextReview, review_decision_context
 from qstriage.standards import classify_algorithm
 from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.simulator import ImpactSimulationResult, simulate_inventory
@@ -15,6 +16,7 @@ def generate_markdown_report(inventory: Inventory) -> str:
     graph = build_dependency_graph(inventory)
     scores = score_inventory(inventory)
     simulations = simulate_inventory(inventory)
+    context_review = review_decision_context(inventory)
 
     simulation_by_asset = _simulation_by_asset(simulations)
     asset_by_id = inventory.asset_by_id()
@@ -55,6 +57,8 @@ def generate_markdown_report(inventory: Inventory) -> str:
         )
 
     lines.append("")
+    lines.extend(_render_decision_context_review(context_review))
+
     lines.append("## Asset-Level Findings")
     lines.append("")
 
@@ -104,6 +108,51 @@ def write_markdown_report(inventory_path: str | Path, output_path: str | Path) -
     destination.write_text(report, encoding="utf-8")
 
     return destination
+
+
+def _render_decision_context_review(review: InventoryContextReview) -> list[str]:
+    lines: list[str] = []
+
+    lines.append("## Decision Context Review")
+    lines.append("")
+    lines.append(f"- Status: {review.status}")
+    lines.append(f"- Incomplete assets: {review.incomplete_asset_count}")
+    lines.append(f"- Issues: {review.issue_count}")
+    lines.append("")
+
+    if review.status == "complete":
+        lines.append(
+            "No decision-context issues were detected by the current review rules."
+        )
+        lines.append("")
+        return lines
+
+    if review.inventory_issues:
+        lines.append("Inventory-level issues:")
+        lines.append("")
+
+        for issue in review.inventory_issues:
+            lines.append(f"- {issue}")
+
+        lines.append("")
+
+    for asset_review in review.asset_reviews:
+        if asset_review.status == "complete":
+            continue
+
+        lines.append(f"### {asset_review.asset_name}")
+        lines.append("")
+        lines.append(f"- Asset ID: `{asset_review.asset_id}`")
+        lines.append(f"- Status: {asset_review.status}")
+        lines.append("- Missing or defaulted context:")
+
+        for issue in asset_review.issues:
+            lines.append(f"  - `{issue.field}`: {issue.message}")
+
+        lines.append(f"- Recommended action: {asset_review.recommended_action}")
+        lines.append("")
+
+    return lines
 
 
 def _render_asset_finding(
