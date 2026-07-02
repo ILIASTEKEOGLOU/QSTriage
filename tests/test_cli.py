@@ -280,3 +280,52 @@ def test_export_simulations_command_uses_config_defaults(tmp_path: Path) -> None
     assert result.exit_code == 0
     assert output_path.exists()
     assert output_path.read_text(encoding="utf-8").startswith("asset_id,asset_name")
+
+
+def test_review_context_command_prints_decision_context_findings(tmp_path: Path) -> None:
+    cbom_path = tmp_path / "sample_cbom.json"
+    inventory_path = tmp_path / "imported_inventory.yaml"
+
+    cbom_path.write_text(
+        Path("tests/fixtures/sample_cbom.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    import_result = runner.invoke(
+        app,
+        [
+            "import",
+            "cbom",
+            str(cbom_path),
+            "--output",
+            str(inventory_path),
+        ],
+    )
+
+    assert import_result.exit_code == 0
+
+    result = runner.invoke(app, ["review", "context", str(inventory_path)])
+
+    assert result.exit_code == 0
+    assert "Decision context status: incomplete" in result.output
+    assert "Incomplete assets: 2" in result.output
+    assert "Issues:" in result.output
+    assert "Inventory-level issues:" in result.output
+    assert "No QSTriage business/security dependencies declared" in result.output
+    assert "crypto-rsa-2048" in result.output
+    assert "data_class is unknown" in result.output
+    assert "retention_years is 0" in result.output
+    assert "exposure is unknown" in result.output
+    assert "criticality is the CBOM import default medium" in result.output
+    assert "Add business context before treating this asset score as" in result.output
+    assert "decision-grade" in result.output
+
+
+def test_review_context_command_prints_complete_status_for_sample_inventory() -> None:
+    result = runner.invoke(app, ["review", "context", "examples/sample_inventory.yaml"])
+
+    assert result.exit_code == 0
+    assert "Decision context status: complete" in result.output
+    assert "Incomplete assets: 0" in result.output
+    assert "Issues: 0" in result.output
+    assert "Missing or defaulted context" not in result.output

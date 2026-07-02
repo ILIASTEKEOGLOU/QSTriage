@@ -14,6 +14,7 @@ from qstriage.exporters import ExportFormat, export_score_results, export_simula
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import load_inventory
 from qstriage.report import generate_markdown_report
+from qstriage.review import review_decision_context
 from qstriage.scoring import score_inventory
 
 app = typer.Typer(
@@ -28,6 +29,11 @@ import_app = typer.Typer(
 
 export_app = typer.Typer(
     help="Export QSTriage results as structured JSON or CSV.",
+    no_args_is_help=True,
+)
+
+review_app = typer.Typer(
+    help="Review whether an inventory has enough business context for decision-grade scoring.",
     no_args_is_help=True,
 )
 
@@ -210,6 +216,46 @@ def import_cbom_command(
     )
 
 
+@review_app.command("context")
+def review_context_command(
+    inventory_path: Path = typer.Argument(
+        ...,
+        help="Path to a QSTriage YAML inventory file.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+) -> None:
+    """Review decision-context completeness for an inventory."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    review = review_decision_context(inventory)
+
+    console.print(f"Decision context status: {review.status}")
+    console.print(f"Incomplete assets: {review.incomplete_asset_count}")
+    console.print(f"Issues: {review.issue_count}")
+
+    if review.inventory_issues:
+        console.print("")
+        console.print("Inventory-level issues:")
+        for issue in review.inventory_issues:
+            console.print(f"- {issue}")
+
+    for asset_review in review.asset_reviews:
+        if asset_review.status == "complete":
+            continue
+
+        console.print("")
+        console.print(f"Asset: {asset_review.asset_name} ({asset_review.asset_id})")
+        console.print(f"Status: {asset_review.status}")
+        console.print("Missing or defaulted context:")
+
+        for issue in asset_review.issues:
+            console.print(f"- {issue.field}: {issue.message}")
+
+        console.print(f"Recommended action: {asset_review.recommended_action}")
+
+
 @export_app.command("scores")
 def export_scores_command(
     inventory_path: Path = typer.Argument(
@@ -298,6 +344,7 @@ def export_simulations_command(
 
 app.add_typer(import_app, name="import")
 app.add_typer(export_app, name="export")
+app.add_typer(review_app, name="review")
 
 
 if __name__ == "__main__":
