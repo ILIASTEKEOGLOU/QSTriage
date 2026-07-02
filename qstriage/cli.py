@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import typer
@@ -6,6 +7,7 @@ from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
+from qstriage.cbom import write_imported_inventory
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
@@ -16,6 +18,11 @@ from qstriage.scoring import score_inventory
 
 app = typer.Typer(
     help="QSTriage — Explainable PQC Migration Decision Engine",
+    no_args_is_help=True,
+)
+
+import_app = typer.Typer(
+    help="Import external cryptographic inventory formats.",
     no_args_is_help=True,
 )
 
@@ -40,6 +47,14 @@ def _load_config_or_exit(config_path: Path | None) -> QSTriageConfig:
         return load_config(config_path)
     except (FileNotFoundError, yaml.YAMLError, ValidationError, ValueError) as error:
         console.print(format_inventory_load_error(error, path=config_path), style="red")
+        raise typer.Exit(code=1) from error
+
+
+def _write_cbom_import_or_exit(input_path: Path, output_path: Path) -> Path:
+    try:
+        return write_imported_inventory(input_path, output_path)
+    except (FileNotFoundError, json.JSONDecodeError, ValidationError, ValueError) as error:
+        console.print(f"[red]CBOM import failed:[/red] {error}")
         raise typer.Exit(code=1) from error
 
 
@@ -168,6 +183,33 @@ def report(
     console.print(f"[green]Report written:[/green] {resolved_output}")
 
 
+@import_app.command("cbom")
+def import_cbom_command(
+    input_path: Path = typer.Argument(
+        ...,
+        help="Path to a CycloneDX CBOM JSON file.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    output: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path where the imported QSTriage YAML inventory will be written.",
+    ),
+) -> None:
+    """Import CycloneDX CBOM JSON as a partial QSTriage inventory."""
+    written_path = _write_cbom_import_or_exit(input_path, output)
+
+    console.print(f"[green]CBOM imported:[/green] {written_path}")
+    console.print(
+        "CBOM dependencies were not imported as QSTriage blast-radius dependencies.",
+        style="yellow",
+    )
+
+
 @export_app.command("scores")
 def export_scores_command(
     inventory_path: Path = typer.Argument(
@@ -254,6 +296,7 @@ def export_simulations_command(
     console.print(f"[green]Simulations exported:[/green] {written_path}")
 
 
+app.add_typer(import_app, name="import")
 app.add_typer(export_app, name="export")
 
 
