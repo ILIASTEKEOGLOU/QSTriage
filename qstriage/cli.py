@@ -10,6 +10,7 @@ from rich.table import Table
 from qstriage.cbom import import_cbom_inventory, load_cbom_json, write_imported_inventory
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
+from qstriage.evidence import review_inventory_evidence
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import load_inventory
@@ -70,6 +71,24 @@ def _write_cbom_import_or_exit(input_path: Path, output_path: Path) -> Path:
         raise typer.Exit(code=1) from error
 
 
+def _load_inventory_for_review_or_exit(
+    input_path: Path,
+    input_format: str,
+):
+    try:
+        normalized_format = input_format.strip().lower()
+
+        if normalized_format == "inventory":
+            return load_inventory(input_path), "qstriage_inventory"
+        if normalized_format == "cbom":
+            return import_cbom_inventory(input_path), "cyclonedx_cbom"
+
+        raise ValueError("Unsupported evidence review input format. Expected 'inventory' or 'cbom'.")
+    except (FileNotFoundError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
+        console.print(f"[red]Evidence review failed:[/red] {error}")
+        raise typer.Exit(code=1) from error
+
+
 def _write_pdr_document_or_exit(
     input_path: Path,
     output_path: Path,
@@ -124,7 +143,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.6.0")
+    typer.echo("QSTriage 0.7.0")
 
 
 @app.command("validate")
@@ -305,6 +324,61 @@ def review_context_command(
             console.print(f"- {issue.field}: {issue.message}")
 
         console.print(f"Recommended action: {asset_review.recommended_action}")
+
+
+@review_app.command("evidence")
+def review_evidence_command(
+    input_path: Path = typer.Argument(
+        ...,
+        help="Path to a QSTriage inventory YAML file or CycloneDX CBOM JSON file.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    input_format: str = typer.Option(
+        "inventory",
+        "--input-format",
+        help="Input format: inventory or cbom.",
+    ),
+) -> None:
+    """Review evidence quality and decision-grade readiness."""
+    inventory, source_type = _load_inventory_for_review_or_exit(input_path, input_format)
+    reviews = review_inventory_evidence(inventory, source_type=source_type)
+
+    table = Table(title="QSTriage Evidence Quality Review")
+    table.add_column("Asset")
+    table.add_column("Decision Grade")
+    table.add_column("Evidence", justify="right")
+    table.add_column("Confidence Cap", justify="right")
+    table.add_column("Human Review")
+    table.add_column("Blocking Findings")
+
+    for review in reviews:
+        blocking = ", ".join(review.blocking_finding_codes) or "-"
+        table.add_row(
+            review.asset_id or "-",
+            review.decision_grade.value,
+            f"{review.evidence_score:.2f}",
+            f"{review.confidence_cap:.2f}",
+            "yes" if review.human_review_required else "no",
+            blocking,
+        )
+
+    console.print(table)
+
+    console.print("")
+    console.print("Evidence review details:")
+    for review in reviews:
+        blocking = ", ".join(review.blocking_finding_codes) or "-"
+        console.print(
+            f"- {review.asset_id or '-'}: "
+            f"decision_grade={review.decision_grade.value}; "
+            f"evidence_score={review.evidence_score:.2f}; "
+            f"confidence_cap={review.confidence_cap:.2f}; "
+            f"human_review_required={'yes' if review.human_review_required else 'no'}; "
+            f"blocking_findings={blocking}"
+        )
 
 
 @pdr_app.command("generate")

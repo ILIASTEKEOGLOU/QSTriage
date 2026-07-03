@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from qstriage.evidence import EvidenceReview, review_asset_evidence
 from qstriage.models import CryptographicAsset, Inventory
 from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.standards import AlgorithmClassification, classify_algorithm
@@ -14,7 +15,7 @@ from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 PDR_VERSION = "0.1"
 ENGINE_NAME = "QSTriage"
-ENGINE_VERSION = "0.6.0"
+ENGINE_VERSION = "0.7.0"
 
 DEFAULT_POLICY_PACK_ID = "nist-pqc-basic"
 DEFAULT_POLICY_PACK_VERSION = "0.1"
@@ -140,6 +141,7 @@ class PQCDecisionRecord(BaseModel):
     policy_context: PolicyContext
     observed_state: ObservedState
     evidence_quality: EvidenceQuality
+    evidence_review: EvidenceReview
     decision_confidence: DecisionConfidence
     mission_context: MissionContext
     tradeoffs: list[Tradeoff]
@@ -220,8 +222,17 @@ def _build_record(
     previous_record_hash: str | None,
 ) -> PQCDecisionRecord:
     classification = classify_algorithm(asset.algorithm)
+    evidence_review = review_asset_evidence(
+        asset,
+        source_type=input_snapshot.source_type,
+    )
     evidence_quality = _evidence_quality(asset)
-    decision_confidence = _decision_confidence(asset, score, evidence_quality)
+    decision_confidence = _decision_confidence(
+        asset,
+        score,
+        evidence_quality,
+        evidence_review,
+    )
 
     decision = PDRDecision(
         priority_band=score.priority_band,
@@ -231,6 +242,7 @@ def _build_record(
         human_review_required=_human_review_required(
             score,
             evidence_quality,
+            evidence_review,
             decision_confidence,
         ),
     )
@@ -245,12 +257,13 @@ def _build_record(
         policy_context=policy_context,
         observed_state=_observed_state(asset, classification),
         evidence_quality=evidence_quality,
+        evidence_review=evidence_review,
         decision_confidence=decision_confidence,
         mission_context=_mission_context(asset, score),
         tradeoffs=_tradeoffs(asset, classification),
         target_state_suggestion=_target_state_suggestions(asset, classification),
         decision=decision,
-        assumptions_made=_assumptions(asset, evidence_quality),
+        assumptions_made=_assumptions(asset, evidence_quality, evidence_review),
         record_integrity=RecordIntegrity(
             previous_record_hash=previous_record_hash,
             record_hash="pending",
@@ -369,6 +382,7 @@ def _decision_confidence(
     asset: CryptographicAsset,
     score: ScoreResult,
     evidence_quality: EvidenceQuality,
+    evidence_review: EvidenceReview,
 ) -> DecisionConfidence:
     base_by_label = {
         "low": 0.45,
@@ -377,12 +391,33 @@ def _decision_confidence(
         "high": 0.9,
     }
     base = base_by_label.get(score.confidence, 0.55)
-    confidence = round(min(base, evidence_quality.score), 2)
+    confidence = round(
+        min(
+            base,
+            evidence_quality.score,
+            evidence_review.evidence_score,
+            evidence_review.confidence_cap,
+        ),
+        2,
+    )
 
-    if evidence_quality.missing_evidence:
+    if evidence_review.blocking_finding_codes:
+        reason = (
+            "Decision confidence is constrained by blocking evidence findings: "
+            + ", ".join(evidence_review.blocking_finding_codes)
+            + "."
+        )
+    elif evidence_quality.missing_evidence:
         reason = (
             "Decision confidence is constrained by missing evidence: "
             + ", ".join(evidence_quality.missing_evidence)
+            + "."
+        )
+    elif evidence_review.findings:
+        finding_codes = [finding.code for finding in evidence_review.findings[:5]]
+        reason = (
+            "Decision confidence is constrained by evidence review findings: "
+            + ", ".join(finding_codes)
             + "."
         )
     elif asset.asset_type == "cbom_cryptographic_asset":
@@ -533,16 +568,22 @@ def _target_state_suggestions(
 def _human_review_required(
     score: ScoreResult,
     evidence_quality: EvidenceQuality,
+    evidence_review: EvidenceReview,
     decision_confidence: DecisionConfidence,
 ) -> bool:
     return (
-        evidence_quality.score < 0.75
+        evidence_review.human_review_required
+        or evidence_quality.score < 0.75
         or decision_confidence.score < 0.7
         or score.priority_band in {"critical", "high"}
     )
 
 
-def _assumptions(asset: CryptographicAsset, evidence_quality: EvidenceQuality) -> list[str]:
+def _assumptions(
+    asset: CryptographicAsset,
+    evidence_quality: EvidenceQuality,
+    evidence_review: EvidenceReview,
+) -> list[str]:
     assumptions = []
 
     if asset.asset_type == "cbom_cryptographic_asset":
@@ -550,6 +591,12 @@ def _assumptions(asset: CryptographicAsset, evidence_quality: EvidenceQuality) -
 
     for field in evidence_quality.missing_evidence:
         assumptions.append(f"Missing {field} lowers evidence quality and decision confidence.")
+
+    if evidence_review.decision_grade.value == "not_decision_grade":
+        assumptions.append("Evidence review marks this record as not decision-grade until blocking findings are resolved.")
+
+    for finding_code in evidence_review.blocking_finding_codes:
+        assumptions.append(f"Blocking evidence finding '{finding_code}' prevents decision-grade status.")
 
     if not assumptions:
         assumptions.append("No material evidence assumptions were added by the current PDR rules.")

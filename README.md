@@ -13,6 +13,7 @@ It turns cryptographic inventories into:
 - narrative Markdown migration reports
 - standards-backed algorithm classification evidence
 - decision context review for business-context completeness
+- evidence quality review with decision-grade status, confidence caps, blocking findings, and human-review actions
 - JSON and CSV exports
 - CycloneDX CBOM JSON import lite
 - CBOM algorithm identifier normalization for registry-ready imports
@@ -20,7 +21,7 @@ It turns cryptographic inventories into:
 
 ## MVP scope
 
-The current MVP reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
+The current MVP reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, reviews evidence quality, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
 
 No production systems are touched.
 No certificates are rotated.
@@ -81,6 +82,13 @@ Review whether an inventory has enough business context for decision-grade scori
 qstriage review context examples/sample_inventory.yaml
 ```
 
+Review evidence quality and decision-grade readiness:
+
+```bash
+qstriage review evidence examples/sample_inventory.yaml
+qstriage review evidence tests/fixtures/sample_cbom.json --input-format cbom
+```
+
 Import a CycloneDX CBOM JSON file as a partial QSTriage inventory:
 
 ```bash
@@ -105,7 +113,7 @@ Generate a PDR from CycloneDX CBOM crypto evidence:
 qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
 ```
 
-A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, observed crypto state, evidence quality, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
 
 ## Standards-aware classification
 

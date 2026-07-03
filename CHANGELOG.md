@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.7.0 - Evidence Quality Engine
+
+### Added
+
+- Evidence review domain model for structured decision-grade evidence assessment.
+- Evidence findings with severity, category, effects, evidence state, maturity, provenance, relationship completeness, and recommended human action.
+- Inventory evidence review engine for QSTriage YAML inventories and CycloneDX CBOM-derived inventories.
+- Confidence caps and decision-grade status based on blocking evidence findings.
+- Explicit handling for missing, defaulted, no-assertion, unknown, and CBOM-derived evidence states.
+- Relationship completeness handling for dependency evidence, including unknown and known dependency context.
+- PDR records now include structured `evidence_review` data alongside the existing `evidence_quality` compatibility block.
+- `qstriage review evidence` CLI command.
+- Evidence review support for CycloneDX CBOM input via `--input-format cbom`.
+- Audit-friendly evidence review CLI details with untruncated asset IDs and blocking finding codes.
+
+### Changed
+
+- PDR decision confidence is now constrained by evidence review confidence caps.
+- Human-review status now reflects structured evidence review findings.
+- Informational evidence findings no longer degrade evidence score or confidence cap.
+- README and usage documentation now describe evidence quality review and decision-grade readiness.
+
+### Validation
+
+- Full test suite passes with 113 tests.
+- Manual smoke verified `qstriage review evidence examples/sample_inventory.yaml`.
+- Manual smoke verified `qstriage review evidence tests/fixtures/sample_cbom.json --input-format cbom`.
+- Manual smoke verified sample inventory assets are decision-grade with full evidence confidence.
+- Manual smoke verified CBOM-derived assets are not decision-grade until business and dependency context is supplied.
+
 ## v0.6.0 - PDR foundation
 
 ### Added
