@@ -253,3 +253,22 @@ def test_declared_qstriage_dependencies_are_recorded_as_known_context() -> None:
         finding.relationship_completeness == RelationshipCompleteness.known
         for finding in review_by_asset["asset-1"].findings
     )
+
+
+def test_informational_findings_do_not_degrade_evidence_confidence() -> None:
+    finding = EvidenceFinding(
+        code="declared_qstriage_dependency_context",
+        category=EvidenceCategory.dependency_context,
+        severity=EvidenceSeverity.info,
+        message="QSTriage dependency context is declared.",
+        effects=[],
+        evidence_state=EvidenceState.declared,
+        relationship_completeness=RelationshipCompleteness.known,
+    )
+
+    review = build_evidence_review([finding], asset_id="asset-id")
+
+    assert review.evidence_score == 1.0
+    assert review.confidence_cap == 1.0
+    assert review.decision_grade == DecisionGrade.decision_grade
+    assert review.human_review_required is False

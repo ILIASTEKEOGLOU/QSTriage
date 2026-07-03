@@ -210,6 +210,9 @@ def _calculate_evidence_score(findings: list[EvidenceFinding]) -> float:
     penalty = 0.0
 
     for finding in findings:
+        if finding.severity == EvidenceSeverity.info and not finding.effects:
+            continue
+
         penalty += max(
             _SEVERITY_SCORE_PENALTY[finding.severity],
             _STATE_SCORE_PENALTY[finding.evidence_state],
@@ -222,6 +225,9 @@ def _calculate_confidence_cap(findings: list[EvidenceFinding]) -> float:
     cap = 1.0
 
     for finding in findings:
+        if finding.severity == EvidenceSeverity.info and not finding.effects:
+            continue
+
         cap = min(
             cap,
             _SEVERITY_CONFIDENCE_CAP[finding.severity],
