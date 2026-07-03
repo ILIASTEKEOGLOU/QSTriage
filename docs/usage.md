@@ -5,7 +5,7 @@ QSTriage is a local-first Cryptographic Policy & Justification Engine for explai
 It follows a conservative workflow:
 
 ```text
-inventory/CBOM -> standards-backed algorithm classification -> explainable scoring -> PDR -> impact simulation -> narrative report -> structured exports
+inventory/CBOM -> standards-backed algorithm classification -> evidence quality review -> explainable scoring -> PDR -> impact simulation -> narrative report -> structured exports
 ```
 
 QSTriage is designed for judgment before automation. It does not modify production systems.
@@ -81,6 +81,13 @@ Reports warn when graph-amplified blast radius is limited because no QSTriage de
 
 ## Generate PQC Decision Records
 
+Review evidence quality and decision-grade readiness:
+
+```bash
+qstriage review evidence examples/sample_inventory.yaml
+qstriage review evidence tests/fixtures/sample_cbom.json --input-format cbom
+```
+
 Generate a PDR from a QSTriage YAML inventory:
 
 ```bash
@@ -93,7 +100,7 @@ Generate a PDR directly from CycloneDX CBOM JSON crypto evidence:
 qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
 ```
 
-The PDR JSON document is the stable decision artifact. It includes input snapshot metadata, policy context, observed crypto state, evidence quality, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+The PDR JSON document is the stable decision artifact. It includes input snapshot metadata, policy context, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
 
 ## Review decision context
 

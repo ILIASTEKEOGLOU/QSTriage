@@ -15,7 +15,7 @@ from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 PDR_VERSION = "0.1"
 ENGINE_NAME = "QSTriage"
-ENGINE_VERSION = "0.6.0"
+ENGINE_VERSION = "0.7.0"
 
 DEFAULT_POLICY_PACK_ID = "nist-pqc-basic"
 DEFAULT_POLICY_PACK_VERSION = "0.1"
