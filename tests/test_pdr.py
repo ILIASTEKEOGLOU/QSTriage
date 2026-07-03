@@ -105,3 +105,32 @@ def test_pdr_records_include_structured_evidence_review() -> None:
     assert 0.0 <= gateway_record.evidence_review.confidence_cap <= 1.0
     assert gateway_record.decision_confidence.score <= gateway_record.evidence_review.confidence_cap
     assert gateway_record.evidence_review.asset_id == "public-api-gateway"
+
+
+def test_pdr_policy_context_comes_from_builtin_policy_pack() -> None:
+    from qstriage.policy import get_policy_pack
+
+    inventory = load_inventory(SAMPLE_INVENTORY)
+    policy_pack = get_policy_pack("nist-pqc-basic")
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+
+    assert document.policy_context.policy_pack_id == policy_pack.policy_pack_id
+    assert document.policy_context.policy_pack_version == policy_pack.version
+    assert document.policy_context.policy_pack_hash == policy_pack.policy_pack_hash()
+    assert document.policy_context.standards_applied == policy_pack.standards_applied()
+    assert document.records[0].policy_context == document.policy_context
+
+
+def test_pdr_rejects_policy_pack_version_mismatch() -> None:
+    import pytest
+
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    with pytest.raises(ValueError, match="version mismatch"):
+        generate_pdr_document(
+            inventory,
+            source_path=SAMPLE_INVENTORY,
+            policy_pack_id="nist-pqc-basic",
+            policy_pack_version="999.0",
+        )
