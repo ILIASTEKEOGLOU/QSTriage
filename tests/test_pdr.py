@@ -16,7 +16,7 @@ def test_generate_pdr_document_creates_one_record_per_asset() -> None:
         inventory,
         source_path=SAMPLE_INVENTORY,
         source_type="qstriage_inventory",
-        source_version="0.5.0",
+        source_version="0.6.0",
     )
 
     assert len(document.records) == len(inventory.assets)

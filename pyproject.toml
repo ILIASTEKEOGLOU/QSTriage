@@ -1,7 +1,7 @@
 [project]
 name = "qstriage"
-version = "0.5.0"
-description = "Explainable PQC Migration Decision Engine"
+version = "0.6.0"
+description = "Cryptographic Policy & Justification Engine"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

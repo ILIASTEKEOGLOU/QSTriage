@@ -19,7 +19,7 @@ from qstriage.review import review_decision_context
 from qstriage.scoring import score_inventory
 
 app = typer.Typer(
-    help="QSTriage — Explainable PQC Migration Decision Engine",
+    help="QSTriage — Cryptographic Policy & Justification Engine",
     no_args_is_help=True,
 )
 
@@ -124,7 +124,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.5.0")
+    typer.echo("QSTriage 0.6.0")
 
 
 @app.command("validate")
