@@ -23,3 +23,6 @@ qstriage = "qstriage.cli:app"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.setuptools]
+packages = ["qstriage"]
