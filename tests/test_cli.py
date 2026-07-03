@@ -329,3 +329,50 @@ def test_review_context_command_prints_complete_status_for_sample_inventory() ->
     assert "Incomplete assets: 0" in result.output
     assert "Issues: 0" in result.output
     assert "Missing or defaulted context" not in result.output
+
+
+def test_review_evidence_command_prints_inventory_evidence_table() -> None:
+    result = runner.invoke(
+        app,
+        ["review", "evidence", "examples/sample_inventory.yaml"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "QSTriage Evidence Quality Review" in result.output
+    assert "public-api-gateway" in result.output
+    assert "decision_grade" in result.output
+
+
+def test_review_evidence_command_supports_cbom_input() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "review",
+            "evidence",
+            "tests/fixtures/sample_cbom.json",
+            "--input-format",
+            "cbom",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "QSTriage Evidence Quality Review" in result.output
+    assert "crypto-rsa-2048" in result.output
+    assert "not_decision_grade" in result.output
+    assert "missing_data_class" in result.output
+
+
+def test_review_evidence_command_rejects_unknown_input_format() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "review",
+            "evidence",
+            "examples/sample_inventory.yaml",
+            "--input-format",
+            "unknown",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Unsupported evidence review input format" in result.output
