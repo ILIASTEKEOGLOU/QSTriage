@@ -138,3 +138,118 @@ def test_evidence_models_reject_unexpected_fields() -> None:
                 "unexpected": True,
             }
         )
+
+
+from qstriage.cbom import import_cbom_inventory
+from qstriage.evidence import review_asset_evidence, review_inventory_evidence
+from qstriage.models import CryptographicAsset, Dependency, Inventory
+
+
+def _complete_asset() -> CryptographicAsset:
+    return CryptographicAsset(
+        id="asset-1",
+        name="Asset 1",
+        environment="prod",
+        asset_type="service",
+        protocol="tls",
+        algorithm="RSA-2048",
+        key_size_bits=2048,
+        data_class="customer_pii",
+        retention_years=7,
+        exposure="internet",
+        criticality="high",
+        local_blast_radius="high",
+        migration_effort="medium",
+    )
+
+
+def test_complete_user_declared_asset_is_decision_grade() -> None:
+    review = review_asset_evidence(_complete_asset())
+
+    assert review.decision_grade == DecisionGrade.decision_grade
+    assert review.human_review_required is False
+    assert review.evidence_score == 1.0
+    assert review.confidence_cap == 1.0
+    assert review.findings == []
+
+
+def test_unknown_algorithm_blocks_decision_grade() -> None:
+    asset = _complete_asset().model_copy(update={"algorithm": "unknown", "key_size_bits": None})
+
+    review = review_asset_evidence(asset)
+
+    assert review.decision_grade == DecisionGrade.not_decision_grade
+    assert "unknown_algorithm" in review.blocking_finding_codes
+    assert any(finding.code == "unknown_algorithm" for finding in review.findings)
+
+
+def test_cbom_imported_assets_are_not_decision_grade_without_business_context() -> None:
+    inventory = import_cbom_inventory("tests/fixtures/sample_cbom.json")
+
+    reviews = review_inventory_evidence(inventory, source_type="cyclonedx_cbom")
+    review_by_asset = {review.asset_id: review for review in reviews}
+    rsa_review = review_by_asset["crypto-rsa-2048"]
+    finding_codes = {finding.code for finding in rsa_review.findings}
+
+    assert rsa_review.decision_grade == DecisionGrade.not_decision_grade
+    assert rsa_review.human_review_required is True
+    assert "missing_data_class" in finding_codes
+    assert "defaulted_retention_years" in finding_codes
+    assert "missing_exposure" in finding_codes
+    assert "defaulted_criticality" in finding_codes
+    assert "unknown_dependency_completeness" in finding_codes
+
+
+def test_cbom_dependency_context_is_known_unknown() -> None:
+    inventory = import_cbom_inventory("tests/fixtures/sample_cbom.json")
+
+    review = review_inventory_evidence(inventory, source_type="cyclonedx_cbom")[0]
+    dependency_findings = [
+        finding
+        for finding in review.findings
+        if finding.code == "unknown_dependency_completeness"
+    ]
+
+    assert len(dependency_findings) == 1
+    assert dependency_findings[0].relationship_completeness == RelationshipCompleteness.unknown
+    assert dependency_findings[0].evidence_state == EvidenceState.unknown
+
+
+def test_declared_qstriage_dependencies_are_recorded_as_known_context() -> None:
+    asset_1 = _complete_asset()
+    asset_2 = _complete_asset().model_copy(
+        update={
+            "id": "asset-2",
+            "name": "Asset 2",
+            "algorithm": "ML-KEM-768",
+            "key_size_bits": None,
+        }
+    )
+    inventory = Inventory(
+        assets=[asset_1, asset_2],
+        dependencies=[
+            Dependency(
+                id="dep-1",
+                source="asset-1",
+                target="asset-2",
+                direction="outbound",
+                dependency_type="api_call",
+                protocol="https",
+                weight=0.8,
+                criticality="high",
+                carries_crypto_context=True,
+            )
+        ],
+    )
+
+    reviews = review_inventory_evidence(inventory)
+    review_by_asset = {review.asset_id: review for review in reviews}
+
+    assert any(
+        finding.code == "declared_qstriage_dependency_context"
+        for finding in review_by_asset["asset-1"].findings
+    )
+    assert any(
+        finding.relationship_completeness == RelationshipCompleteness.known
+        for finding in review_by_asset["asset-1"].findings
+    )
