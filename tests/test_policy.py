@@ -211,3 +211,62 @@ def test_policy_models_reject_unexpected_fields() -> None:
                 "unexpected": True,
             }
         )
+
+
+def test_builtin_policy_registry_lists_nist_pqc_basic() -> None:
+    from qstriage.policy import list_policy_packs
+
+    packs = list_policy_packs()
+
+    assert [pack.policy_pack_id for pack in packs] == ["nist-pqc-basic"]
+    assert packs[0].version == "0.1"
+    assert packs[0].title == "NIST PQC Basic"
+
+
+def test_builtin_policy_pack_contains_expected_references_thresholds_and_rules() -> None:
+    from qstriage.policy import get_policy_pack
+
+    pack = get_policy_pack("nist-pqc-basic")
+
+    assert pack.policy_pack_id == "nist-pqc-basic"
+    assert "NIST-FIPS-203" in pack.standards_applied()
+    assert "NIST-SP-800-131A-REV3-IPD" in pack.standards_applied()
+    assert "CISA-PQC-DISCOVERY-INVENTORY" in pack.standards_applied()
+    assert "QSTRIAGE-SAFETY-POLICY" in pack.standards_applied()
+    assert "minimum_decision_grade_confidence" in pack.threshold_ids()
+    assert "cbom_default_confidence_cap" in pack.threshold_ids()
+    assert "long_retention_years" in pack.threshold_ids()
+    assert (
+        "quantum_vulnerable_public_key_requires_pqc_migration_review"
+        in pack.rule_ids()
+    )
+    assert "missing_business_context_requires_human_review" in pack.rule_ids()
+    assert "ml_kem_usage_requires_key_establishment_context" in pack.rule_ids()
+
+
+def test_builtin_policy_pack_hash_is_deterministic_across_loads() -> None:
+    from qstriage.policy import get_policy_pack
+
+    pack_a = get_policy_pack("nist-pqc-basic")
+    pack_b = get_policy_pack("nist-pqc-basic")
+
+    assert pack_a.canonical_json() == pack_b.canonical_json()
+    assert pack_a.policy_pack_hash() == pack_b.policy_pack_hash()
+    assert pack_a.policy_pack_hash().startswith("sha256:")
+
+
+def test_builtin_policy_pack_is_returned_as_fresh_instance() -> None:
+    from qstriage.policy import get_policy_pack
+
+    pack_a = get_policy_pack("nist-pqc-basic")
+    pack_b = get_policy_pack("nist-pqc-basic")
+
+    assert pack_a is not pack_b
+    assert pack_a == pack_b
+
+
+def test_unknown_policy_pack_is_rejected() -> None:
+    from qstriage.policy import get_policy_pack
+
+    with pytest.raises(ValueError, match="Unknown policy pack"):
+        get_policy_pack("unknown-pack")
