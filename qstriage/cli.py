@@ -7,18 +7,19 @@ from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
-from qstriage.cbom import write_imported_inventory
+from qstriage.cbom import import_cbom_inventory, load_cbom_json, write_imported_inventory
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import load_inventory
+from qstriage.pdr import generate_pdr_document
 from qstriage.report import generate_markdown_report
 from qstriage.review import review_decision_context
 from qstriage.scoring import score_inventory
 
 app = typer.Typer(
-    help="QSTriage — Explainable PQC Migration Decision Engine",
+    help="QSTriage — Cryptographic Policy & Justification Engine",
     no_args_is_help=True,
 )
 
@@ -34,6 +35,11 @@ export_app = typer.Typer(
 
 review_app = typer.Typer(
     help="Review whether an inventory has enough business context for decision-grade scoring.",
+    no_args_is_help=True,
+)
+
+pdr_app = typer.Typer(
+    help="Generate PQC Decision Records.",
     no_args_is_help=True,
 )
 
@@ -64,6 +70,51 @@ def _write_cbom_import_or_exit(input_path: Path, output_path: Path) -> Path:
         raise typer.Exit(code=1) from error
 
 
+def _write_pdr_document_or_exit(
+    input_path: Path,
+    output_path: Path,
+    input_format: str,
+) -> Path:
+    try:
+        normalized_format = input_format.strip().lower()
+
+        if normalized_format == "inventory":
+            inventory = load_inventory(input_path)
+            source_type = "qstriage_inventory"
+            source_version = None
+        elif normalized_format == "cbom":
+            cbom = load_cbom_json(input_path)
+            inventory = import_cbom_inventory(input_path)
+            source_type = "cyclonedx_cbom"
+            source_version = str(cbom.get("specVersion")) if cbom.get("specVersion") else None
+        else:
+            raise ValueError(
+                "Unsupported PDR input format. Expected 'inventory' or 'cbom'."
+            )
+
+        document = generate_pdr_document(
+            inventory,
+            source_path=input_path,
+            source_type=source_type,
+            source_version=source_version,
+        )
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(
+                document.model_dump(mode="json"),
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return output_path
+    except (FileNotFoundError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
+        console.print(f"[red]PDR generation failed:[/red] {error}")
+        raise typer.Exit(code=1) from error
+
+
 @app.callback()
 def main() -> None:
     """QSTriage command line interface."""
@@ -73,7 +124,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.5.0")
+    typer.echo("QSTriage 0.6.0")
 
 
 @app.command("validate")
@@ -256,6 +307,34 @@ def review_context_command(
         console.print(f"Recommended action: {asset_review.recommended_action}")
 
 
+@pdr_app.command("generate")
+def generate_pdr_command(
+    input_path: Path = typer.Argument(
+        ...,
+        help="Path to a QSTriage inventory YAML file or CycloneDX CBOM JSON file.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    output: Path = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        help="Path where the PDR JSON document will be written.",
+    ),
+    input_format: str = typer.Option(
+        "inventory",
+        "--input-format",
+        help="Input format: inventory or cbom.",
+    ),
+) -> None:
+    """Generate a PQC Decision Record JSON document."""
+    written_path = _write_pdr_document_or_exit(input_path, output, input_format)
+
+    console.print(f"[green]PDR written:[/green] {written_path}")
+
+
 @export_app.command("scores")
 def export_scores_command(
     inventory_path: Path = typer.Argument(
@@ -345,6 +424,7 @@ def export_simulations_command(
 app.add_typer(import_app, name="import")
 app.add_typer(export_app, name="export")
 app.add_typer(review_app, name="review")
+app.add_typer(pdr_app, name="pdr")
 
 
 if __name__ == "__main__":

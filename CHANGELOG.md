@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.6.0 - PDR foundation
+
+### Added
+
+- PQC Decision Record (PDR) document model.
+- Deterministic record and document hashing for reproducible decision artifacts.
+- Input snapshot metadata with source type, source version, source path, and source hash.
+- Policy context metadata with built-in `nist-pqc-basic` policy pack identity and standards applied.
+- Observed cryptographic state per asset.
+- Evidence quality scoring for missing or defaulted decision evidence.
+- Decision confidence scoring separate from evidence quality.
+- Mission context, trade-offs, assumptions, human-review status, and target-state suggestions.
+- `qstriage pdr generate` CLI command.
+- PDR generation from QSTriage YAML inventories.
+- PDR generation from CycloneDX CBOM JSON crypto evidence.
+
+### Changed
+
+- Project positioning updated to Cryptographic Policy & Justification Engine.
+- Package discovery is now explicit so editable installs do not accidentally include generated report folders.
+
+### Validation
+
+- Full test suite passes with 97 tests.
+- Manual smoke verified PDR generation from `examples/sample_inventory.yaml`.
+- Manual smoke verified PDR generation from `tests/fixtures/sample_cbom.json`.
+- Generated PDRs include SHA-256 record integrity hashes.
+
 ## v0.5.0 - Decision context review
 
 ### Added

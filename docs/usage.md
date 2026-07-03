@@ -1,11 +1,11 @@
 # QSTriage Usage Guide
 
-QSTriage is a local-first command line tool for explainable post-quantum cryptography migration planning.
+QSTriage is a local-first Cryptographic Policy & Justification Engine for explainable post-quantum cryptography migration planning and governance.
 
 It follows a conservative workflow:
 
 ```text
-inventory -> dependency graph -> standards-backed algorithm classification -> explainable scoring -> impact simulation -> narrative report -> structured exports
+inventory/CBOM -> standards-backed algorithm classification -> explainable scoring -> PDR -> impact simulation -> narrative report -> structured exports
 ```
 
 QSTriage is designed for judgment before automation. It does not modify production systems.
@@ -78,6 +78,22 @@ qstriage report reports/imported_inventory.yaml --output reports/imported_report
 ```
 
 Reports warn when graph-amplified blast radius is limited because no QSTriage dependencies were declared.
+
+## Generate PQC Decision Records
+
+Generate a PDR from a QSTriage YAML inventory:
+
+```bash
+qstriage pdr generate examples/sample_inventory.yaml --output reports/pdr.json
+```
+
+Generate a PDR directly from CycloneDX CBOM JSON crypto evidence:
+
+```bash
+qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
+```
+
+The PDR JSON document is the stable decision artifact. It includes input snapshot metadata, policy context, observed crypto state, evidence quality, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
 
 ## Review decision context
 
@@ -155,7 +171,7 @@ The generated report includes:
 - dependency graph views
 - method notes
 
-Reports are written locally. The default `reports/` directory is ignored by Git.
+Reports are written locally. Generated report artifacts should not be committed unless intentionally promoted as examples.
 
 ## Export score results
 

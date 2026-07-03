@@ -1,11 +1,12 @@
 # QSTriage
 
-**QSTriage — Explainable PQC Migration Decision Engine**
+**QSTriage — Cryptographic Policy & Justification Engine**
 
-QSTriage is a local-first command line tool for post-quantum cryptography migration planning.
+QSTriage is a local-first command line tool for post-quantum cryptography migration planning and governance. It consumes QSTriage inventories or CycloneDX CBOM crypto evidence and produces auditable PQC Decision Records.
 
 It turns cryptographic inventories into:
 
+- PQC Decision Record (PDR) JSON documents
 - dependency-aware risk scores
 - graph-amplified blast-radius analysis
 - hybrid PQC migration impact warnings
@@ -19,7 +20,7 @@ It turns cryptographic inventories into:
 
 ## MVP scope
 
-The current MVP reads a YAML inventory, builds a directed dependency graph, classifies cryptographic algorithms using a standards-backed registry, scores cryptographic assets, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
+The current MVP reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
 
 No production systems are touched.
 No certificates are rotated.
@@ -90,6 +91,22 @@ CBOM imports are intentionally conservative. Imported cryptographic assets becom
 
 During import, QSTriage normalizes split CBOM crypto metadata into stronger algorithm identifiers when possible. For example, `algorithmFamily=ML-KEM` with `parameterSetIdentifier=768` becomes `ML-KEM-768`, `algorithmFamily=RSA` with `keySize=2048` becomes `RSA-2048`, and `algorithmFamily=AES` with `keyLength=256` becomes `AES-256`.
 
+## PQC Decision Records
+
+Generate a PDR from a QSTriage inventory:
+
+```bash
+qstriage pdr generate examples/sample_inventory.yaml --output reports/pdr.json
+```
+
+Generate a PDR from CycloneDX CBOM crypto evidence:
+
+```bash
+qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
+```
+
+A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, observed crypto state, evidence quality, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+
 ## Standards-aware classification
 
 QSTriage classifies algorithm strings before they are used in scoring and reports.
@@ -143,4 +160,4 @@ The generated report includes:
 
 ## Project status
 
-QSTriage is currently an MVP prototype for local analysis and planning. It is not a production migration orchestrator.
+QSTriage is currently an MVP prototype for local analysis, planning, and auditable PQC decision records. It is not a production migration orchestrator.
