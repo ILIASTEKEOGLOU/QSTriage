@@ -265,3 +265,15 @@ It does not:
 - perform rollback
 
 QSTriage helps teams reason about what to prioritize, why it matters, and what should be simulated before any real migration work.
+
+## Policy pack inspection
+
+List built-in policy packs:
+
+- `qstriage policy list`
+
+Show the built-in NIST PQC baseline policy pack:
+
+- `qstriage policy show nist-pqc-basic`
+
+The `policy_pack_hash` field is deterministic and is used in PDR policy context.

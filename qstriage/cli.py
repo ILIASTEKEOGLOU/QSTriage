@@ -15,6 +15,7 @@ from qstriage.exporters import ExportFormat, export_score_results, export_simula
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document
+from qstriage.policy import get_policy_pack, list_policy_packs
 from qstriage.report import generate_markdown_report
 from qstriage.review import review_decision_context
 from qstriage.scoring import score_inventory
@@ -41,6 +42,11 @@ review_app = typer.Typer(
 
 pdr_app = typer.Typer(
     help="Generate PQC Decision Records.",
+    no_args_is_help=True,
+)
+
+policy_app = typer.Typer(
+    help="Inspect built-in cryptographic policy packs.",
     no_args_is_help=True,
 )
 
@@ -134,6 +140,53 @@ def _write_pdr_document_or_exit(
         raise typer.Exit(code=1) from error
 
 
+
+@policy_app.command("list")
+def list_policy_pack_command() -> None:
+    """List available built-in policy packs."""
+    table = Table(title="QSTriage Policy Packs")
+    table.add_column("Policy Pack ID")
+    table.add_column("Version")
+    table.add_column("Title")
+    table.add_column("Rules", justify="right")
+
+    for policy_pack in list_policy_packs():
+        table.add_row(
+            policy_pack.policy_pack_id,
+            policy_pack.version,
+            policy_pack.title,
+            str(len(policy_pack.rules)),
+        )
+
+    console.print(table)
+
+
+@policy_app.command("show")
+def show_policy_pack_command(
+    policy_pack_id: str = typer.Argument(
+        ...,
+        help="Built-in policy pack id to inspect.",
+    ),
+) -> None:
+    """Show a built-in policy pack as deterministic JSON."""
+    try:
+        policy_pack = get_policy_pack(policy_pack_id)
+    except ValueError as error:
+        console.print(f"[red]Policy lookup failed:[/red] {error}")
+        raise typer.Exit(code=1) from error
+
+    payload = policy_pack.model_dump(mode="json")
+    payload["policy_pack_hash"] = policy_pack.policy_pack_hash()
+
+    typer.echo(
+        json.dumps(
+            payload,
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
+
+
 @app.callback()
 def main() -> None:
     """QSTriage command line interface."""
@@ -143,7 +196,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.7.0")
+    typer.echo("QSTriage 0.8.0")
 
 
 @app.command("validate")
@@ -499,6 +552,8 @@ app.add_typer(import_app, name="import")
 app.add_typer(export_app, name="export")
 app.add_typer(review_app, name="review")
 app.add_typer(pdr_app, name="pdr")
+
+app.add_typer(policy_app, name="policy")
 
 
 if __name__ == "__main__":

@@ -9,22 +9,25 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from qstriage.evidence import EvidenceReview, review_asset_evidence
 from qstriage.models import CryptographicAsset, Inventory
+from qstriage.policy import (
+    BUILTIN_POLICY_PACK_ID,
+    BUILTIN_POLICY_PACK_VERSION,
+    get_policy_pack,
+)
 from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 
 PDR_VERSION = "0.1"
 ENGINE_NAME = "QSTriage"
-ENGINE_VERSION = "0.7.0"
+ENGINE_VERSION = "0.8.0"
 
-DEFAULT_POLICY_PACK_ID = "nist-pqc-basic"
-DEFAULT_POLICY_PACK_VERSION = "0.1"
+DEFAULT_POLICY_PACK_ID = BUILTIN_POLICY_PACK_ID
+DEFAULT_POLICY_PACK_VERSION = BUILTIN_POLICY_PACK_VERSION
 
 STANDARD_FIPS_203 = "NIST-FIPS-203"
 STANDARD_FIPS_204 = "NIST-FIPS-204"
 STANDARD_FIPS_205 = "NIST-FIPS-205"
-STANDARD_NIST_IR_8547 = "NIST-IR-8547-IPD"
-STANDARD_QSTRIAGE_POLICY = "QSTRIAGE-SAFETY-POLICY"
 
 
 class PDREngine(BaseModel):
@@ -304,25 +307,19 @@ def _build_input_snapshot(
 
 
 def _build_policy_context(policy_pack_id: str, policy_pack_version: str) -> PolicyContext:
-    standards = [
-        STANDARD_FIPS_203,
-        STANDARD_FIPS_204,
-        STANDARD_FIPS_205,
-        STANDARD_NIST_IR_8547,
-        STANDARD_QSTRIAGE_POLICY,
-    ]
-    policy_hash = _hash_object(
-        {
-            "policy_pack_id": policy_pack_id,
-            "policy_pack_version": policy_pack_version,
-            "standards_applied": standards,
-        }
-    )
+    policy_pack = get_policy_pack(policy_pack_id)
+
+    if policy_pack.version != policy_pack_version:
+        raise ValueError(
+            f"Policy pack '{policy_pack_id}' version mismatch: "
+            f"requested {policy_pack_version}, available {policy_pack.version}"
+        )
+
     return PolicyContext(
-        policy_pack_id=policy_pack_id,
-        policy_pack_version=policy_pack_version,
-        policy_pack_hash=policy_hash,
-        standards_applied=standards,
+        policy_pack_id=policy_pack.policy_pack_id,
+        policy_pack_version=policy_pack.version,
+        policy_pack_hash=policy_pack.policy_pack_hash(),
+        standards_applied=policy_pack.standards_applied(),
     )
 
 

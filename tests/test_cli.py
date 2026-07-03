@@ -376,3 +376,33 @@ def test_review_evidence_command_rejects_unknown_input_format() -> None:
 
     assert result.exit_code == 1
     assert "Unsupported evidence review input format" in result.output
+
+
+def test_policy_list_command_shows_builtin_policy_pack() -> None:
+    result = runner.invoke(app, ["policy", "list"])
+
+    assert result.exit_code == 0
+    assert "QSTriage Policy Packs" in result.output
+    assert "nist-pqc-basic" in result.output
+    assert "NIST PQC Basic" in result.output
+    assert "0.1" in result.output
+
+
+def test_policy_show_command_prints_policy_pack_json() -> None:
+    result = runner.invoke(app, ["policy", "show", "nist-pqc-basic"])
+
+    assert result.exit_code == 0
+    assert '"policy_pack_id": "nist-pqc-basic"' in result.output
+    assert '"version": "0.1"' in result.output
+    assert '"policy_pack_hash": "sha256:' in result.output
+    assert "NIST-FIPS-203" in result.output
+    assert "minimum_decision_grade_confidence" in result.output
+    assert "quantum_vulnerable_public_key_requires_pqc_migration_review" in result.output
+
+
+def test_policy_show_command_rejects_unknown_policy_pack() -> None:
+    result = runner.invoke(app, ["policy", "show", "unknown-pack"])
+
+    assert result.exit_code == 1
+    assert "Policy lookup failed" in result.output
+    assert "Unknown policy pack" in result.output
