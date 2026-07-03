@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from qstriage.cbom import import_cbom_inventory
+from qstriage.evidence import DecisionGrade
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document
 
@@ -67,6 +68,9 @@ def test_cbom_imported_assets_have_low_evidence_and_human_review() -> None:
     assert rsa_record.input_snapshot.source_type == "cyclonedx_cbom"
     assert rsa_record.evidence_quality.score < 0.75
     assert "data_class" in rsa_record.evidence_quality.missing_evidence
+    assert rsa_record.evidence_review.decision_grade == DecisionGrade.not_decision_grade
+    assert "missing_data_class" in rsa_record.evidence_review.blocking_finding_codes
+    assert rsa_record.decision_confidence.score <= rsa_record.evidence_review.confidence_cap
     assert rsa_record.decision.human_review_required is True
 
 
@@ -86,3 +90,18 @@ def test_standardized_ml_kem_cbom_asset_is_marked_as_existing_pqc_target() -> No
 
     assert ml_kem_record.observed_state.quantum_status == "quantum_resistant"
     assert "retain_ml_kem" in options
+
+
+def test_pdr_records_include_structured_evidence_review() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+    record_by_asset = {record.observed_state.asset_id: record for record in document.records}
+
+    gateway_record = record_by_asset["public-api-gateway"]
+
+    assert gateway_record.evidence_review.review_version == "0.1"
+    assert 0.0 <= gateway_record.evidence_review.evidence_score <= 1.0
+    assert 0.0 <= gateway_record.evidence_review.confidence_cap <= 1.0
+    assert gateway_record.decision_confidence.score <= gateway_record.evidence_review.confidence_cap
+    assert gateway_record.evidence_review.asset_id == "public-api-gateway"
