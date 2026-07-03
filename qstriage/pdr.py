@@ -20,7 +20,7 @@ from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 PDR_VERSION = "0.1"
 ENGINE_NAME = "QSTriage"
-ENGINE_VERSION = "0.7.0"
+ENGINE_VERSION = "0.8.0"
 
 DEFAULT_POLICY_PACK_ID = BUILTIN_POLICY_PACK_ID
 DEFAULT_POLICY_PACK_VERSION = BUILTIN_POLICY_PACK_VERSION

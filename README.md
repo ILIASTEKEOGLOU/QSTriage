@@ -169,3 +169,16 @@ The generated report includes:
 ## Project status
 
 QSTriage is currently an MVP prototype for local analysis, planning, and auditable PQC decision records. It is not a production migration orchestrator.
+
+## Policy packs
+
+QSTriage v0.8.0 includes a built-in policy pack registry.
+
+Built-in pack: `nist-pqc-basic`.
+
+Commands:
+
+- `qstriage policy list`
+- `qstriage policy show nist-pqc-basic`
+
+Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.

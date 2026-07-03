@@ -196,7 +196,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.7.0")
+    typer.echo("QSTriage 0.8.0")
 
 
 @app.command("validate")
@@ -553,7 +553,8 @@ app.add_typer(export_app, name="export")
 app.add_typer(review_app, name="review")
 app.add_typer(pdr_app, name="pdr")
 
+app.add_typer(policy_app, name="policy")
+
 
 if __name__ == "__main__":
     app()
-app.add_typer(policy_app, name="policy")

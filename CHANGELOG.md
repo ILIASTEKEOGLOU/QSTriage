@@ -1,5 +1,15 @@
 # Changelog
 
+
+## v0.8.0 - Policy Packs Foundation
+
+- Added explicit policy pack domain models for versioned, auditable cryptographic decision policy.
+- Added the built-in `nist-pqc-basic` policy pack with NIST, CISA, and QSTriage safety references.
+- Added deterministic policy pack hashing for reproducible PDR policy context.
+- Integrated PDR policy context with the built-in policy pack registry.
+- Added `qstriage policy list` and `qstriage policy show nist-pqc-basic`.
+- Kept policy packs local-first and deterministic; no external policy loading is included in this release.
+
 ## v0.7.0 - Evidence Quality Engine
 
 ### Added
