@@ -1,20 +1,33 @@
 # Changelog
 
 
-## Unreleased - Post-v0.8.0 audit hardening
+## v0.9.0 - Live Policy Evaluation
+
+### Added
+
+- Added deterministic asset-level `PolicyEvaluator.evaluate_asset()`.
+- Added executable policy fact derivation for data sensitivity, exposure category, and business context.
+- Added record-level `policy_evaluation` to PDR records using `PolicyEvaluationResult`.
+- Added policy evaluation tests for quantum-vulnerable assets, standardized PQC assets, unknown algorithms, missing business context, long-retention sensitive data, and exposed assets.
+
+### Changed
+
+- Updated the built-in `nist-pqc-basic` policy pack to version `0.2`.
+- Aligned built-in policy rule conditions with deterministic asset facts.
+- PDR record hashes now naturally include policy evaluation output.
+- `PolicyContext` remains document-level policy pack provenance only.
 
 ### Fixed
 
 - Prevented PDR generation from crashing on unknown algorithms by routing them to manual cryptographic review.
 - Stabilized PDR record and document hashes across relative and absolute source path forms.
 - Centralized QSTriage version metadata for CLI output and PDR engine metadata.
-- Clarified policy pack scope: v0.8.0 attaches deterministic policy identity, version, hash, and standards context to PDRs, but does not yet perform rule-by-rule policy evaluation into record-level findings.
+- Clarified policy pack scope in documentation.
 - Added ASCII fallback for text dependency graph output on non-UTF-8 terminals to avoid Windows `UnicodeEncodeError` failures.
 
 ### Validation
 
-- Full test suite passes with 138 tests.
-- Manual smoke verified `python -m qstriage.cli graph --help`.
+- Full test suite passes with 153 tests.
 
 ## v0.8.0 - Policy Packs Foundation
 

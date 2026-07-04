@@ -5,6 +5,7 @@ from qstriage.policy import (
     POLICY_PACK_SCHEMA_VERSION,
     PolicyApplicability,
     PolicyApplicabilityTarget,
+    PolicyEvaluator,
     PolicyEvaluationResult,
     PolicyFinding,
     PolicyPack,
@@ -13,7 +14,12 @@ from qstriage.policy import (
     PolicyRuleEffect,
     PolicySeverity,
     PolicyThreshold,
+    _derive_business_context,
+    _derive_data_class_sensitivity,
+    _derive_exposure_category,
 )
+from qstriage.models import CryptographicAsset, RiskLevel
+from qstriage.standards import classify_algorithm
 
 
 def _reference(reference_id: str = "NIST-FIPS-203") -> PolicyReference:
@@ -80,6 +86,40 @@ def _policy_pack() -> PolicyPack:
         thresholds=[_threshold()],
         rules=[_rule()],
         notes="Local-first QSTriage policy pack for deterministic PDR policy context.",
+    )
+
+
+def _asset(
+    *,
+    asset_id: str = "asset-1",
+    algorithm: str = "RSA-2048",
+    data_class: str = "internal",
+    retention_years: int = 1,
+    exposure: str = "internal",
+) -> CryptographicAsset:
+    return CryptographicAsset(
+        id=asset_id,
+        name=asset_id,
+        environment="prod",
+        asset_type="service",
+        protocol="TLS",
+        algorithm=algorithm,
+        data_class=data_class,
+        retention_years=retention_years,
+        exposure=exposure,
+        criticality=RiskLevel.medium,
+        local_blast_radius=RiskLevel.medium,
+        migration_effort=RiskLevel.medium,
+    )
+
+
+def _evaluate_asset(asset: CryptographicAsset) -> PolicyEvaluationResult:
+    from qstriage.policy import get_policy_pack
+
+    return PolicyEvaluator.evaluate_asset(
+        asset,
+        get_policy_pack("nist-pqc-basic"),
+        classify_algorithm(asset.algorithm),
     )
 
 
@@ -306,3 +346,159 @@ def test_builtin_policy_pack_uses_executable_asset_condition_keys() -> None:
     assert rules[
         "ml_kem_usage_requires_key_establishment_context"
     ].applicability.conditions == {"algorithm_family": "ML-KEM"}
+
+
+def test_policy_evaluator_fires_quantum_vulnerable_asset_rule() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="RSA-2048",
+            data_class="internal",
+            retention_years=1,
+            exposure="internal",
+        )
+    )
+
+    assert (
+        "quantum_vulnerable_public_key_requires_pqc_migration_review"
+        in result.applied_rule_ids
+    )
+    finding = result.findings[
+        result.applied_rule_ids.index(
+            "quantum_vulnerable_public_key_requires_pqc_migration_review"
+        )
+    ]
+    assert finding.asset_id == "asset-1"
+    assert finding.message == "Quantum-vulnerable public-key crypto requires PQC migration review"
+
+
+def test_policy_evaluator_fires_public_or_partner_exposure_rule() -> None:
+    public_result = _evaluate_asset(
+        _asset(
+            algorithm="ECDHE_RSA",
+            data_class="internal",
+            retention_years=1,
+            exposure="public_internet",
+        )
+    )
+    partner_result = _evaluate_asset(
+        _asset(
+            algorithm="ECDHE_RSA",
+            data_class="internal",
+            retention_years=1,
+            exposure="partner_network",
+        )
+    )
+
+    expected_rule = (
+        "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority"
+    )
+    assert expected_rule in public_result.applied_rule_ids
+    assert expected_rule in partner_result.applied_rule_ids
+
+
+def test_policy_evaluator_fires_long_retention_sensitive_rule_with_threshold() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="AES-256",
+            data_class="customer_pii",
+            retention_years=10,
+            exposure="internal",
+        )
+    )
+
+    assert "long_retention_sensitive_data_raises_priority" in result.applied_rule_ids
+    assert result.thresholds_applied == ["long_retention_years"]
+
+
+def test_policy_evaluator_fires_ml_kem_rules() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="ML-KEM-768",
+            data_class="internal",
+            retention_years=1,
+            exposure="internal",
+        )
+    )
+
+    assert result.applied_rule_ids == [
+        "standardized_pqc_can_be_retained_with_operational_review",
+        "ml_kem_usage_requires_key_establishment_context",
+    ]
+
+
+def test_policy_evaluator_fires_unknown_algorithm_rule() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="MysteryCrypto-1",
+            data_class="internal",
+            retention_years=1,
+            exposure="internal",
+        )
+    )
+
+    assert result.applied_rule_ids == ["unknown_algorithm_requires_manual_crypto_review"]
+    assert result.findings[0].standards_applied == ["QSTRIAGE-SAFETY-POLICY"]
+
+
+def test_policy_evaluator_fires_missing_business_context_for_unknown_data_class() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="AES-256",
+            data_class="unknown",
+            retention_years=1,
+            exposure="internal",
+        )
+    )
+
+    assert result.applied_rule_ids == [
+        "missing_business_context_requires_human_review"
+    ]
+
+
+def test_policy_evaluator_derives_asset_facts_deterministically() -> None:
+    assert _derive_data_class_sensitivity("customer_pii") == "sensitive"
+    assert _derive_data_class_sensitivity("payment_metadata") == "sensitive"
+    assert _derive_data_class_sensitivity("telemetry") == "operational"
+    assert _derive_exposure_category("public_internet") == "public"
+    assert _derive_exposure_category("partner_network") == "partner"
+    assert _derive_exposure_category("restricted_network") == "restricted"
+    assert (
+        _derive_business_context(
+            _asset(
+                algorithm="AES-256",
+                data_class="unknown",
+                retention_years=1,
+                exposure="internal",
+            )
+        )
+        == "missing"
+    )
+    assert (
+        _derive_business_context(
+            _asset(
+                algorithm="AES-256",
+                data_class="customer_pii",
+                retention_years=10,
+                exposure="public_internet",
+            )
+        )
+        == "present"
+    )
+
+
+def test_policy_evaluator_does_not_apply_non_asset_target_rules_yet() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="AES-256",
+            data_class="internal",
+            retention_years=1,
+            exposure="internal",
+        )
+    )
+
+    assert result.applied_rule_ids == []
+    assert {
+        "cbom_defaulted_context_blocks_decision_grade",
+        "unknown_dependency_completeness_blocks_decision_grade",
+        "deprecated_or_disallowed_transition_status_requires_policy_finding",
+    }.isdisjoint(result.applied_rule_ids)

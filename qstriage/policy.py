@@ -196,6 +196,209 @@ class PolicyPack(BaseModel):
         return [threshold.threshold_id for threshold in self.thresholds]
 
 
+class PolicyEvaluator:
+    @staticmethod
+    def evaluate_asset(
+        asset: Any,
+        pack: PolicyPack,
+        classification: Any,
+        *,
+        source_type: str = "qstriage_inventory",
+    ) -> PolicyEvaluationResult:
+        facts = _asset_policy_facts(
+            asset=asset,
+            classification=classification,
+            source_type=source_type,
+        )
+        thresholds_by_id = {
+            threshold.threshold_id: threshold for threshold in pack.thresholds
+        }
+
+        applied_rule_ids: list[str] = []
+        standards_applied: list[str] = []
+        thresholds_applied: list[str] = []
+        findings: list[PolicyFinding] = []
+
+        for rule in pack.rules:
+            if rule.applicability.target != PolicyApplicabilityTarget.asset:
+                continue
+
+            matches, matched_threshold_ids = _rule_matches_facts(
+                conditions=rule.applicability.conditions,
+                facts=facts,
+                thresholds_by_id=thresholds_by_id,
+            )
+            if not matches:
+                continue
+
+            applied_rule_ids.append(rule.rule_id)
+            _append_unique(standards_applied, rule.references)
+            _append_unique(thresholds_applied, matched_threshold_ids)
+            findings.append(
+                PolicyFinding(
+                    rule_id=rule.rule_id,
+                    severity=rule.severity,
+                    message=rule.title,
+                    effects=rule.effects,
+                    asset_id=asset.id,
+                    rationale=rule.rationale,
+                    recommendation=rule.recommendation,
+                    standards_applied=rule.references,
+                )
+            )
+
+        return PolicyEvaluationResult(
+            policy_pack_id=pack.policy_pack_id,
+            policy_pack_version=pack.version,
+            policy_pack_hash=pack.policy_pack_hash(),
+            applied_rule_ids=applied_rule_ids,
+            standards_applied=standards_applied,
+            thresholds_applied=thresholds_applied,
+            findings=findings,
+        )
+
+
+def _asset_policy_facts(
+    *,
+    asset: Any,
+    classification: Any,
+    source_type: str,
+) -> dict[str, Any]:
+    data_class = asset.data_class
+    exposure = asset.exposure
+
+    return {
+        "algorithm": asset.algorithm,
+        "algorithm_family": classification.algorithm_family,
+        "primitive": classification.primitive,
+        "quantum_status": classification.quantum_status,
+        "standard_status": classification.standard_status,
+        "data_class": data_class,
+        "data_class_sensitivity": _derive_data_class_sensitivity(data_class),
+        "retention_years": asset.retention_years,
+        "exposure": exposure,
+        "exposure_category": _derive_exposure_category(exposure),
+        "business_context": _derive_business_context(asset),
+        "source_type": source_type,
+    }
+
+
+def _rule_matches_facts(
+    *,
+    conditions: dict[str, Any],
+    facts: dict[str, Any],
+    thresholds_by_id: dict[str, PolicyThreshold],
+) -> tuple[bool, list[str]]:
+    matched_threshold_ids: list[str] = []
+
+    for fact_key, expected in conditions.items():
+        fact_value = facts.get(fact_key)
+
+        if isinstance(expected, str) and expected.startswith(">= "):
+            threshold_id = expected.removeprefix(">= ").strip()
+            threshold = thresholds_by_id.get(threshold_id)
+            if threshold is None or not _matches_threshold(fact_value, threshold.value):
+                return False, []
+            matched_threshold_ids.append(threshold_id)
+            continue
+
+        if isinstance(expected, list):
+            if fact_value not in expected:
+                return False, []
+            continue
+
+        if fact_value != expected:
+            return False, []
+
+    return True, matched_threshold_ids
+
+
+def _matches_threshold(fact_value: Any, threshold_value: PolicyScalar) -> bool:
+    if not isinstance(fact_value, int | float) or isinstance(fact_value, bool):
+        return False
+    if not isinstance(threshold_value, int | float) or isinstance(threshold_value, bool):
+        return False
+
+    return fact_value >= threshold_value
+
+
+def _derive_data_class_sensitivity(data_class: str) -> str:
+    normalized = _normalize_policy_text(data_class)
+
+    if normalized in {"customer_pii", "identity_tokens", "payment_metadata"}:
+        return "sensitive"
+    if _is_unknown_like(normalized):
+        return "unknown"
+    if normalized == "telemetry":
+        return "operational"
+    if any(
+        token in normalized
+        for token in (
+            "medical",
+            "health",
+            "pii",
+            "identity",
+            "payment",
+            "personal",
+            "customer",
+        )
+    ):
+        return "sensitive"
+
+    return "operational"
+
+
+def _derive_exposure_category(exposure: str) -> str:
+    normalized = _normalize_policy_text(exposure)
+
+    if normalized in {"public_internet", "internet", "public"}:
+        return "public"
+    if normalized in {"partner_network", "partner"}:
+        return "partner"
+    if normalized == "internal":
+        return "internal"
+    if normalized in {"restricted_network", "restricted"}:
+        return "restricted"
+    if normalized == "isolated":
+        return "isolated"
+    if _is_unknown_like(normalized):
+        return "unknown"
+
+    return "unknown"
+
+
+def _derive_business_context(asset: Any) -> str:
+    if _is_unknown_like(_normalize_policy_text(asset.data_class)):
+        return "missing"
+    if asset.retention_years == 0:
+        return "missing"
+    if _is_unknown_like(_normalize_policy_text(asset.exposure)):
+        return "missing"
+
+    return "present"
+
+
+def _normalize_policy_text(value: str | None) -> str:
+    return (value or "").strip().lower()
+
+
+def _is_unknown_like(value: str) -> bool:
+    return value in {
+        "",
+        "unknown",
+        "no_assertion",
+        "no-value",
+        "no_value",
+        "redacted",
+    }
+
+
+def _append_unique(target: list[str], values: list[str]) -> None:
+    for value in values:
+        if value not in target:
+            target.append(value)
+
+
 def _ensure_unique(values: list[str], label: str) -> None:
     seen: set[str] = set()
     duplicates: set[str] = set()

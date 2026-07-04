@@ -170,11 +170,11 @@ The generated report includes:
 
 QSTriage is currently an MVP prototype for local analysis, planning, and auditable PQC decision records. It is not a production migration orchestrator.
 
-## Policy packs
+## Policy packs and policy evaluation
 
-QSTriage v0.8.0 includes a built-in policy pack registry.
+QSTriage includes a built-in policy pack registry and live asset-level policy evaluation in PDR records.
 
-Built-in pack: `nist-pqc-basic`.
+Built-in pack: `nist-pqc-basic` policy pack version `0.2`.
 
 Commands:
 
@@ -183,4 +183,4 @@ Commands:
 
 Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.
 
-Current v0.8.0 scope: policy packs provide deterministic policy identity, version, hash, and standards context for PDRs. Rule-by-rule policy evaluation into record-level policy findings is not implemented yet.
+In v0.9.0, each PDR record includes `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for that asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
