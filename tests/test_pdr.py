@@ -2,7 +2,7 @@ from pathlib import Path
 
 from qstriage.cbom import import_cbom_inventory
 from qstriage.evidence import DecisionGrade
-from qstriage.models import load_inventory
+from qstriage.models import CryptographicAsset, Inventory, load_inventory
 from qstriage.pdr import generate_pdr_document
 
 
@@ -90,6 +90,41 @@ def test_standardized_ml_kem_cbom_asset_is_marked_as_existing_pqc_target() -> No
 
     assert ml_kem_record.observed_state.quantum_status == "quantum_resistant"
     assert "retain_ml_kem" in options
+
+
+def test_unknown_algorithm_pdr_generates_manual_review_record() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="unknown-crypto",
+                name="Unknown Crypto Asset",
+                environment="production",
+                asset_type="service",
+                protocol="tls",
+                algorithm="MysteryCrypto",
+                key_size_bits=None,
+                data_class="customer_pii",
+                retention_years=10,
+                exposure="public",
+                criticality="high",
+                local_blast_radius="high",
+                migration_effort="low",
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    document = generate_pdr_document(inventory)
+
+    assert document is not None
+    assert len(document.records) == 1
+    record = document.records[0]
+    assert record.observed_state.algorithm == "MysteryCrypto"
+    assert record.decision.human_review_required is True
+    assert record.target_state_suggestion[0].option == (
+        "manual_cryptographic_review_required"
+    )
 
 
 def test_pdr_records_include_structured_evidence_review() -> None:
