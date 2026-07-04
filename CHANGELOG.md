@@ -1,6 +1,21 @@
 # Changelog
 
 
+## Unreleased - Post-v0.8.0 audit hardening
+
+### Fixed
+
+- Prevented PDR generation from crashing on unknown algorithms by routing them to manual cryptographic review.
+- Stabilized PDR record and document hashes across relative and absolute source path forms.
+- Centralized QSTriage version metadata for CLI output and PDR engine metadata.
+- Clarified policy pack scope: v0.8.0 attaches deterministic policy identity, version, hash, and standards context to PDRs, but does not yet perform rule-by-rule policy evaluation into record-level findings.
+- Added ASCII fallback for text dependency graph output on non-UTF-8 terminals to avoid Windows `UnicodeEncodeError` failures.
+
+### Validation
+
+- Full test suite passes with 138 tests.
+- Manual smoke verified `python -m qstriage.cli graph --help`.
+
 ## v0.8.0 - Policy Packs Foundation
 
 - Added explicit policy pack domain models for versioned, auditable cryptographic decision policy.
