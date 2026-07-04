@@ -169,3 +169,20 @@ def test_pdr_rejects_policy_pack_version_mismatch() -> None:
             policy_pack_id="nist-pqc-basic",
             policy_pack_version="999.0",
         )
+
+def test_pdr_hashes_are_stable_for_relative_and_absolute_source_paths() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    relative = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+    absolute = generate_pdr_document(
+        inventory,
+        source_path=SAMPLE_INVENTORY.resolve(),
+    )
+
+    assert relative.run_id == absolute.run_id
+    assert relative.document_hash == absolute.document_hash
+    assert relative.records[0].record_integrity.record_hash == (
+        absolute.records[0].record_integrity.record_hash
+    )
+    assert relative.input_snapshot.source_path == SAMPLE_INVENTORY.name
+    assert absolute.input_snapshot.source_path == SAMPLE_INVENTORY.name

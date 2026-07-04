@@ -295,7 +295,7 @@ def _build_input_snapshot(
     path = Path(source_path) if source_path is not None else None
     if path is not None:
         source_hash = _hash_file(path)
-        source_path_text = str(path)
+        source_path_text = path.name
     else:
         source_hash = _hash_object(inventory.model_dump(mode="json"))
         source_path_text = None
