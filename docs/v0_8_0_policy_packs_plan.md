@@ -33,7 +33,7 @@ For v0.8.0:
 - PolicyRule is declarative metadata.
 - Python-side evaluators may exist.
 - Each evaluator must map clearly to a rule_id.
-- The PDR must preserve which policy pack and rule identity influenced the decision.
+- The PDR must preserve policy pack identity, version, hash, and standards context. Rule identity preservation is planned for later rule-level evaluation.
 
 ## Design Principle 3 — Standards-Backed Policy Context
 
@@ -140,7 +140,7 @@ The PDR should include:
 - policy_pack_version
 - policy_pack_hash
 - standards_applied
-- policy rules or rule identifiers used for the decision
+- future rule-level policy identifiers, once rule evaluation is implemented
 
 If the policy pack changes, the policy hash must change.
 
@@ -162,6 +162,8 @@ Do not implement in v0.8.0:
 v0.8.0 is only:
 
 Policy Pack domain model, built-in registry, policy CLI, and PDR policy context integration.
+
+Non-goal for v0.8.0: rule-by-rule policy evaluation into PDR record-level findings.
 
 ## Commit Plan
 

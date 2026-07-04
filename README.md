@@ -182,3 +182,5 @@ Commands:
 - `qstriage policy show nist-pqc-basic`
 
 Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.
+
+Current v0.8.0 scope: policy packs provide deterministic policy identity, version, hash, and standards context for PDRs. Rule-by-rule policy evaluation into record-level policy findings is not implemented yet.

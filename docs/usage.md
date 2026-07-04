@@ -277,3 +277,5 @@ Show the built-in NIST PQC baseline policy pack:
 - `qstriage policy show nist-pqc-basic`
 
 The `policy_pack_hash` field is deterministic and is used in PDR policy context.
+
+Current v0.8.0 scope: policy packs can be inspected and their identity/hash is attached to PDR policy context. Rule-by-rule policy evaluation into record-level policy findings is planned, but not implemented yet.
