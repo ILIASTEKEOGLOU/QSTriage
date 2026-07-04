@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.0.1 - Public Trust Infrastructure
+
+### Added
+
+- Added GitHub Actions CI for push and pull_request validation.
+- Added Python 3.11 GitHub runner validation using the supported baseline.
+- Added CLI smoke validation in CI with `python -m qstriage.cli version`.
+- Added full test execution in CI with `python -m pytest`.
+- Added README CI status badge.
+
+### Validation
+
+- GitHub Actions CI passed on the feature branch.
+- GitHub Actions CI passed on main after merge.
+- Local CLI version smoke passed.
+- Full local test suite passes with 153 tests.
+
+### Scope
+
+- No engine changes.
+- No policy changes.
+- No importer changes.
+- No PDR schema changes.
+- No scoring changes.
+
+
 
 ## v1.0.0 - Public Release Baseline
 
