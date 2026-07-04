@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from qstriage.graph import (
+    _encoding_supports_unicode_tree,
     build_dependency_graph,
     calculate_graph_amplified_blast_radius,
     critical_paths,
@@ -64,13 +65,52 @@ def test_render_text_graph_contains_dependency_context() -> None:
     inventory = load_inventory(Path("examples/sample_inventory.yaml"))
     graph = build_dependency_graph(inventory)
 
-    rendered = render_text_graph(graph, "public-api-gateway")
+    rendered = render_text_graph(graph, "public-api-gateway", output_encoding="utf-8")
 
     assert "[public-api-gateway]" in rendered
     assert "auth" in rendered
     assert "HTTPS/TLS1.3" in rendered
     assert "w=0.90" in rendered
     assert "│   └──(database, mTLS, w=0.80)──> [customer-db]" in rendered
+
+
+def test_render_text_graph_keeps_unicode_tree_for_utf8_output() -> None:
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    graph = build_dependency_graph(inventory)
+
+    rendered = render_text_graph(graph, "public-api-gateway", output_encoding="utf-8")
+
+    assert "├──(auth, HTTPS/TLS1.3, w=0.90)──> [auth-service]" in rendered
+    assert "└──(api_call, HTTPS/TLS1.3, w=0.75)──> [payments-api]" in rendered
+
+
+def test_render_text_graph_uses_ascii_tree_for_charmap_output() -> None:
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    graph = build_dependency_graph(inventory)
+
+    rendered = render_text_graph(graph, "public-api-gateway", output_encoding="cp1252")
+
+    assert "|--(auth, HTTPS/TLS1.3, w=0.90)--> [auth-service]" in rendered
+    assert "`--(api_call, HTTPS/TLS1.3, w=0.75)--> [payments-api]" in rendered
+    assert "├" not in rendered
+    assert "└" not in rendered
+    assert "│" not in rendered
+    assert "─" not in rendered
+
+
+def test_ascii_tree_fallback_encodes_on_non_utf8_output() -> None:
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    graph = build_dependency_graph(inventory)
+
+    rendered = render_text_graph(graph, "public-api-gateway", output_encoding="ascii")
+
+    rendered.encode("ascii")
+
+
+def test_unicode_tree_encoding_detection() -> None:
+    assert _encoding_supports_unicode_tree("utf-8")
+    assert not _encoding_supports_unicode_tree("cp1252")
+    assert not _encoding_supports_unicode_tree("ascii")
 
 
 def test_critical_paths_include_api_to_customer_db() -> None:

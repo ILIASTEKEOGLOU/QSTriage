@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 
 import networkx as nx
@@ -22,6 +23,29 @@ class BlastRadiusResult:
     direct_graph_exposure: float
     recursive_graph_exposure: float
     total_score: float
+
+
+@dataclass(frozen=True)
+class _TextGraphStyle:
+    branch: str
+    last_branch: str
+    continuation: str
+    edge_arrow: str
+
+
+_UNICODE_GRAPH_STYLE = _TextGraphStyle(
+    branch="├──",
+    last_branch="└──",
+    continuation="│   ",
+    edge_arrow="──>",
+)
+_ASCII_GRAPH_STYLE = _TextGraphStyle(
+    branch="|--",
+    last_branch="`--",
+    continuation="|   ",
+    edge_arrow="-->",
+)
+_UNICODE_TREE_CHARACTERS = "├└│─"
 
 
 def build_dependency_graph(inventory: Inventory) -> nx.DiGraph:
@@ -139,8 +163,15 @@ def calculate_graph_amplified_blast_radius(
     )
 
 
-def render_text_graph(graph: nx.DiGraph, root_asset_id: str, *, max_depth: int = 3) -> str:
+def render_text_graph(
+    graph: nx.DiGraph,
+    root_asset_id: str,
+    *,
+    max_depth: int = 3,
+    output_encoding: str | None = None,
+) -> str:
     _ensure_node_exists(graph, root_asset_id)
+    style = _text_graph_style(output_encoding)
 
     lines: list[str] = [_node_label(root_asset_id, graph.nodes[root_asset_id])]
 
@@ -153,12 +184,12 @@ def render_text_graph(graph: nx.DiGraph, root_asset_id: str, *, max_depth: int =
         visited: set[str],
     ) -> None:
         edge = graph.edges[parent_id, child_id]
-        connector = "└──" if is_last else "├──"
-        continuation_prefix = "    " if is_last else "│   "
+        connector = style.last_branch if is_last else style.branch
+        continuation_prefix = "    " if is_last else style.continuation
 
         edge_label = (
             f"{connector}({edge['dependency_type'].value}, "
-            f"{edge['protocol']}, w={edge['weight']:.2f})──> "
+            f"{edge['protocol']}, w={edge['weight']:.2f}){style.edge_arrow} "
         )
 
         if child_id in visited:
@@ -198,6 +229,26 @@ def render_text_graph(graph: nx.DiGraph, root_asset_id: str, *, max_depth: int =
         )
 
     return "\n".join(lines)
+
+
+def _text_graph_style(output_encoding: str | None = None) -> _TextGraphStyle:
+    encoding = output_encoding or sys.stdout.encoding
+    if _encoding_supports_unicode_tree(encoding):
+        return _UNICODE_GRAPH_STYLE
+    return _ASCII_GRAPH_STYLE
+
+
+def _encoding_supports_unicode_tree(encoding: str | None) -> bool:
+    if not encoding:
+        return False
+
+    try:
+        _UNICODE_TREE_CHARACTERS.encode(encoding)
+    except (LookupError, UnicodeEncodeError):
+        return False
+
+    return True
+
 
 def critical_paths(graph: nx.DiGraph, *, min_target_criticality: RiskLevel = RiskLevel.high) -> list[list[str]]:
     min_score = _risk_score(min_target_criticality)
