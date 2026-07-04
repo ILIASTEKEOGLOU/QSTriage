@@ -1,6 +1,28 @@
 # Changelog
 
 
+## v1.0.0 - Public Release Baseline
+
+### Released
+
+- First public baseline of QSTriage as a local-first tool for PQC migration decisions.
+- The release centers on the working path: inventory and CBOM input, algorithm classification, evidence review, scoring, policy evaluation, PDR generation, reports, and structured exports.
+- Added Apache-2.0 licensing and a security policy for public use and responsible reporting.
+
+### Clarified
+
+- Reworked the README opening around the migration problem QSTriage is meant to solve.
+- Split the quickstart from the developer setup path.
+- Documented the PDR JSON output as an evolving public decision artifact, not an internal debug dump.
+- Clarified that PDR hashes are deterministic for the same version, input, policy pack, and generated content, but are not a cross-version compatibility promise.
+- Cleaned stale wording before the v1.0 release.
+
+### Validation
+
+- Fresh clone, runtime install, policy listing, PDR generation, and policy evaluation smoke passed.
+- Development install with test dependencies passed.
+- Full test suite passes with 153 tests.
+
 ## v0.9.0 - Live Policy Evaluation
 
 ### Added
