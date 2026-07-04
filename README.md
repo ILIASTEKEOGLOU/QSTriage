@@ -26,9 +26,9 @@ QSTriage currently produces:
 - CBOM algorithm identifier normalization for registry-ready imports
 - config-driven default output paths
 
-## MVP scope
+## Current scope
 
-The current MVP reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, reviews evidence quality, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
+QSTriage reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, reviews evidence quality, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
 
 No production systems are touched.
 No certificates are rotated.
@@ -182,7 +182,7 @@ Use configuration defaults:
 qstriage report examples/sample_inventory.yaml --config examples/qstriage.yaml
 ```
 
-## MVP flow
+## Current workflow
 
 ```text
 inventory -> dependency graph -> explainable scoring -> impact simulation -> narrative report -> structured exports
@@ -212,7 +212,7 @@ The generated report includes:
 
 ## Project status
 
-QSTriage is currently an MVP prototype for local analysis, planning, and auditable PQC decision records. It is not a production migration orchestrator.
+QSTriage is an early public release for local cryptographic analysis, PQC migration planning, and auditable decision records. It is not a production migration orchestrator.
 
 ## Policy packs and policy evaluation
 
@@ -227,7 +227,7 @@ Commands:
 
 Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.
 
-In v0.9.0, each PDR record includes `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for that asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
+Current PDR records include `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for each asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
 
 ## License
 
