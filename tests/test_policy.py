@@ -219,7 +219,7 @@ def test_builtin_policy_registry_lists_nist_pqc_basic() -> None:
     packs = list_policy_packs()
 
     assert [pack.policy_pack_id for pack in packs] == ["nist-pqc-basic"]
-    assert packs[0].version == "0.1"
+    assert packs[0].version == "0.2"
     assert packs[0].title == "NIST PQC Basic"
 
 
@@ -270,3 +270,39 @@ def test_unknown_policy_pack_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="Unknown policy pack"):
         get_policy_pack("unknown-pack")
+
+def test_builtin_policy_pack_uses_executable_asset_condition_keys() -> None:
+    from qstriage.policy import get_policy_pack
+
+    pack = get_policy_pack("nist-pqc-basic")
+    rules = {rule.rule_id: rule for rule in pack.rules}
+
+    assert rules[
+        "quantum_vulnerable_public_key_requires_pqc_migration_review"
+    ].applicability.conditions == {"quantum_status": "quantum_vulnerable"}
+
+    assert rules[
+        "standardized_pqc_can_be_retained_with_operational_review"
+    ].applicability.conditions == {"standard_status": "standardized_pqc"}
+
+    assert rules[
+        "unknown_algorithm_requires_manual_crypto_review"
+    ].applicability.conditions == {"algorithm_family": "unknown"}
+
+    assert rules[
+        "long_retention_sensitive_data_raises_priority"
+    ].applicability.conditions == {
+        "data_class_sensitivity": "sensitive",
+        "retention_years": ">= long_retention_years",
+    }
+
+    assert rules[
+        "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority"
+    ].applicability.conditions == {
+        "quantum_status": "quantum_vulnerable",
+        "exposure_category": ["public", "partner"],
+    }
+
+    assert rules[
+        "ml_kem_usage_requires_key_establishment_context"
+    ].applicability.conditions == {"algorithm_family": "ML-KEM"}

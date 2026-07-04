@@ -385,7 +385,7 @@ def test_policy_list_command_shows_builtin_policy_pack() -> None:
     assert "QSTriage Policy Packs" in result.output
     assert "nist-pqc-basic" in result.output
     assert "NIST PQC Basic" in result.output
-    assert "0.1" in result.output
+    assert "0.2" in result.output
 
 
 def test_policy_show_command_prints_policy_pack_json() -> None:
@@ -393,7 +393,7 @@ def test_policy_show_command_prints_policy_pack_json() -> None:
 
     assert result.exit_code == 0
     assert '"policy_pack_id": "nist-pqc-basic"' in result.output
-    assert '"version": "0.1"' in result.output
+    assert '"version": "0.2"' in result.output
     assert '"policy_pack_hash": "sha256:' in result.output
     assert "NIST-FIPS-203" in result.output
     assert "minimum_decision_grade_confidence" in result.output

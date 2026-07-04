@@ -211,7 +211,7 @@ def _ensure_unique(values: list[str], label: str) -> None:
 
 
 BUILTIN_POLICY_PACK_ID = "nist-pqc-basic"
-BUILTIN_POLICY_PACK_VERSION = "0.1"
+BUILTIN_POLICY_PACK_VERSION = "0.2"
 
 
 def get_policy_pack(policy_pack_id: str = BUILTIN_POLICY_PACK_ID) -> PolicyPack:
@@ -374,10 +374,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             ),
             applicability=PolicyApplicability(
                 target=PolicyApplicabilityTarget.asset,
-                conditions={
-                    "primitive": "public_key",
-                    "quantum_status": "quantum_vulnerable",
-                },
+                conditions={"quantum_status": "quantum_vulnerable"},
             ),
             severity=PolicySeverity.high,
             effects=[
@@ -405,7 +402,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             ),
             applicability=PolicyApplicability(
                 target=PolicyApplicabilityTarget.asset,
-                conditions={"quantum_status": "standardized_pqc"},
+                conditions={"standard_status": "standardized_pqc"},
             ),
             severity=PolicySeverity.info,
             effects=[
@@ -433,7 +430,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             description="Blocks decision-grade treatment when the algorithm is unknown.",
             applicability=PolicyApplicability(
                 target=PolicyApplicabilityTarget.asset,
-                conditions={"algorithm": "unknown"},
+                conditions={"algorithm_family": "unknown"},
             ),
             severity=PolicySeverity.critical,
             effects=[
@@ -543,7 +540,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             applicability=PolicyApplicability(
                 target=PolicyApplicabilityTarget.asset,
                 conditions={
-                    "data_class": "sensitive",
+                    "data_class_sensitivity": "sensitive",
                     "retention_years": ">= long_retention_years",
                 },
             ),
@@ -576,7 +573,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
                 target=PolicyApplicabilityTarget.asset,
                 conditions={
                     "quantum_status": "quantum_vulnerable",
-                    "exposure": ["public", "partner"],
+                    "exposure_category": ["public", "partner"],
                 },
             ),
             severity=PolicySeverity.high,
@@ -607,7 +604,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             ),
             applicability=PolicyApplicability(
                 target=PolicyApplicabilityTarget.asset,
-                conditions={"algorithm": "ML-KEM"},
+                conditions={"algorithm_family": "ML-KEM"},
             ),
             severity=PolicySeverity.medium,
             effects=[
