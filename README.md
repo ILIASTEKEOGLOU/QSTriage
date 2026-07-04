@@ -185,7 +185,7 @@ qstriage report examples/sample_inventory.yaml --config examples/qstriage.yaml
 ## Current workflow
 
 ```text
-inventory -> dependency graph -> explainable scoring -> impact simulation -> narrative report -> structured exports
+inventory/CBOM -> algorithm classification -> evidence review -> scoring -> policy evaluation -> PDR -> impact simulation -> report/export
 ```
 
 ## Example output
