@@ -166,6 +166,111 @@ def test_pdr_policy_context_comes_from_builtin_policy_pack() -> None:
     assert document.records[0].policy_context == document.policy_context
 
 
+def test_pdr_records_include_policy_evaluation_metadata_from_policy_context() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+
+    for record in document.records:
+        assert record.policy_evaluation.policy_pack_id == (
+            document.policy_context.policy_pack_id
+        )
+        assert record.policy_evaluation.policy_pack_version == (
+            document.policy_context.policy_pack_version
+        )
+        assert record.policy_evaluation.policy_pack_hash == (
+            document.policy_context.policy_pack_hash
+        )
+
+
+def test_public_api_gateway_pdr_includes_asset_level_policy_rules() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+    record_by_asset = {record.observed_state.asset_id: record for record in document.records}
+
+    gateway_record = record_by_asset["public-api-gateway"]
+
+    assert {
+        "quantum_vulnerable_public_key_requires_pqc_migration_review",
+        "long_retention_sensitive_data_raises_priority",
+        "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+    }.issubset(gateway_record.policy_evaluation.applied_rule_ids)
+    assert "long_retention_years" in gateway_record.policy_evaluation.thresholds_applied
+
+
+def test_ml_kem_cbom_pdr_includes_asset_level_policy_rules() -> None:
+    inventory = import_cbom_inventory(SAMPLE_CBOM)
+
+    document = generate_pdr_document(
+        inventory,
+        source_path=SAMPLE_CBOM,
+        source_type="cyclonedx_cbom",
+        source_version="1.6",
+    )
+    record_by_asset = {record.observed_state.asset_id: record for record in document.records}
+
+    ml_kem_record = record_by_asset["crypto-ml-kem-768"]
+
+    assert {
+        "standardized_pqc_can_be_retained_with_operational_review",
+        "ml_kem_usage_requires_key_establishment_context",
+    }.issubset(ml_kem_record.policy_evaluation.applied_rule_ids)
+
+
+def test_unknown_algorithm_pdr_includes_manual_review_policy_evaluation() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="unknown-crypto",
+                name="Unknown Crypto Asset",
+                environment="production",
+                asset_type="service",
+                protocol="tls",
+                algorithm="MysteryCrypto",
+                key_size_bits=None,
+                data_class="customer_pii",
+                retention_years=10,
+                exposure="public",
+                criticality="high",
+                local_blast_radius="high",
+                migration_effort="low",
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    document = generate_pdr_document(inventory)
+    record = document.records[0]
+
+    assert "unknown_algorithm_requires_manual_crypto_review" in (
+        record.policy_evaluation.applied_rule_ids
+    )
+    assert record.policy_evaluation.human_review_required is True
+
+
+def test_pdr_policy_evaluation_findings_are_scoped_to_record_asset() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+
+    for record in document.records:
+        assert record.policy_evaluation.findings
+        for finding in record.policy_evaluation.findings:
+            assert finding.asset_id == record.observed_state.asset_id
+
+def test_pdr_policy_context_remains_document_level_provenance_only() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+    policy_context_fields = type(document.policy_context).model_fields
+
+    assert document.records[0].policy_context == document.policy_context
+    assert "applied_rule_ids" not in policy_context_fields
+    assert "policy_findings" not in policy_context_fields
+
+
 def test_pdr_rejects_policy_pack_version_mismatch() -> None:
     import pytest
 
@@ -178,6 +283,7 @@ def test_pdr_rejects_policy_pack_version_mismatch() -> None:
             policy_pack_id="nist-pqc-basic",
             policy_pack_version="999.0",
         )
+
 
 def test_pdr_hashes_are_stable_for_relative_and_absolute_source_paths() -> None:
     inventory = load_inventory(SAMPLE_INVENTORY)

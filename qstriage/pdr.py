@@ -13,6 +13,9 @@ from qstriage.models import CryptographicAsset, Inventory
 from qstriage.policy import (
     BUILTIN_POLICY_PACK_ID,
     BUILTIN_POLICY_PACK_VERSION,
+    PolicyEvaluationResult,
+    PolicyEvaluator,
+    PolicyPack,
     get_policy_pack,
 )
 from qstriage.scoring import ScoreResult, score_inventory
@@ -145,6 +148,7 @@ class PQCDecisionRecord(BaseModel):
     engine: PDREngine
     input_snapshot: InputSnapshot
     policy_context: PolicyContext
+    policy_evaluation: PolicyEvaluationResult
     observed_state: ObservedState
     evidence_quality: EvidenceQuality
     evidence_review: EvidenceReview
@@ -184,7 +188,8 @@ def generate_pdr_document(
         source_type=source_type,
         source_version=source_version,
     )
-    policy_context = _build_policy_context(policy_pack_id, policy_pack_version)
+    policy_pack = _load_policy_pack(policy_pack_id, policy_pack_version)
+    policy_context = _build_policy_context(policy_pack)
     run_id = _run_id(input_snapshot, policy_context)
     lineage_id = _lineage_id(input_snapshot)
     score_by_asset = {result.asset_id: result for result in score_inventory(inventory)}
@@ -198,6 +203,7 @@ def generate_pdr_document(
             lineage_id=lineage_id,
             input_snapshot=input_snapshot,
             policy_context=policy_context,
+            policy_pack=policy_pack,
             previous_record_hash=(
                 previous_record_hashes or {}
             ).get(asset.id),
@@ -225,9 +231,16 @@ def _build_record(
     lineage_id: str,
     input_snapshot: InputSnapshot,
     policy_context: PolicyContext,
+    policy_pack: PolicyPack,
     previous_record_hash: str | None,
 ) -> PQCDecisionRecord:
     classification = classify_algorithm(asset.algorithm)
+    policy_evaluation = PolicyEvaluator.evaluate_asset(
+        asset,
+        policy_pack,
+        classification,
+        source_type=input_snapshot.source_type,
+    )
     evidence_review = review_asset_evidence(
         asset,
         source_type=input_snapshot.source_type,
@@ -261,6 +274,7 @@ def _build_record(
         engine=PDREngine(),
         input_snapshot=input_snapshot,
         policy_context=policy_context,
+        policy_evaluation=policy_evaluation,
         observed_state=_observed_state(asset, classification),
         evidence_quality=evidence_quality,
         evidence_review=evidence_review,
@@ -309,15 +323,18 @@ def _build_input_snapshot(
     )
 
 
-def _build_policy_context(policy_pack_id: str, policy_pack_version: str) -> PolicyContext:
+def _load_policy_pack(policy_pack_id: str, policy_pack_version: str) -> PolicyPack:
     policy_pack = get_policy_pack(policy_pack_id)
-
     if policy_pack.version != policy_pack_version:
         raise ValueError(
             f"Policy pack '{policy_pack_id}' version mismatch: "
             f"requested {policy_pack_version}, available {policy_pack.version}"
         )
 
+    return policy_pack
+
+
+def _build_policy_context(policy_pack: PolicyPack) -> PolicyContext:
     return PolicyContext(
         policy_pack_id=policy_pack.policy_pack_id,
         policy_pack_version=policy_pack.version,
