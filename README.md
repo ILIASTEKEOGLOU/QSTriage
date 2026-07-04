@@ -147,7 +147,17 @@ Generate a PDR from CycloneDX CBOM crypto evidence:
 qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
 ```
 
-A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, asset-level policy evaluation, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+
+### PDR output contract
+
+QSTriage treats the PDR JSON document as a documented, evolving decision artifact.
+
+The public semantic contract includes the top-level PDR document, `policy_context`, `records`, per-record `policy_evaluation`, observed crypto state, evidence review, decision state, assumptions, and record/document integrity hashes.
+
+Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields is treated as a breaking change.
+
+Exact `document_hash` and `record_hash` values are not guaranteed to remain the same across QSTriage versions. They are deterministic for the same QSTriage version, input snapshot, policy pack, and generated PDR content.
 
 ## Standards-aware classification
 
