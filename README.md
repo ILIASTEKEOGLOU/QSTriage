@@ -1,5 +1,7 @@
 # QSTriage
 
+[![CI](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/ci.yml/badge.svg)](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/ci.yml)
+
 **QSTriage — Cryptographic Policy & Justification Engine**
 
 Cryptographic migration is not a scanner problem.
