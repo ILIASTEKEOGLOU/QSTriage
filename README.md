@@ -184,3 +184,9 @@ Commands:
 Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.
 
 In v0.9.0, each PDR record includes `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for that asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
+
+## License
+
+Copyright 2026 Ilias Tekeoglou.
+
+QSTriage is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
