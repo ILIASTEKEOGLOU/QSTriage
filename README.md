@@ -2,11 +2,18 @@
 
 **QSTriage — Cryptographic Policy & Justification Engine**
 
-QSTriage is a local-first command line tool for post-quantum cryptography migration planning and governance. It consumes QSTriage inventories or CycloneDX CBOM crypto evidence and produces auditable PQC Decision Records.
+Cryptographic migration is not a scanner problem.
 
-It turns cryptographic inventories into:
+A scanner can tell you where RSA is. It cannot tell you which decision must be made first, which exception is acceptable, or why a risky asset was allowed to remain unchanged.
+
+QSTriage turns cryptographic inventory and CycloneDX CBOM crypto evidence into auditable post-quantum cryptography decision records.
+
+It is local-first, deterministic, and designed for judgment before automation.
+
+QSTriage currently produces:
 
 - PQC Decision Record (PDR) JSON documents
+- asset-level policy evaluation with applied rule IDs, findings, standards, and thresholds
 - dependency-aware risk scores
 - graph-amplified blast-radius analysis
 - hybrid PQC migration impact warnings
@@ -29,19 +36,46 @@ No automatic rollout is performed.
 
 The first goal is judgment before automation.
 
-## Install for local development
+## Quickstart
+
+From a fresh clone, create and activate a virtual environment for your platform.
+
+Windows Git Bash:
 
 ```bash
-py -3.11 -m venv .venv
+python -m venv .venv
 source .venv/Scripts/activate
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
 ```
 
-## Run tests
+Linux/macOS:
 
 ```bash
-pytest
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Then install QSTriage and run a small smoke path:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e .
+python -m qstriage.cli version
+python -m qstriage.cli policy list
+python -m qstriage.cli pdr generate examples/sample_inventory.yaml --output reports/pdr.json
+```
+
+Expected result: QSTriage prints its version, lists the built-in `nist-pqc-basic` policy pack, and writes a PDR JSON document under `reports/`.
+
+The installed `qstriage` console command is also available after installation. The `python -m qstriage.cli` form is shown because it is explicit and works reliably in local virtual environments.
+
+## Developer setup
+
+Create and activate a virtual environment as above, then install the development extra and run tests:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+python -m pytest
 ```
 
 ## CLI usage
@@ -113,7 +147,17 @@ Generate a PDR from CycloneDX CBOM crypto evidence:
 qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
 ```
 
-A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, asset-level policy evaluation, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+
+### PDR output contract
+
+QSTriage treats the PDR JSON document as a documented, evolving decision artifact.
+
+The public semantic contract includes the top-level PDR document, `policy_context`, `records`, per-record `policy_evaluation`, observed crypto state, evidence review, decision state, assumptions, and record/document integrity hashes.
+
+Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields is treated as a breaking change.
+
+Exact `document_hash` and `record_hash` values are not guaranteed to remain the same across QSTriage versions. They are deterministic for the same QSTriage version, input snapshot, policy pack, and generated PDR content.
 
 ## Standards-aware classification
 
@@ -184,3 +228,9 @@ Commands:
 Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.
 
 In v0.9.0, each PDR record includes `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for that asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
+
+## License
+
+Copyright 2026 Ilias Tekeoglou.
+
+QSTriage is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).

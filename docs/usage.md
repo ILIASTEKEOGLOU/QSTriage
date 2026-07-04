@@ -100,7 +100,27 @@ Generate a PDR directly from CycloneDX CBOM JSON crypto evidence:
 qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
 ```
 
-The PDR JSON document is the stable decision artifact. It includes input snapshot metadata, policy context, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+The PDR JSON document is the documented decision artifact. It includes input snapshot metadata, policy context, asset-level policy evaluation, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+
+### PDR output contract
+
+QSTriage treats PDR JSON as a documented, evolving contract rather than an internal debug dump.
+
+The public semantic contract includes:
+
+- the top-level PDR document
+- `policy_context` as document-level policy pack provenance
+- `records` as asset-level decision records
+- per-record `policy_evaluation` with applied rules, findings, standards, thresholds, and review status
+- observed cryptographic state
+- evidence quality and evidence review
+- decision confidence and decision-grade status
+- mission context, trade-offs, assumptions, and human-review state
+- `document_hash` and per-record `record_integrity`
+
+Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields is treated as a breaking change.
+
+Exact hash values are not a cross-version compatibility promise. They are deterministic for the same QSTriage version, input snapshot, policy pack, and generated PDR content.
 
 ## Review decision context
 
