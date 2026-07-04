@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from qstriage import __version__
 from qstriage.cbom import import_cbom_inventory
 from qstriage.evidence import DecisionGrade
 from qstriage.models import CryptographicAsset, Inventory, load_inventory
@@ -24,6 +25,14 @@ def test_generate_pdr_document_creates_one_record_per_asset() -> None:
     assert document.input_snapshot.source_hash.startswith("sha256:")
     assert document.policy_context.policy_pack_id == "nist-pqc-basic"
     assert document.document_hash.startswith("sha256:")
+
+
+def test_pdr_engine_version_uses_package_version() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+
+    assert document.records[0].engine.version == __version__
 
 
 def test_pdr_record_hash_is_deterministic_for_same_input() -> None:

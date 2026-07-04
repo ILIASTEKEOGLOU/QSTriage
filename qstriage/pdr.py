@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from qstriage import __version__
 from qstriage.evidence import EvidenceReview, review_asset_evidence
 from qstriage.models import CryptographicAsset, Inventory
 from qstriage.policy import (
@@ -20,7 +21,7 @@ from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 PDR_VERSION = "0.1"
 ENGINE_NAME = "QSTriage"
-ENGINE_VERSION = "0.8.0"
+ENGINE_VERSION = __version__
 
 DEFAULT_POLICY_PACK_ID = BUILTIN_POLICY_PACK_ID
 DEFAULT_POLICY_PACK_VERSION = BUILTIN_POLICY_PACK_VERSION

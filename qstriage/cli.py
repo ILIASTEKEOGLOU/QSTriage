@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 
+from qstriage import __version__
 from qstriage.cbom import import_cbom_inventory, load_cbom_json, write_imported_inventory
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
@@ -196,7 +197,7 @@ def main() -> None:
 @app.command()
 def version() -> None:
     """Show QSTriage version."""
-    typer.echo("QSTriage 0.8.0")
+    typer.echo(f"QSTriage {__version__}")
 
 
 @app.command("validate")
