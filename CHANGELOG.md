@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased - v1.1A CBOM Compatibility Evidence
+
+### Added
+
+- Added an IBM-style CBOM fixture using `bomFormat: "CBOM"` and `type: "crypto-asset"` components.
+- Added compatibility tests covering CBOM import, CLI import, evidence review, and report generation for the IBM-style fixture.
+- Added regression coverage showing that `cryptoProperties`-bearing CBOM components are imported even when the component type is `crypto-asset` rather than `cryptographic-asset`.
+
+### Validated
+
+- Confirmed IBM-style AES and TLS v1.2 crypto assets import into a valid QSTriage inventory.
+- Confirmed imported CBOM assets can pass through validation, scoring, evidence review, and report generation.
+- Confirmed local full test suite passes with 156 tests.
+
+### Known limitations
+
+- CBOM dependency relationships are not mapped into QSTriage blast-radius dependencies.
+- CBOM protocol assets currently fall back into the QSTriage `algorithm` field.
+- Protocol assets such as `tlsv12` therefore still require normalization in a future track.
+
+### Scope
+
+- No engine behavior changes.
+- No policy changes.
+- No importer behavior changes.
+- No PDR schema changes.
+- No scoring changes.
+
+
 ## v1.0.1 - Public Trust Infrastructure
 
 ### Added
