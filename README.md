@@ -17,6 +17,7 @@ QSTriage currently produces:
 - PQC Decision Record (PDR) JSON documents
 - asset-level policy evaluation with applied rule IDs, findings, standards, and thresholds
 - dependency-aware risk scores
+- documented deterministic scoring rationale
 - graph-amplified blast-radius analysis
 - hybrid PQC migration impact warnings
 - narrative Markdown migration reports
@@ -31,6 +32,8 @@ QSTriage currently produces:
 ## Current scope
 
 QSTriage reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, reviews evidence quality, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
+
+Scoring is documented as a deterministic planning heuristic, not as an empirical probability or actuarial risk model. See [Scoring Rationale](docs/scoring-rationale.md).
 
 No production systems are touched.
 No certificates are rotated.
