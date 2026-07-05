@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v1.1B CBOM Protocol Asset Normalization
+
+### Changed
+
+- Normalized CBOM protocol-only assets so protocol names are preserved in the QSTriage `protocol` field.
+- Protocol-only CBOM assets without `algorithmProperties` now import with `algorithm: "unknown"` instead of falling back to the component name.
+- CBOM import notes now preserve `assetType=protocol` metadata for review traceability.
+
+### Validated
+
+- IBM-style CBOM compatibility fixture now confirms `tlsv12` is treated as protocol context, not as an algorithm family.
+- Evidence review remains conservative: protocol-only assets without algorithm evidence still trigger manual crypto review.
+- Full local test suite passed with 156 tests.
+
+### Scope
+
+- No standards registry changes.
+- No scoring changes.
+- No policy changes.
+- No PDR schema changes.
+- No release/tag change.
+
 ## Unreleased - v1.1A CBOM Compatibility Evidence
 
 ### Added
