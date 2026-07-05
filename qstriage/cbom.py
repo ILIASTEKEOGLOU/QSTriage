@@ -60,13 +60,19 @@ def _is_cryptographic_asset(component: dict[str, Any]) -> bool:
 def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
     crypto_properties = component.get("cryptoProperties") or {}
     algorithm_properties = crypto_properties.get("algorithmProperties") or {}
+    protocol_properties = crypto_properties.get("protocolProperties") or {}
+    asset_type = _string_or_none(crypto_properties.get("assetType"))
 
-    algorithm = _cbom_algorithm_identifier(algorithm_properties, component)
-
-    primitive = _first_non_empty(
-        algorithm_properties.get("primitive"),
-        crypto_properties.get("assetType"),
-        "unknown",
+    algorithm = _cbom_algorithm_identifier(
+        algorithm_properties,
+        component,
+        asset_type=asset_type,
+    )
+    protocol = _cbom_protocol_identifier(
+        asset_type,
+        protocol_properties,
+        algorithm_properties,
+        component,
     )
 
     return CryptographicAsset(
@@ -80,7 +86,7 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
             )
         ),
         asset_type="cbom_cryptographic_asset",
-        protocol=str(primitive),
+        protocol=str(protocol),
         algorithm=str(algorithm),
         key_size_bits=_extract_key_size_bits(algorithm_properties, str(algorithm)),
         data_class="unknown",
@@ -89,13 +95,15 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
         criticality="medium",
         local_blast_radius="medium",
         migration_effort="medium",
-        notes=_build_notes(algorithm_properties),
+        notes=_build_notes(crypto_properties, algorithm_properties),
     )
 
 
 def _cbom_algorithm_identifier(
     algorithm_properties: dict[str, Any],
     component: dict[str, Any],
+    *,
+    asset_type: str | None = None,
 ) -> str:
     parameter_set = _string_or_none(algorithm_properties.get("parameterSetIdentifier"))
     algorithm = _string_or_none(algorithm_properties.get("algorithm"))
@@ -114,10 +122,39 @@ def _cbom_algorithm_identifier(
     if family:
         return _normalize_cbom_algorithm_string(family, family, key_size_bits)
 
+    if asset_type == "protocol":
+        return "unknown"
+
     if component_name:
         return _normalize_cbom_algorithm_string(component_name, None, key_size_bits)
 
     return "unknown"
+
+
+def _cbom_protocol_identifier(
+    asset_type: str | None,
+    protocol_properties: dict[str, Any],
+    algorithm_properties: dict[str, Any],
+    component: dict[str, Any],
+) -> str:
+    if asset_type == "protocol":
+        return str(
+            _first_non_empty(
+                protocol_properties.get("protocol"),
+                protocol_properties.get("name"),
+                component.get("name"),
+                asset_type,
+                "protocol",
+            )
+        )
+
+    return str(
+        _first_non_empty(
+            algorithm_properties.get("primitive"),
+            asset_type,
+            "unknown",
+        )
+    )
 
 
 def _normalize_cbom_algorithm_string(
@@ -192,8 +229,15 @@ def _extract_key_size_bits(
     return None
 
 
-def _build_notes(algorithm_properties: dict[str, Any]) -> str:
+def _build_notes(
+    crypto_properties: dict[str, Any],
+    algorithm_properties: dict[str, Any],
+) -> str:
     details = []
+
+    asset_type = crypto_properties.get("assetType")
+    if asset_type is not None:
+        details.append(f"assetType={asset_type}")
 
     for key in (
         "primitive",

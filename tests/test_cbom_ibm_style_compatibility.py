@@ -26,8 +26,9 @@ def test_ibm_style_cbom_crypto_asset_components_import() -> None:
     assert "primitive=ae" in aes_asset.notes
 
     assert tls_asset.id == "oid-1.3.18.0.2.32.104"
-    assert tls_asset.protocol == "protocol"
-    assert tls_asset.algorithm == "tlsv12"
+    assert tls_asset.protocol == "tlsv12"
+    assert tls_asset.algorithm == "unknown"
+    assert "assetType=protocol" in tls_asset.notes
     assert "CBOM dependency relationships are not imported" in tls_asset.notes
 
 
@@ -99,5 +100,5 @@ def test_ibm_style_cbom_downstream_flow_documents_current_limitations(
 
     assert "Assets analyzed: 2" in report
     assert "CBOM dependency relationships" in report
-    assert "Input algorithm: `tlsv12`" in report
+    assert "Input algorithm: `unknown`" in report
     assert "Registry action: manual_review_required" in report
