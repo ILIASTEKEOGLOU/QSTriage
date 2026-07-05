@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased - v1.1E-A Context Normalization Contract
+
+### Added
+- Added legacy context normalization contract tests for existing data class and exposure behavior.
+- Added current-divergence tests documenting where policy-derived context, scoring, and simulator behavior do not yet share the same vocabulary interpretation.
+
+### Scope
+- Tests only.
+- No production code changes.
+- No scoring weight changes.
+- No simulator behavior changes.
+- No PDR schema changes.
+- Shared normalization remains a follow-up implementation track.
+
 ## Unreleased - v1.1D Policy Derived-Facts Normalization
 
 ### Added
