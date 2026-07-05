@@ -341,6 +341,9 @@ def _derive_data_class_sensitivity(data_class: str) -> str:
             "payment",
             "personal",
             "customer",
+            "gdpr",
+            "cardholder",
+            "patient",
         )
     ):
         return "sensitive"
@@ -351,13 +354,44 @@ def _derive_data_class_sensitivity(data_class: str) -> str:
 def _derive_exposure_category(exposure: str) -> str:
     normalized = _normalize_policy_text(exposure)
 
-    if normalized in {"public_internet", "internet", "public"}:
+    if normalized in {
+        "public_internet",
+        "internet",
+        "public",
+        "public_facing",
+        "internet_facing",
+        "external",
+        "external_facing",
+        "dmz",
+        "perimeter",
+        "edge",
+    }:
         return "public"
-    if normalized in {"partner_network", "partner"}:
+    if normalized in {
+        "partner_network",
+        "partner",
+        "partner_facing",
+        "third_party",
+        "vendor",
+        "supplier",
+    }:
         return "partner"
-    if normalized == "internal":
+    if normalized in {
+        "internal",
+        "internal_only",
+        "private_network",
+        "corp",
+        "corporate",
+        "lan",
+    }:
         return "internal"
-    if normalized in {"restricted_network", "restricted"}:
+    if normalized in {
+        "restricted_network",
+        "restricted",
+        "offline",
+        "air_gapped",
+        "segmented",
+    }:
         return "restricted"
     if normalized == "isolated":
         return "isolated"
@@ -379,7 +413,7 @@ def _derive_business_context(asset: Any) -> str:
 
 
 def _normalize_policy_text(value: str | None) -> str:
-    return (value or "").strip().lower()
+    return (value or "").strip().lower().replace("-", "_")
 
 
 def _is_unknown_like(value: str) -> bool:
