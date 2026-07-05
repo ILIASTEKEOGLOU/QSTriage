@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased - v1.1C Scoring Rationale
+
+### Added
+
+- Added `docs/scoring-rationale.md` to document QSTriage priority scores as deterministic planning heuristics.
+- Clarified that scores are not empirical probability estimates, actuarial risk measurements, or compliance certifications.
+- Documented score components, numeric-weight interpretation, and 0-100 scaling.
+- Linked the scoring rationale from README and usage documentation.
+
+### Scope
+
+- Documentation only.
+- No scoring weight changes.
+- No engine changes.
+- No policy changes.
+- No PDR schema changes.
+- No release/tag change.
+
 ## Unreleased - v1.1B CBOM Protocol Asset Normalization
 
 ### Changed

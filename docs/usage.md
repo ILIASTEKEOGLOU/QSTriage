@@ -146,6 +146,8 @@ rank -> asset -> score -> band -> recommended action
 
 The score is explainable and combines standards-aware cryptographic risk, shelf-life risk, exposure, criticality, graph-amplified blast radius, deadline pressure, and migration effort.
 
+Scores are deterministic planning heuristics. They are not empirical probability estimates, actuarial risk measurements, or compliance certifications. See [Scoring Rationale](scoring-rationale.md).
+
 ## Algorithm classification
 
 QSTriage includes a standards-backed algorithm registry used by scoring and reports.
