@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased - v1.1D Policy Derived-Facts Normalization
+
+### Added
+- Added policy normalization tests for realistic data class and exposure vocabulary.
+
+### Changed
+- Normalized policy text separators so hyphen and underscore variants are interpreted consistently.
+- Extended policy-derived data sensitivity detection for GDPR, cardholder, and patient context.
+- Extended policy exposure categorization for common public, partner, internal, and restricted exposure terms.
+
+### Scope
+- Policy layer only.
+- No scoring weight changes.
+- No simulator changes.
+- No PDR schema changes.
+- Cross-module context normalization remains a follow-up track.
+
 ## Unreleased - v1.1C Scoring Rationale
 
 ### Added
