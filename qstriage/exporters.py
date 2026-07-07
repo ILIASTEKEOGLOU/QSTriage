@@ -137,7 +137,22 @@ def _write_csv(destination: Path, rows: list[dict[str, Any]]) -> None:
         destination.write_text("", encoding="utf-8")
         return
 
+    safe_rows = [
+        {key: _csv_safe_cell(value) for key, value in row.items()}
+        for row in rows
+    ]
+
     with destination.open("w", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=list(rows[0].keys()))
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(safe_rows)
+
+
+def _csv_safe_cell(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+
+    if value.startswith(("=", "+", "-", "@", "\t", "\r", "\n")):
+        return "'" + value
+
+    return value

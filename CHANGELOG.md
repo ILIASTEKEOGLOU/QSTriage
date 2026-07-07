@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased - CSV Export Formula Neutralization
+
+### Fixed
+- Neutralized spreadsheet formula injection risk in CSV score and simulation exports by ensuring formula-leading text values are treated as plain text by spreadsheet applications.
+
+### Added
+- Added regression coverage for values beginning with spreadsheet formula trigger characters (`=`, `+`, `-`, `@`, tab, carriage return, and line feed) across reachable asset, protocol, and scenario fields.
+- Added boundary coverage confirming that normal text, numeric CSV fields, and JSON score exports remain unchanged.
+
+### Scope
+- Limited to CSV output generation only.
+- No changes to inventory processing, scoring, simulation logic, JSON or PDR generation, reports, or schemas.
+
 ## Unreleased - v1.1F-A PDR PQC Evidence-Quality Normalization
 
 ### Fixed
