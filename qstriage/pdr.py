@@ -245,7 +245,7 @@ def _build_record(
         asset,
         source_type=input_snapshot.source_type,
     )
-    evidence_quality = _evidence_quality(asset)
+    evidence_quality = _evidence_quality(asset, classification)
     decision_confidence = _decision_confidence(
         asset,
         score,
@@ -362,7 +362,10 @@ def _observed_state(
     )
 
 
-def _evidence_quality(asset: CryptographicAsset) -> EvidenceQuality:
+def _evidence_quality(
+    asset: CryptographicAsset,
+    classification: AlgorithmClassification,
+) -> EvidenceQuality:
     missing = []
     limitations = []
 
@@ -375,7 +378,10 @@ def _evidence_quality(asset: CryptographicAsset) -> EvidenceQuality:
     if asset.exposure.strip().lower() == "unknown":
         missing.append("exposure_boundary")
 
-    if asset.key_size_bits is None and asset.algorithm.upper() not in {"ML-KEM", "ML-DSA", "SLH-DSA"}:
+    if (
+        asset.key_size_bits is None
+        and classification.algorithm_family not in {"ML-KEM", "ML-DSA", "SLH-DSA"}
+    ):
         missing.append("key_size_bits")
 
     if asset.asset_type == "cbom_cryptographic_asset":

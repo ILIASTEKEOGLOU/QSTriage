@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased - v1.1F-A PDR PQC Evidence-Quality Normalization
+
+### Fixed
+- Reused standards classification in PDR evidence-quality evaluation so parameterized standardized PQC identifiers are not incorrectly reported as missing `key_size_bits`.
+
+### Added
+- Added regression coverage for ML-KEM, ML-DSA, and SLH-DSA parameterized identifiers.
+- Added boundary-lock coverage preserving missing-key-size behavior for RSA and unknown algorithms.
+
+### Scope
+- PDR evidence-quality metadata only.
+- Scoring-derived confidence, priority scores, recommended actions, and the PDR schema are unchanged.
+- Epistemic action gating remains a separate follow-up design track.
+
 ## Unreleased - v1.1E-A Context Normalization Contract
 
 ### Added
