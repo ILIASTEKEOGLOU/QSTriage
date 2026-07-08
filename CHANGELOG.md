@@ -1,131 +1,57 @@
 # Changelog
 
-## Unreleased - CSV Export Formula Neutralization
+## Unreleased
 
-### Fixed
-- Neutralized spreadsheet formula injection risk in CSV score and simulation exports by ensuring formula-leading text values are treated as plain text by spreadsheet applications.
-
-### Added
-- Added regression coverage for values beginning with spreadsheet formula trigger characters (`=`, `+`, `-`, `@`, tab, carriage return, and line feed) across reachable asset, protocol, and scenario fields.
-- Added boundary coverage confirming that normal text, numeric CSV fields, and JSON score exports remain unchanged.
-
-### Scope
-- Limited to CSV output generation only.
-- No changes to inventory processing, scoring, simulation logic, JSON or PDR generation, reports, or schemas.
-
-## Unreleased - v1.1F-A PDR PQC Evidence-Quality Normalization
-
-### Fixed
-- Reused standards classification in PDR evidence-quality evaluation so parameterized standardized PQC identifiers are not incorrectly reported as missing `key_size_bits`.
-
-### Added
-- Added regression coverage for ML-KEM, ML-DSA, and SLH-DSA parameterized identifiers.
-- Added boundary-lock coverage preserving missing-key-size behavior for RSA and unknown algorithms.
-
-### Scope
-- PDR evidence-quality metadata only.
-- Scoring-derived confidence, priority scores, recommended actions, and the PDR schema are unchanged.
-- Epistemic action gating remains a separate follow-up design track.
-
-## Unreleased - v1.1E-A Context Normalization Contract
-
-### Added
-- Added legacy context normalization contract tests for existing data class and exposure behavior.
-- Added current-divergence tests documenting where policy-derived context, scoring, and simulator behavior do not yet share the same vocabulary interpretation.
-
-### Scope
-- Tests only.
-- No production code changes.
-- No scoring weight changes.
-- No simulator behavior changes.
-- No PDR schema changes.
-- Shared normalization remains a follow-up implementation track.
-
-## Unreleased - v1.1D Policy Derived-Facts Normalization
-
-### Added
-- Added policy normalization tests for realistic data class and exposure vocabulary.
-
-### Changed
-- Normalized policy text separators so hyphen and underscore variants are interpreted consistently.
-- Extended policy-derived data sensitivity detection for GDPR, cardholder, and patient context.
-- Extended policy exposure categorization for common public, partner, internal, and restricted exposure terms.
-
-### Scope
-- Policy layer only.
-- No scoring weight changes.
-- No simulator changes.
-- No PDR schema changes.
-- Cross-module context normalization remains a follow-up track.
-
-## Unreleased - v1.1C Scoring Rationale
+## v1.1.0 - 2026-07-08
 
 ### Added
 
-- Added `docs/scoring-rationale.md` to document QSTriage priority scores as deterministic planning heuristics.
-- Clarified that scores are not empirical probability estimates, actuarial risk measurements, or compliance certifications.
-- Documented score components, numeric-weight interpretation, and 0-100 scaling.
-- Linked the scoring rationale from README and usage documentation.
-
-### Scope
-
-- Documentation only.
-- No scoring weight changes.
-- No engine changes.
-- No policy changes.
-- No PDR schema changes.
-- No release/tag change.
-
-## Unreleased - v1.1B CBOM Protocol Asset Normalization
+- Added an IBM-style CBOM compatibility fixture using `bomFormat: "CBOM"` and `crypto-asset` components.
+- Confirmed the CBOM importer accepts `cryptoProperties`-bearing components even when typed `crypto-asset` rather than `cryptographic-asset`, covering IBM-style CBOM artifacts.
+- Added compatibility coverage for CBOM import, CLI workflows, evidence review, scoring, and report generation.
+- Added `docs/scoring-rationale.md` documenting priority scores as deterministic planning heuristics rather than probability estimates, actuarial measurements, compliance certifications, or empirical risk predictions.
+- Added policy normalization tests for realistic data-class and exposure vocabulary.
+- Added context-normalization contract tests covering existing data-class and exposure behavior.
+- Added divergence tests documenting where policy, scoring, and simulation do not yet share the same context vocabulary.
+- Added regression coverage for parameterized ML-KEM, ML-DSA, and SLH-DSA identifiers.
+- Added CSV export regression coverage for spreadsheet formula trigger characters across reachable asset, protocol, and scenario fields.
 
 ### Changed
 
-- Normalized CBOM protocol-only assets so protocol names are preserved in the QSTriage `protocol` field.
-- Protocol-only CBOM assets without `algorithmProperties` now import with `algorithm: "unknown"` instead of falling back to the component name.
+- Normalized CBOM protocol-only assets so protocol identifiers are preserved in the QSTriage `protocol` field.
+- Protocol-only assets without algorithm evidence now import with `algorithm: "unknown"` rather than treating the component or protocol name as an algorithm.
 - CBOM import notes now preserve `assetType=protocol` metadata for review traceability.
+- Normalized hyphen and underscore variants in policy-derived context.
+- Extended policy-derived data-sensitivity detection for GDPR, cardholder, and patient context.
+- Extended policy exposure categorization for common public, partner, internal, and restricted exposure terms.
+- Reused standards classification during PDR evidence-quality evaluation.
 
-### Validated
+### Fixed
 
-- IBM-style CBOM compatibility fixture now confirms `tlsv12` is treated as protocol context, not as an algorithm family.
-- Evidence review remains conservative: protocol-only assets without algorithm evidence still trigger manual crypto review.
-- Full local test suite passed with 156 tests.
+- Parameterized standardized PQC identifiers such as ML-KEM, ML-DSA, and SLH-DSA variants are no longer incorrectly reported as missing `key_size_bits`.
+- Protocol identifiers such as `tlsv12` are no longer represented as algorithm families during CBOM import.
+- CSV score and simulation exports now preserve formula-leading user-controlled values as plain spreadsheet text.
 
-### Scope
+### Security
 
-- No standards registry changes.
-- No scoring changes.
-- No policy changes.
-- No PDR schema changes.
-- No release/tag change.
+- Neutralized spreadsheet formula injection risk in analyst-facing CSV exports for reachable asset, protocol, scenario, and derived explanation fields.
+- Restricted the GitHub Actions `GITHUB_TOKEN` to read-only repository contents using explicit least-privilege workflow permissions.
 
-## Unreleased - v1.1A CBOM Compatibility Evidence
-
-### Added
-
-- Added an IBM-style CBOM fixture using `bomFormat: "CBOM"` and `type: "crypto-asset"` components.
-- Added compatibility tests covering CBOM import, CLI import, evidence review, and report generation for the IBM-style fixture.
-- Added regression coverage showing that `cryptoProperties`-bearing CBOM components are imported even when the component type is `crypto-asset` rather than `cryptographic-asset`.
-
-### Validated
+### Validation
 
 - Confirmed IBM-style AES and TLS v1.2 crypto assets import into a valid QSTriage inventory.
-- Confirmed imported CBOM assets can pass through validation, scoring, evidence review, and report generation.
-- Confirmed local full test suite passes with 156 tests.
+- Confirmed imported assets pass through validation, scoring, evidence review, and report generation.
+- Confirmed protocol-only and unknown-algorithm evidence continues to require conservative human review.
+- Confirmed normal CSV text, numeric CSV fields, and JSON score exports remain unchanged.
+- GitHub Actions validation passed after the CI permission restriction.
+- Full local test suite passes with 233 tests.
 
-### Known limitations
+### Known Limitations
 
-- CBOM dependency relationships are not mapped into QSTriage blast-radius dependencies.
-- CBOM protocol assets currently fall back into the QSTriage `algorithm` field.
-- Protocol assets such as `tlsv12` therefore still require normalization in a future track.
-
-### Scope
-
-- No engine behavior changes.
-- No policy changes.
-- No importer behavior changes.
-- No PDR schema changes.
-- No scoring changes.
-
+- CBOM dependency relationships are not yet mapped into QSTriage blast-radius dependencies.
+- Shared cross-module context normalization remains a follow-up implementation track.
+- Epistemic action gating and conflict resolution remain a separate post-v1.1.0 track.
+- Scoring weights, simulation behavior, and the PDR schema are unchanged.
 
 ## v1.0.1 - Public Trust Infrastructure
 

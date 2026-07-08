@@ -1,6 +1,6 @@
 [project]
 name = "qstriage"
-version = "1.0.1"
+version = "1.1.0"
 description = "Cryptographic Policy & Justification Engine"
 readme = "README.md"
 requires-python = ">=3.11"
