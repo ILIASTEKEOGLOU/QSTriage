@@ -18,6 +18,15 @@ from qstriage.policy import (
     _derive_data_class_sensitivity,
     _derive_exposure_category,
 )
+from qstriage.evidence import (
+    EvidenceCategory,
+    EvidenceFinding,
+    EvidenceProvenance,
+    EvidenceSeverity,
+    EvidenceState,
+    RelationshipCompleteness,
+    build_evidence_review,
+)
 from qstriage.models import CryptographicAsset, RiskLevel
 from qstriage.standards import classify_algorithm
 
@@ -486,19 +495,183 @@ def test_policy_evaluator_derives_asset_facts_deterministically() -> None:
     )
 
 
-def test_policy_evaluator_does_not_apply_non_asset_target_rules_yet() -> None:
-    result = _evaluate_asset(
-        _asset(
-            algorithm="AES-256",
-            data_class="internal",
-            retention_years=1,
-            exposure="internal",
-        )
+def _evaluate_with_evidence(
+    asset: CryptographicAsset,
+    *findings: EvidenceFinding,
+    source_type: str = "cyclonedx_cbom",
+) -> PolicyEvaluationResult:
+    from qstriage.policy import get_policy_pack
+
+    evidence_review = build_evidence_review(findings, asset_id=asset.id)
+    return PolicyEvaluator.evaluate_asset(
+        asset,
+        get_policy_pack("nist-pqc-basic"),
+        classify_algorithm(asset.algorithm),
+        source_type=source_type,
+        evidence_review=evidence_review,
     )
 
-    assert result.applied_rule_ids == []
-    assert {
+
+@pytest.mark.parametrize(
+    ("code", "category"),
+    [
+        ("defaulted_retention_years", EvidenceCategory.business_context),
+        ("defaulted_criticality", EvidenceCategory.supply_chain_context),
+        ("defaulted_local_blast_radius", EvidenceCategory.supply_chain_context),
+        ("defaulted_migration_effort", EvidenceCategory.supply_chain_context),
+    ],
+)
+def test_policy_evaluator_applies_cbom_defaulted_context_rule_for_supported_findings(
+    code: str,
+    category: EvidenceCategory,
+) -> None:
+    asset = _asset(algorithm="AES-256")
+    finding = EvidenceFinding(
+        code=code,
+        category=category,
+        severity=EvidenceSeverity.medium,
+        message="QSTriage supplied a defaulted CBOM context value.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.defaulted,
+        provenance=EvidenceProvenance.qstriage_default,
+    )
+
+    result = _evaluate_with_evidence(asset, finding)
+
+    assert "cbom_defaulted_context_blocks_decision_grade" in result.applied_rule_ids
+    assert "cbom_defaulted_context_blocks_decision_grade" in result.blocking_rule_ids
+
+
+def test_policy_evaluator_requires_expected_category_for_defaulted_context() -> None:
+    asset = _asset(algorithm="AES-256")
+    finding = EvidenceFinding(
+        code="defaulted_retention_years",
+        category=EvidenceCategory.supply_chain_context,
+        severity=EvidenceSeverity.medium,
+        message="The code is attached to the wrong evidence category.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.defaulted,
+        provenance=EvidenceProvenance.qstriage_default,
+    )
+
+    result = _evaluate_with_evidence(asset, finding)
+
+    assert "cbom_defaulted_context_blocks_decision_grade" not in result.applied_rule_ids
+
+
+def test_policy_evaluator_does_not_treat_unrelated_default_as_cbom_context() -> None:
+    asset = _asset(algorithm="AES-256")
+    finding = EvidenceFinding(
+        code="defaulted_unrelated_field",
+        category=EvidenceCategory.integrity_context,
+        severity=EvidenceSeverity.medium,
+        message="An unrelated value was defaulted.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.defaulted,
+        provenance=EvidenceProvenance.qstriage_default,
+    )
+
+    result = _evaluate_with_evidence(asset, finding)
+
+    assert "cbom_defaulted_context_blocks_decision_grade" not in result.applied_rule_ids
+
+
+def test_policy_evaluator_requires_default_state_and_qstriage_provenance() -> None:
+    asset = _asset(algorithm="AES-256")
+    declared = EvidenceFinding(
+        code="defaulted_retention_years",
+        category=EvidenceCategory.business_context,
+        severity=EvidenceSeverity.info,
+        message="Retention was declared by the user.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.declared,
+        provenance=EvidenceProvenance.user_declared,
+    )
+
+    result = _evaluate_with_evidence(asset, declared)
+
+    assert "cbom_defaulted_context_blocks_decision_grade" not in result.applied_rule_ids
+
+
+def test_policy_evaluator_applies_unknown_dependency_completeness_rule() -> None:
+    asset = _asset(algorithm="AES-256")
+    finding = EvidenceFinding(
+        code="unknown_dependency_completeness",
+        category=EvidenceCategory.dependency_context,
+        severity=EvidenceSeverity.high,
+        message="Dependency relationship completeness is unknown.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.unknown,
+        provenance=EvidenceProvenance.tool_generated,
+        relationship_completeness=RelationshipCompleteness.unknown,
+    )
+
+    result = _evaluate_with_evidence(asset, finding)
+
+    assert (
+        "unknown_dependency_completeness_blocks_decision_grade"
+        in result.applied_rule_ids
+    )
+
+
+def test_policy_evaluator_does_not_map_none_to_unknown_completeness() -> None:
+    asset = _asset(algorithm="AES-256")
+    finding = EvidenceFinding(
+        code="declared_no_dependencies",
+        category=EvidenceCategory.dependency_context,
+        severity=EvidenceSeverity.info,
+        message="The asset explicitly declares no dependencies.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.declared,
+        provenance=EvidenceProvenance.user_declared,
+        relationship_completeness=RelationshipCompleteness.none,
+    )
+
+    result = _evaluate_with_evidence(asset, finding, source_type="qstriage_inventory")
+
+    assert (
+        "unknown_dependency_completeness_blocks_decision_grade"
+        not in result.applied_rule_ids
+    )
+
+
+def test_policy_evaluator_preserves_pack_order_across_asset_and_evidence_targets() -> None:
+    asset = _asset(algorithm="MysteryCrypto-1")
+    defaulted = EvidenceFinding(
+        code="defaulted_retention_years",
+        category=EvidenceCategory.business_context,
+        severity=EvidenceSeverity.medium,
+        message="Retention was defaulted.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.defaulted,
+        provenance=EvidenceProvenance.qstriage_default,
+    )
+    dependency = EvidenceFinding(
+        code="unknown_dependency_completeness",
+        category=EvidenceCategory.dependency_context,
+        severity=EvidenceSeverity.high,
+        message="Dependency relationship completeness is unknown.",
+        asset_id=asset.id,
+        evidence_state=EvidenceState.unknown,
+        provenance=EvidenceProvenance.tool_generated,
+        relationship_completeness=RelationshipCompleteness.unknown,
+    )
+
+    result = _evaluate_with_evidence(asset, defaulted, dependency)
+
+    assert result.applied_rule_ids == [
+        "unknown_algorithm_requires_manual_crypto_review",
         "cbom_defaulted_context_blocks_decision_grade",
         "unknown_dependency_completeness_blocks_decision_grade",
-        "deprecated_or_disallowed_transition_status_requires_policy_finding",
-    }.isdisjoint(result.applied_rule_ids)
+    ]
+
+
+def test_policy_evaluator_keeps_unsupported_classification_rule_inactive() -> None:
+    asset = _asset(algorithm="AES-256")
+
+    result = _evaluate_with_evidence(asset)
+
+    assert (
+        "deprecated_or_disallowed_transition_status_requires_policy_finding"
+        not in result.applied_rule_ids
+    )

@@ -83,6 +83,50 @@ def test_cbom_imported_assets_have_low_evidence_and_human_review() -> None:
     assert rsa_record.decision.human_review_required is True
 
 
+def test_cbom_pdr_includes_evidence_review_policy_target_findings() -> None:
+    inventory = import_cbom_inventory(SAMPLE_CBOM)
+
+    document = generate_pdr_document(
+        inventory,
+        source_path=SAMPLE_CBOM,
+        source_type="cyclonedx_cbom",
+        source_version="1.6",
+    )
+
+    for record in document.records:
+        assert {
+            "cbom_defaulted_context_blocks_decision_grade",
+            "unknown_dependency_completeness_blocks_decision_grade",
+        }.issubset(record.policy_evaluation.applied_rule_ids)
+        assert {
+            "cbom_defaulted_context_blocks_decision_grade",
+            "unknown_dependency_completeness_blocks_decision_grade",
+        }.issubset(record.policy_evaluation.blocking_rule_ids)
+
+
+def test_cbom_pdr_policy_target_evaluation_is_deterministic() -> None:
+    inventory = import_cbom_inventory(SAMPLE_CBOM)
+
+    first = generate_pdr_document(
+        inventory,
+        source_path=SAMPLE_CBOM,
+        source_type="cyclonedx_cbom",
+        source_version="1.6",
+    )
+    second = generate_pdr_document(
+        inventory,
+        source_path=SAMPLE_CBOM,
+        source_type="cyclonedx_cbom",
+        source_version="1.6",
+    )
+
+    assert first.run_id == second.run_id
+    assert first.document_hash == second.document_hash
+    assert [record.record_integrity.record_hash for record in first.records] == [
+        record.record_integrity.record_hash for record in second.records
+    ]
+
+
 def test_standardized_ml_kem_cbom_asset_is_marked_as_existing_pqc_target() -> None:
     inventory = import_cbom_inventory(SAMPLE_CBOM)
 

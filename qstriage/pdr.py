@@ -235,15 +235,16 @@ def _build_record(
     previous_record_hash: str | None,
 ) -> PQCDecisionRecord:
     classification = classify_algorithm(asset.algorithm)
+    evidence_review = review_asset_evidence(
+        asset,
+        source_type=input_snapshot.source_type,
+    )
     policy_evaluation = PolicyEvaluator.evaluate_asset(
         asset,
         policy_pack,
         classification,
         source_type=input_snapshot.source_type,
-    )
-    evidence_review = review_asset_evidence(
-        asset,
-        source_type=input_snapshot.source_type,
+        evidence_review=evidence_review,
     )
     evidence_quality = _evidence_quality(asset, classification)
     decision_confidence = _decision_confidence(
