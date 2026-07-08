@@ -7,10 +7,25 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from qstriage.evidence import (
+    EvidenceCategory,
+    EvidenceProvenance,
+    EvidenceReview,
+    EvidenceState,
+    RelationshipCompleteness,
+)
+
 
 POLICY_PACK_SCHEMA_VERSION = "0.1"
 
 PolicyScalar = str | int | float | bool
+
+_CBOM_DEFAULTED_CONTEXT_FINDINGS = {
+    "defaulted_retention_years": EvidenceCategory.business_context,
+    "defaulted_criticality": EvidenceCategory.supply_chain_context,
+    "defaulted_local_blast_radius": EvidenceCategory.supply_chain_context,
+    "defaulted_migration_effort": EvidenceCategory.supply_chain_context,
+}
 
 
 class PolicySeverity(str, Enum):
@@ -204,12 +219,22 @@ class PolicyEvaluator:
         classification: Any,
         *,
         source_type: str = "qstriage_inventory",
+        evidence_review: EvidenceReview | None = None,
     ) -> PolicyEvaluationResult:
-        facts = _asset_policy_facts(
-            asset=asset,
-            classification=classification,
-            source_type=source_type,
-        )
+        facts_by_target = {
+            PolicyApplicabilityTarget.asset: _asset_policy_facts(
+                asset=asset,
+                classification=classification,
+                source_type=source_type,
+            ),
+        }
+        if evidence_review is not None:
+            facts_by_target[PolicyApplicabilityTarget.evidence_review] = (
+                _evidence_review_policy_facts(
+                    evidence_review=evidence_review,
+                    source_type=source_type,
+                )
+            )
         thresholds_by_id = {
             threshold.threshold_id: threshold for threshold in pack.thresholds
         }
@@ -220,7 +245,8 @@ class PolicyEvaluator:
         findings: list[PolicyFinding] = []
 
         for rule in pack.rules:
-            if rule.applicability.target != PolicyApplicabilityTarget.asset:
+            facts = facts_by_target.get(rule.applicability.target)
+            if facts is None:
                 continue
 
             matches, matched_threshold_ids = _rule_matches_facts(
@@ -281,6 +307,47 @@ def _asset_policy_facts(
         "business_context": _derive_business_context(asset),
         "source_type": source_type,
     }
+
+
+def _evidence_review_policy_facts(
+    *,
+    evidence_review: EvidenceReview,
+    source_type: str,
+) -> dict[str, Any]:
+    return {
+        "source_type": source_type,
+        "context": (
+            "defaulted"
+            if _has_supported_cbom_defaulted_context(evidence_review)
+            else None
+        ),
+        "relationship_completeness": (
+            "unknown"
+            if _has_unknown_relationship_completeness(evidence_review)
+            else None
+        ),
+    }
+
+
+def _has_supported_cbom_defaulted_context(
+    evidence_review: EvidenceReview,
+) -> bool:
+    return any(
+        _CBOM_DEFAULTED_CONTEXT_FINDINGS.get(finding.code) == finding.category
+        and finding.evidence_state == EvidenceState.defaulted
+        and finding.provenance == EvidenceProvenance.qstriage_default
+        for finding in evidence_review.findings
+    )
+
+
+def _has_unknown_relationship_completeness(
+    evidence_review: EvidenceReview,
+) -> bool:
+    return any(
+        finding.category == EvidenceCategory.dependency_context
+        and finding.relationship_completeness == RelationshipCompleteness.unknown
+        for finding in evidence_review.findings
+    )
 
 
 def _rule_matches_facts(
