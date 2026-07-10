@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from qstriage.context import (
+    ContextValueState,
+    is_cbom_imported_asset,
+    normalize_asset_context,
+)
 from qstriage.models import CryptographicAsset, Inventory, RiskLevel
 
 
@@ -54,9 +59,9 @@ def review_decision_context(inventory: Inventory) -> InventoryContextReview:
 
 def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
     issues: list[ContextIssue] = []
-    imported_from_cbom = _is_cbom_imported_asset(asset)
+    context = normalize_asset_context(asset)
 
-    if asset.data_class.strip().lower() == "unknown":
+    if context.data_sensitivity.requires_verification:
         issues.append(
             ContextIssue(
                 field="data_class",
@@ -64,7 +69,7 @@ def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
             )
         )
 
-    if asset.retention_years == 0:
+    if context.retention_years.requires_verification:
         issues.append(
             ContextIssue(
                 field="retention_years",
@@ -72,7 +77,7 @@ def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
             )
         )
 
-    if asset.exposure.strip().lower() == "unknown":
+    if context.exposure.requires_verification:
         issues.append(
             ContextIssue(
                 field="exposure",
@@ -80,7 +85,7 @@ def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
             )
         )
 
-    if imported_from_cbom and asset.criticality == RiskLevel.medium:
+    if context.criticality.state == ContextValueState.defaulted:
         issues.append(
             ContextIssue(
                 field="criticality",
@@ -88,7 +93,7 @@ def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
             )
         )
 
-    if imported_from_cbom and asset.local_blast_radius == RiskLevel.medium:
+    if context.local_blast_radius.state == ContextValueState.defaulted:
         issues.append(
             ContextIssue(
                 field="local_blast_radius",
@@ -96,7 +101,7 @@ def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
             )
         )
 
-    if imported_from_cbom and asset.migration_effort == RiskLevel.medium:
+    if context.migration_effort.state == ContextValueState.defaulted:
         issues.append(
             ContextIssue(
                 field="migration_effort",
@@ -132,7 +137,4 @@ def _review_inventory_context(inventory: Inventory) -> tuple[str, ...]:
 
 
 def _is_cbom_imported_asset(asset: CryptographicAsset) -> bool:
-    return (
-        asset.asset_type == "cbom_cryptographic_asset"
-        or "Imported from CycloneDX CBOM" in asset.notes
-    )
+    return is_cbom_imported_asset(asset)

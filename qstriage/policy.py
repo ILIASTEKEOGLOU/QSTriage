@@ -7,6 +7,15 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from qstriage.context import (
+    DataSensitivity,
+    ExposureCategory,
+    is_unknown_like,
+    normalize_asset_context,
+    normalize_context_text,
+    normalize_data_sensitivity,
+    normalize_exposure,
+)
 from qstriage.evidence import (
     EvidenceCategory,
     EvidenceProvenance,
@@ -290,8 +299,7 @@ def _asset_policy_facts(
     classification: Any,
     source_type: str,
 ) -> dict[str, Any]:
-    data_class = asset.data_class
-    exposure = asset.exposure
+    context = normalize_asset_context(asset)
 
     return {
         "algorithm": asset.algorithm,
@@ -299,11 +307,14 @@ def _asset_policy_facts(
         "primitive": classification.primitive,
         "quantum_status": classification.quantum_status,
         "standard_status": classification.standard_status,
-        "data_class": data_class,
-        "data_class_sensitivity": _derive_data_class_sensitivity(data_class),
+        "data_class": asset.data_class,
+        "data_class_sensitivity": context.data_sensitivity.canonical_value.value,
+        "data_class_state": context.data_sensitivity.state.value,
         "retention_years": asset.retention_years,
-        "exposure": exposure,
-        "exposure_category": _derive_exposure_category(exposure),
+        "retention_years_state": context.retention_years.state.value,
+        "exposure": asset.exposure,
+        "exposure_category": context.exposure.canonical_value.value,
+        "exposure_state": context.exposure.state.value,
         "business_context": _derive_business_context(asset),
         "source_type": source_type,
     }
@@ -390,108 +401,27 @@ def _matches_threshold(fact_value: Any, threshold_value: PolicyScalar) -> bool:
 
 
 def _derive_data_class_sensitivity(data_class: str) -> str:
-    normalized = _normalize_policy_text(data_class)
-
-    if normalized in {"customer_pii", "identity_tokens", "payment_metadata"}:
-        return "sensitive"
-    if _is_unknown_like(normalized):
-        return "unknown"
-    if normalized == "telemetry":
-        return "operational"
-    if any(
-        token in normalized
-        for token in (
-            "medical",
-            "health",
-            "pii",
-            "identity",
-            "payment",
-            "personal",
-            "customer",
-            "gdpr",
-            "cardholder",
-            "patient",
-        )
-    ):
-        return "sensitive"
-
-    return "operational"
+    return normalize_data_sensitivity(data_class).canonical_value.value
 
 
 def _derive_exposure_category(exposure: str) -> str:
-    normalized = _normalize_policy_text(exposure)
-
-    if normalized in {
-        "public_internet",
-        "internet",
-        "public",
-        "public_facing",
-        "internet_facing",
-        "external",
-        "external_facing",
-        "dmz",
-        "perimeter",
-        "edge",
-    }:
-        return "public"
-    if normalized in {
-        "partner_network",
-        "partner",
-        "partner_facing",
-        "third_party",
-        "vendor",
-        "supplier",
-    }:
-        return "partner"
-    if normalized in {
-        "internal",
-        "internal_only",
-        "private_network",
-        "corp",
-        "corporate",
-        "lan",
-    }:
-        return "internal"
-    if normalized in {
-        "restricted_network",
-        "restricted",
-        "offline",
-        "air_gapped",
-        "segmented",
-    }:
-        return "restricted"
-    if normalized == "isolated":
-        return "isolated"
-    if _is_unknown_like(normalized):
-        return "unknown"
-
-    return "unknown"
+    return normalize_exposure(exposure).canonical_value.value
 
 
 def _derive_business_context(asset: Any) -> str:
-    if _is_unknown_like(_normalize_policy_text(asset.data_class)):
+    context = normalize_asset_context(asset)
+    if context.data_sensitivity.requires_verification:
         return "missing"
-    if asset.retention_years == 0:
+    if context.retention_years.requires_verification:
         return "missing"
-    if _is_unknown_like(_normalize_policy_text(asset.exposure)):
+    if context.exposure.requires_verification:
         return "missing"
 
     return "present"
 
 
 def _normalize_policy_text(value: str | None) -> str:
-    return (value or "").strip().lower().replace("-", "_")
-
-
-def _is_unknown_like(value: str) -> bool:
-    return value in {
-        "",
-        "unknown",
-        "no_assertion",
-        "no-value",
-        "no_value",
-        "redacted",
-    }
+    return normalize_context_text(value)
 
 
 def _append_unique(target: list[str], values: list[str]) -> None:

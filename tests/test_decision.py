@@ -364,3 +364,77 @@ def test_no_conflict_high_effort_migration_preserves_simulation_semantics() -> N
         "risk:critical_attention",
         "migration:simulation_required",
     )
+
+
+def test_normalized_context_adds_verification_without_changing_execution_state() -> None:
+    from qstriage.context import normalize_asset_context
+    from qstriage.models import CryptographicAsset
+
+    asset = CryptographicAsset(
+        id="asset-1",
+        name="Asset 1",
+        environment="prod",
+        asset_type="service",
+        protocol="TLS",
+        algorithm="RSA-2048",
+        key_size_bits=2048,
+        data_class="Personal_Info_Scope",
+        retention_years=5,
+        exposure="internal",
+        criticality=RiskLevel.medium,
+        local_blast_radius=RiskLevel.low,
+        migration_effort=RiskLevel.low,
+    )
+
+    decision = reconcile_decision(
+        classification=classify_algorithm(asset.algorithm),
+        score=_score(value=72.0, band="high", legacy_action="review soon"),
+        evidence_review=build_evidence_review([], asset_id=asset.id),
+        policy_evaluation=_policy_result(),
+        decision_confidence=0.9,
+        migration_effort=asset.migration_effort,
+        context=DecisionContext(normalized_context=normalize_asset_context(asset)),
+    )
+
+    assert decision.execution_state is ExecutionState.justified
+    assert decision.verification_priority is VerificationPriority.medium
+    assert VerificationRequirement.business_context in decision.verification_requirements
+
+
+def test_cbom_defaulted_context_adds_typed_verification_requirements() -> None:
+    from qstriage.context import normalize_asset_context
+    from qstriage.models import CryptographicAsset
+
+    asset = CryptographicAsset(
+        id="asset-cbom",
+        name="CBOM Asset",
+        environment="prod",
+        asset_type="cbom_cryptographic_asset",
+        protocol="TLS",
+        algorithm="RSA-2048",
+        key_size_bits=2048,
+        data_class="internal",
+        retention_years=5,
+        exposure="internal",
+        criticality=RiskLevel.medium,
+        local_blast_radius=RiskLevel.medium,
+        migration_effort=RiskLevel.medium,
+    )
+
+    decision = reconcile_decision(
+        classification=classify_algorithm(asset.algorithm),
+        score=_score(value=72.0, band="high", legacy_action="review soon"),
+        evidence_review=build_evidence_review([], asset_id=asset.id),
+        policy_evaluation=_policy_result(),
+        decision_confidence=0.9,
+        migration_effort=asset.migration_effort,
+        context=DecisionContext(normalized_context=normalize_asset_context(asset)),
+    )
+
+    assert decision.execution_state is ExecutionState.justified
+    assert decision.verification_priority is VerificationPriority.medium
+    assert decision.verification_requirements == (
+        VerificationRequirement.business_context,
+        VerificationRequirement.dependency_context,
+        VerificationRequirement.operational_context,
+    )

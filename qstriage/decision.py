@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from qstriage.context import ContextValueState, NormalizedAssetContext
 from qstriage.evidence import DecisionGrade, EvidenceCategory, EvidenceReview
 from qstriage.models import RiskLevel
 from qstriage.policy import PolicyEvaluationResult
@@ -37,6 +38,7 @@ class VerificationRequirement(str, Enum):
     cryptographic_parameters = "cryptographic_parameters"
     business_context = "business_context"
     dependency_context = "dependency_context"
+    operational_context = "operational_context"
     supply_chain_context = "supply_chain_context"
     evidence_quality = "evidence_quality"
     policy_resolution = "policy_resolution"
@@ -45,6 +47,7 @@ class VerificationRequirement(str, Enum):
 @dataclass(frozen=True)
 class DecisionContext:
     missing_requirements: tuple[VerificationRequirement, ...] = ()
+    normalized_context: NormalizedAssetContext | None = None
 
 
 @dataclass(frozen=True)
@@ -77,9 +80,10 @@ _REQUIREMENT_ORDER = {
     VerificationRequirement.cryptographic_parameters: 1,
     VerificationRequirement.business_context: 2,
     VerificationRequirement.dependency_context: 3,
-    VerificationRequirement.supply_chain_context: 4,
-    VerificationRequirement.evidence_quality: 5,
-    VerificationRequirement.policy_resolution: 6,
+    VerificationRequirement.operational_context: 4,
+    VerificationRequirement.supply_chain_context: 5,
+    VerificationRequirement.evidence_quality: 6,
+    VerificationRequirement.policy_resolution: 7,
 }
 
 _PRIORITY_ORDER = {
@@ -215,6 +219,7 @@ def _verification_requirements(
     thresholds: DecisionThresholds,
 ) -> tuple[VerificationRequirement, ...]:
     requirements = set(context.missing_requirements)
+    _add_normalized_context_requirements(requirements, context.normalized_context)
 
     if classification.standard_status == "unknown":
         requirements.add(VerificationRequirement.cryptographic_identity)
@@ -253,6 +258,27 @@ def _verification_requirements(
 
     return tuple(sorted(requirements, key=_REQUIREMENT_ORDER.__getitem__))
 
+
+
+def _add_normalized_context_requirements(
+    requirements: set[VerificationRequirement],
+    context: NormalizedAssetContext | None,
+) -> None:
+    if context is None:
+        return
+
+    if context.data_sensitivity.requires_verification:
+        requirements.add(VerificationRequirement.business_context)
+    if context.exposure.requires_verification:
+        requirements.add(VerificationRequirement.business_context)
+    if context.retention_years.requires_verification:
+        requirements.add(VerificationRequirement.business_context)
+    if context.criticality.requires_verification:
+        requirements.add(VerificationRequirement.business_context)
+    if context.local_blast_radius.requires_verification:
+        requirements.add(VerificationRequirement.dependency_context)
+    if context.migration_effort.requires_verification:
+        requirements.add(VerificationRequirement.operational_context)
 
 def _execution_state(
     *,
@@ -320,6 +346,7 @@ def _verification_priority(
     context_requirements = {
         VerificationRequirement.business_context,
         VerificationRequirement.dependency_context,
+        VerificationRequirement.operational_context,
         VerificationRequirement.supply_chain_context,
     }
     if any(requirement in context_requirements for requirement in requirements):
