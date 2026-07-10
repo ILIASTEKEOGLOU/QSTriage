@@ -20,9 +20,22 @@ def test_score_command_prints_priority_backlog() -> None:
     result = runner.invoke(app, ["score", "examples/sample_inventory.yaml"])
 
     assert result.exit_code == 0
-    assert "QSTriage Priority Backlog" in result.output
+    assert "QSTriage Canonical Decision Backlog" in result.output
     assert "Public API Gateway" in result.output
 
+
+
+def test_score_command_prints_canonical_decision_fields() -> None:
+    result = runner.invoke(app, ["score", "examples/sample_inventory.yaml"])
+
+    assert result.exit_code == 0
+    assert "QSTriage Canonical Decision Backlog" in result.output
+    assert "Risk Attention" in result.output
+    assert "execution=justified" in result.output
+    assert "action=simulate_before_migration" in result.output
+    assert "verification=none" in result.output
+    assert "human_review=yes" in result.output
+    assert "review soon and include in near-term migration backlog" not in result.output
 
 def test_graph_command_prints_text_dependency_graph() -> None:
     result = runner.invoke(

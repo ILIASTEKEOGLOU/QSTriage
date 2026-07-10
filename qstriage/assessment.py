@@ -7,9 +7,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from qstriage.context import NormalizedAssetContext, normalize_asset_context
 from qstriage.decision import CanonicalDecision, DecisionContext, reconcile_decision
 from qstriage.evidence import EvidenceReview, review_asset_evidence
-from qstriage.models import CryptographicAsset
-from qstriage.policy import PolicyEvaluationResult, PolicyEvaluator, PolicyPack
-from qstriage.scoring import ScoreResult
+from qstriage.models import CryptographicAsset, Inventory
+from qstriage.policy import (
+    PolicyEvaluationResult,
+    PolicyEvaluator,
+    PolicyPack,
+    get_policy_pack,
+)
+from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.standards import AlgorithmClassification, classify_algorithm
 
 
@@ -94,6 +99,28 @@ def assess_asset(
         decision=decision,
     )
 
+
+
+def assess_inventory(
+    inventory: Inventory,
+    *,
+    policy_pack: PolicyPack | None = None,
+    source_type: str = "qstriage_inventory",
+) -> list[AssetAssessment]:
+    """Build canonical assessments in deterministic risk-attention order."""
+
+    resolved_policy_pack = policy_pack or get_policy_pack()
+    asset_by_id = inventory.asset_by_id()
+
+    return [
+        assess_asset(
+            asset_by_id[score.asset_id],
+            score=score,
+            policy_pack=resolved_policy_pack,
+            source_type=source_type,
+        )
+        for score in score_inventory(inventory)
+    ]
 
 def evaluate_evidence_quality(
     asset: CryptographicAsset,

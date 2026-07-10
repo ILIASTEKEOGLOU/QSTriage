@@ -199,14 +199,16 @@ qstriage report examples/sample_inventory.yaml --output reports/qstriage_report.
 The generated report includes:
 
 - executive summary
-- priority backlog
-- asset-level findings
+- canonical decision backlog with risk attention, execution, action, verification, and review state
+- asset-level findings with decision confidence, typed verification requirements, and deterministic reason codes
 - standards-backed algorithm classification evidence
 - registry source IDs for classification rationale
 - decision context review
 - PQC impact simulation warnings
 - dependency graph views
 - method notes
+
+The report and `qstriage score` command use the shared canonical assessment boundary. Structured score exports remain on the legacy score-result contract until the dedicated export-alignment track.
 
 Reports are written locally. Generated report artifacts should not be committed unless intentionally promoted as examples.
 

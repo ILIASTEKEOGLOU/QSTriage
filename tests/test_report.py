@@ -30,6 +30,22 @@ def test_generate_markdown_report_contains_scores_and_simulation_warnings() -> N
     assert "middlebox risk" in report
 
 
+
+def test_generate_markdown_report_uses_canonical_decision_fields() -> None:
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+
+    report = generate_markdown_report(inventory)
+
+    assert "| Risk Attention | Band | Execution | Canonical Action |" in report
+    assert "- Risk attention score: **81.00**" in report
+    assert "- Execution state: **justified**" in report
+    assert "- Canonical action: **simulate_before_migration**" in report
+    assert "- Verification requirements: none" in report
+    assert "- Decision confidence: 0.80" in report
+    assert "- Human review required: yes" in report
+    assert "- Reason codes: classification:quantum_vulnerable" in report
+    assert "review soon and include in near-term migration backlog" not in report
+
 def test_generate_markdown_report_contains_text_graph_block() -> None:
     inventory = load_inventory(Path("examples/sample_inventory.yaml"))
 

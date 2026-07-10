@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from qstriage import __version__
+from qstriage.assessment import assess_inventory
 from qstriage.cbom import import_cbom_inventory, load_cbom_json, write_imported_inventory
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
@@ -19,7 +20,6 @@ from qstriage.pdr import generate_pdr_document
 from qstriage.policy import get_policy_pack, list_policy_packs
 from qstriage.report import generate_markdown_report
 from qstriage.review import review_decision_context
-from qstriage.scoring import score_inventory
 
 app = typer.Typer(
     help="QSTriage — Cryptographic Policy & Justification Engine",
@@ -233,22 +233,30 @@ def score(
 ) -> None:
     """Print the explainable migration priority backlog."""
     inventory = _load_inventory_or_exit(inventory_path)
-    results = score_inventory(inventory)
+    assessments = assess_inventory(inventory)
 
-    table = Table(title="QSTriage Priority Backlog")
+    table = Table(title="QSTriage Canonical Decision Backlog", box=None)
     table.add_column("Rank", justify="right")
-    table.add_column("Asset")
-    table.add_column("Score", justify="right")
-    table.add_column("Band")
-    table.add_column("Recommended Action")
+    table.add_column("Asset", max_width=18, overflow="fold")
+    table.add_column("Risk Attention", justify="right")
+    table.add_column("Canonical Decision", overflow="fold")
 
-    for index, result in enumerate(results, start=1):
+    for index, assessment in enumerate(assessments, start=1):
+        decision = assessment.decision
         table.add_row(
             str(index),
-            result.asset_name,
-            f"{result.priority_score:.2f}",
-            result.priority_band,
-            result.recommended_action,
+            assessment.asset.name,
+            f"{decision.risk_attention_score:.2f} / "
+            f"{decision.risk_attention_band}",
+            "\n".join(
+                [
+                    f"execution={decision.execution_state.value}",
+                    f"action={decision.action_type.value}",
+                    f"verification={decision.verification_priority.value}",
+                    "human_review="
+                    + ("yes" if decision.human_review_required else "no"),
+                ]
+            ),
         )
 
     console.print(table)
@@ -401,7 +409,7 @@ def review_evidence_command(
     reviews = review_inventory_evidence(inventory, source_type=source_type)
 
     table = Table(title="QSTriage Evidence Quality Review")
-    table.add_column("Asset")
+    table.add_column("Asset", max_width=18, overflow="fold")
     table.add_column("Decision Grade")
     table.add_column("Evidence", justify="right")
     table.add_column("Confidence Cap", justify="right")

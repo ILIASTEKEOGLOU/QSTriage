@@ -4,18 +4,22 @@
 
 ### Added
 
+- Added deterministic inventory-level assessment assembly for analyst-facing output surfaces.
+- Added canonical execution, action, verification, confidence, review, and reason-code detail to Markdown reports.
 - Added a shared asset-assessment boundary that gathers classification, scoring, normalized context, evidence review, policy evaluation, decision confidence, and canonical decision state.
 - Added canonical execution, action, verification, review, and reason-code fields to PDR decision records.
 - Added a shared typed context-normalization layer that preserves raw values and records declared, missing, defaulted, or unmapped state.
 
 ### Changed
 
+- CLI score output and Markdown reports now project the shared canonical decision instead of the legacy score-derived action.
 - Bumped the PDR contract version from `0.1` to `0.2`; record and document hashes therefore change with the new serialized decision contract.
 - PDR generation now projects `CanonicalDecision` instead of rebuilding action and human-review state from score fields.
 - Policy, scoring, simulation, context review, and decision gating now consume the same canonical data-sensitivity and exposure categories.
 
 ### Fixed
 
+- Markdown score explanations no longer repeat a legacy action that can contradict the canonical decision.
 - PDR records no longer expose score-derived action text that can contradict canonical execution and verification state.
 - Realistic context aliases no longer receive contradictory cross-module interpretations, while unknown or unmapped values require verification instead of being guessed.
 
