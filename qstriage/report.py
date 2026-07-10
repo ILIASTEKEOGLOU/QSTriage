@@ -4,23 +4,20 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
+from qstriage.assessment import AssetAssessment, assess_inventory
 from qstriage.graph import build_dependency_graph, render_text_graph
-from qstriage.models import CryptographicAsset, Inventory, load_inventory
+from qstriage.models import Inventory, load_inventory
 from qstriage.review import InventoryContextReview, review_decision_context
-from qstriage.standards import classify_algorithm
-from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.simulator import ImpactSimulationResult, simulate_inventory
 
 
 def generate_markdown_report(inventory: Inventory) -> str:
     graph = build_dependency_graph(inventory)
-    scores = score_inventory(inventory)
+    assessments = assess_inventory(inventory)
     simulations = simulate_inventory(inventory)
     context_review = review_decision_context(inventory)
 
     simulation_by_asset = _simulation_by_asset(simulations)
-    asset_by_id = inventory.asset_by_id()
-
     lines: list[str] = []
 
     lines.append("# QSTriage PQC Migration Assessment Report")
@@ -43,17 +40,29 @@ def generate_markdown_report(inventory: Inventory) -> str:
             "relationships, if present, are not treated as QSTriage blast-radius dependencies."
         )
     lines.append(f"- Migration scenarios analyzed: {max(1, len(inventory.scenarios))}")
-    lines.append(f"- Highest priority asset: {scores[0].asset_name} ({scores[0].priority_score})")
+    highest = assessments[0]
+    lines.append(
+        f"- Highest risk-attention asset: {highest.asset.name} "
+        f"({highest.decision.risk_attention_score})"
+    )
     lines.append("")
     lines.append("## Priority Backlog")
     lines.append("")
-    lines.append("| Rank | Asset | Score | Band | Recommended Action |")
-    lines.append("|---:|---|---:|---|---|")
+    lines.append(
+        "| Rank | Asset | Risk Attention | Band | Execution | Canonical Action | "
+        "Verification | Human Review |"
+    )
+    lines.append("|---:|---|---:|---|---|---|---|---|")
 
-    for index, score in enumerate(scores, start=1):
+    for index, assessment in enumerate(assessments, start=1):
+        decision = assessment.decision
         lines.append(
-            f"| {index} | {score.asset_name} | {score.priority_score:.2f} | "
-            f"{score.priority_band} | {score.recommended_action} |"
+            f"| {index} | {assessment.asset.name} | "
+            f"{decision.risk_attention_score:.2f} | "
+            f"{decision.risk_attention_band} | {decision.execution_state.value} | "
+            f"{decision.action_type.value} | "
+            f"{decision.verification_priority.value} | "
+            f"{'yes' if decision.human_review_required else 'no'} |"
         )
 
     lines.append("")
@@ -62,23 +71,22 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append("## Asset-Level Findings")
     lines.append("")
 
-    for score in scores:
+    for assessment in assessments:
         lines.extend(
             _render_asset_finding(
-                score,
-                asset_by_id[score.asset_id],
-                simulation_by_asset.get(score.asset_id, []),
+                assessment,
+                simulation_by_asset.get(assessment.asset.id, []),
             )
         )
 
     lines.append("## Dependency Graph Views")
     lines.append("")
 
-    for score in scores[:3]:
-        lines.append(f"### {score.asset_name}")
+    for assessment in assessments[:3]:
+        lines.append(f"### {assessment.asset.name}")
         lines.append("")
         lines.append("```text")
-        lines.append(render_text_graph(graph, score.asset_id))
+        lines.append(render_text_graph(graph, assessment.asset.id))
         lines.append("```")
         lines.append("")
 
@@ -156,22 +164,37 @@ def _render_decision_context_review(review: InventoryContextReview) -> list[str]
 
 
 def _render_asset_finding(
-    score: ScoreResult,
-    asset: CryptographicAsset,
+    assessment: AssetAssessment,
     simulations: list[ImpactSimulationResult],
 ) -> list[str]:
     lines: list[str] = []
+    asset = assessment.asset
+    score = assessment.score
+    decision = assessment.decision
+    classification = assessment.classification
 
-    lines.append(f"### {score.asset_name}")
+    requirements = ", ".join(
+        requirement.value for requirement in decision.verification_requirements
+    ) or "none"
+    reason_codes = ", ".join(decision.reason_codes) or "none"
+
+    lines.append(f"### {asset.name}")
     lines.append("")
-    lines.append(f"- Asset ID: `{score.asset_id}`")
-    lines.append(f"- Priority score: **{score.priority_score:.2f}**")
-    lines.append(f"- Priority band: **{score.priority_band}**")
-    lines.append(f"- Confidence: {score.confidence}")
-    lines.append(f"- Recommended action: {score.recommended_action}")
+    lines.append(f"- Asset ID: `{asset.id}`")
+    lines.append(f"- Risk attention score: **{decision.risk_attention_score:.2f}**")
+    lines.append(f"- Risk attention band: **{decision.risk_attention_band}**")
+    lines.append(f"- Execution state: **{decision.execution_state.value}**")
+    lines.append(f"- Canonical action: **{decision.action_type.value}**")
+    lines.append(f"- Verification priority: **{decision.verification_priority.value}**")
+    lines.append(f"- Verification requirements: {requirements}")
+    lines.append(f"- Decision confidence: {decision.decision_confidence:.2f}")
+    lines.append(
+        "- Human review required: "
+        + ("yes" if decision.human_review_required else "no")
+    )
+    lines.append(f"- Reason codes: {reason_codes}")
     lines.append("")
 
-    classification = classify_algorithm(asset.algorithm)
     lines.append("Algorithm classification:")
     lines.append("")
     lines.append(f"- Input algorithm: `{classification.input_algorithm}`")
@@ -193,10 +216,12 @@ def _render_asset_finding(
     lines.append(f"- Deadline pressure: {score.breakdown.deadline_pressure:.2f}")
     lines.append(f"- Effort penalty: {score.breakdown.effort_penalty:.2f}")
     lines.append("")
-    lines.append("Explanation:")
+    lines.append("Score explanation:")
     lines.append("")
 
     for explanation_line in score.explanation:
+        if explanation_line.startswith("Recommended action:"):
+            continue
         lines.append(f"- {explanation_line}")
 
     if simulations:

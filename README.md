@@ -91,11 +91,13 @@ Validate an inventory:
 qstriage validate examples/sample_inventory.yaml
 ```
 
-Print the migration priority backlog:
+Print the canonical decision backlog:
 
 ```bash
 qstriage score examples/sample_inventory.yaml
 ```
+
+The CLI separates risk attention from execution state and shows the canonical action, verification priority, and human-review requirement for each asset.
 
 Render a text dependency graph:
 
@@ -108,6 +110,8 @@ Generate a Markdown report:
 ```bash
 qstriage report examples/sample_inventory.yaml --output reports/sample_report.md
 ```
+
+Markdown reports use the same canonical assessment boundary as the CLI and PDR. Score-derived action text is retained only in structured legacy score exports until their separate contract migration.
 
 Export score results:
 
