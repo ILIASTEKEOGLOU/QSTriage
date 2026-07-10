@@ -106,7 +106,15 @@ The PDR JSON document is the documented decision artifact. It includes input sna
 
 QSTriage treats PDR JSON as a documented, evolving contract rather than an internal debug dump.
 
-The public semantic contract includes:
+PDR `0.2` projects the canonical decision contract into every asset record. The `decision` object contains:
+
+- `risk_attention_score` and `risk_attention_band` as planning-attention signals
+- `execution_state` and `action_type` as the reconciled operational decision
+- `verification_priority` and typed `verification_requirements`
+- `confidence_score` and `human_review_required`
+- deterministic `reason_codes`
+
+The public semantic contract also includes:
 
 - the top-level PDR document
 - `policy_context` as document-level policy pack provenance
@@ -118,7 +126,7 @@ The public semantic contract includes:
 - mission context, trade-offs, assumptions, and human-review state
 - `document_hash` and per-record `record_integrity`
 
-Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields is treated as a breaking change.
+Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields requires a PDR contract-version change.
 
 Exact hash values are not a cross-version compatibility promise. They are deterministic for the same QSTriage version, input snapshot, policy pack, and generated PDR content.
 

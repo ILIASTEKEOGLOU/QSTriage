@@ -158,9 +158,11 @@ A PDR is structured decision state, not a narrative report. It includes input sn
 
 QSTriage treats the PDR JSON document as a documented, evolving decision artifact.
 
-The public semantic contract includes the top-level PDR document, `policy_context`, `records`, per-record `policy_evaluation`, observed crypto state, evidence review, decision state, assumptions, and record/document integrity hashes.
+PDR `0.2` projects the canonical decision contract into each record. The `decision` object separates `risk_attention_score` and `risk_attention_band` from `execution_state` and `action_type`, and records `verification_priority`, `verification_requirements`, `confidence_score`, `human_review_required`, and deterministic `reason_codes`.
 
-Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields is treated as a breaking change.
+The public semantic contract includes the top-level PDR document, `policy_context`, `records`, per-record `policy_evaluation`, observed crypto state, evidence review, canonical decision state, assumptions, and record/document integrity hashes.
+
+Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields requires a PDR contract-version change.
 
 Exact `document_hash` and `record_hash` values are not guaranteed to remain the same across QSTriage versions. They are deterministic for the same QSTriage version, input snapshot, policy pack, and generated PDR content.
 

@@ -8,21 +8,32 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from qstriage import __version__
-from qstriage.evidence import EvidenceReview, review_asset_evidence
+from qstriage.assessment import (
+    AssetAssessment,
+    DecisionConfidence,
+    EvidenceQuality,
+    assess_asset,
+)
+from qstriage.decision import (
+    ActionType,
+    ExecutionState,
+    VerificationPriority,
+    VerificationRequirement,
+)
+from qstriage.evidence import EvidenceReview
 from qstriage.models import CryptographicAsset, Inventory
 from qstriage.policy import (
     BUILTIN_POLICY_PACK_ID,
     BUILTIN_POLICY_PACK_VERSION,
     PolicyEvaluationResult,
-    PolicyEvaluator,
     PolicyPack,
     get_policy_pack,
 )
 from qstriage.scoring import ScoreResult, score_inventory
-from qstriage.standards import AlgorithmClassification, classify_algorithm
+from qstriage.standards import AlgorithmClassification
 
 
-PDR_VERSION = "0.1"
+PDR_VERSION = "0.2"
 ENGINE_NAME = "QSTriage"
 ENGINE_VERSION = __version__
 
@@ -77,21 +88,6 @@ class ObservedState(BaseModel):
     standard_status: str
 
 
-class EvidenceQuality(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    score: float = Field(ge=0.0, le=1.0)
-    missing_evidence: list[str]
-    limitations: list[str]
-
-
-class DecisionConfidence(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    score: float = Field(ge=0.0, le=1.0)
-    reason: str
-
-
 class MissionContext(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -123,11 +119,15 @@ class TargetStateSuggestion(BaseModel):
 class PDRDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    priority_band: str
-    recommended_action: str
-    priority_score: float
+    risk_attention_score: float
+    risk_attention_band: str
+    execution_state: ExecutionState
+    action_type: ActionType
+    verification_priority: VerificationPriority
+    verification_requirements: list[VerificationRequirement]
     confidence_score: float = Field(ge=0.0, le=1.0)
     human_review_required: bool
+    reason_codes: list[str]
 
 
 class RecordIntegrity(BaseModel):
@@ -234,37 +234,11 @@ def _build_record(
     policy_pack: PolicyPack,
     previous_record_hash: str | None,
 ) -> PQCDecisionRecord:
-    classification = classify_algorithm(asset.algorithm)
-    evidence_review = review_asset_evidence(
+    assessment = assess_asset(
         asset,
+        score=score,
+        policy_pack=policy_pack,
         source_type=input_snapshot.source_type,
-    )
-    policy_evaluation = PolicyEvaluator.evaluate_asset(
-        asset,
-        policy_pack,
-        classification,
-        source_type=input_snapshot.source_type,
-        evidence_review=evidence_review,
-    )
-    evidence_quality = _evidence_quality(asset, classification)
-    decision_confidence = _decision_confidence(
-        asset,
-        score,
-        evidence_quality,
-        evidence_review,
-    )
-
-    decision = PDRDecision(
-        priority_band=score.priority_band,
-        recommended_action=score.recommended_action,
-        priority_score=score.priority_score,
-        confidence_score=decision_confidence.score,
-        human_review_required=_human_review_required(
-            score,
-            evidence_quality,
-            evidence_review,
-            decision_confidence,
-        ),
     )
 
     record = PQCDecisionRecord(
@@ -275,16 +249,23 @@ def _build_record(
         engine=PDREngine(),
         input_snapshot=input_snapshot,
         policy_context=policy_context,
-        policy_evaluation=policy_evaluation,
-        observed_state=_observed_state(asset, classification),
-        evidence_quality=evidence_quality,
-        evidence_review=evidence_review,
-        decision_confidence=decision_confidence,
+        policy_evaluation=assessment.policy_evaluation,
+        observed_state=_observed_state(asset, assessment.classification),
+        evidence_quality=assessment.evidence_quality,
+        evidence_review=assessment.evidence_review,
+        decision_confidence=assessment.decision_confidence,
         mission_context=_mission_context(asset, score),
-        tradeoffs=_tradeoffs(asset, classification),
-        target_state_suggestion=_target_state_suggestions(asset, classification),
-        decision=decision,
-        assumptions_made=_assumptions(asset, evidence_quality, evidence_review),
+        tradeoffs=_tradeoffs(asset, assessment.classification),
+        target_state_suggestion=_target_state_suggestions(
+            asset,
+            assessment.classification,
+        ),
+        decision=_project_decision(assessment),
+        assumptions_made=_assumptions(
+            asset,
+            assessment.evidence_quality,
+            assessment.evidence_review,
+        ),
         record_integrity=RecordIntegrity(
             previous_record_hash=previous_record_hash,
             record_hash="pending",
@@ -298,6 +279,21 @@ def _build_record(
                 record_hash=record_hash,
             )
         }
+    )
+
+
+def _project_decision(assessment: AssetAssessment) -> PDRDecision:
+    decision = assessment.decision
+    return PDRDecision(
+        risk_attention_score=decision.risk_attention_score,
+        risk_attention_band=decision.risk_attention_band,
+        execution_state=decision.execution_state,
+        action_type=decision.action_type,
+        verification_priority=decision.verification_priority,
+        verification_requirements=list(decision.verification_requirements),
+        confidence_score=decision.decision_confidence,
+        human_review_required=decision.human_review_required,
+        reason_codes=list(decision.reason_codes),
     )
 
 
@@ -361,95 +357,6 @@ def _observed_state(
         quantum_status=classification.quantum_status,
         standard_status=classification.standard_status,
     )
-
-
-def _evidence_quality(
-    asset: CryptographicAsset,
-    classification: AlgorithmClassification,
-) -> EvidenceQuality:
-    missing = []
-    limitations = []
-
-    if asset.data_class.strip().lower() == "unknown":
-        missing.append("data_class")
-
-    if asset.retention_years == 0:
-        missing.append("retention_years")
-
-    if asset.exposure.strip().lower() == "unknown":
-        missing.append("exposure_boundary")
-
-    if (
-        asset.key_size_bits is None
-        and classification.algorithm_family not in {"ML-KEM", "ML-DSA", "SLH-DSA"}
-    ):
-        missing.append("key_size_bits")
-
-    if asset.asset_type == "cbom_cryptographic_asset":
-        if str(asset.criticality) == "RiskLevel.medium" or asset.criticality.value == "medium":
-            missing.append("business_criticality_context")
-        if asset.local_blast_radius.value == "medium":
-            missing.append("blast_radius_context")
-        if asset.migration_effort.value == "medium":
-            missing.append("migration_effort_context")
-        limitations.append("CBOM dependency relationships are not imported as QSTriage dependencies.")
-
-    score = round(max(0.0, 1.0 - (len(missing) * 0.12) - (len(limitations) * 0.08)), 2)
-    return EvidenceQuality(
-        score=score,
-        missing_evidence=missing,
-        limitations=limitations,
-    )
-
-
-def _decision_confidence(
-    asset: CryptographicAsset,
-    score: ScoreResult,
-    evidence_quality: EvidenceQuality,
-    evidence_review: EvidenceReview,
-) -> DecisionConfidence:
-    base_by_label = {
-        "low": 0.45,
-        "medium": 0.65,
-        "medium-high": 0.8,
-        "high": 0.9,
-    }
-    base = base_by_label.get(score.confidence, 0.55)
-    confidence = round(
-        min(
-            base,
-            evidence_quality.score,
-            evidence_review.evidence_score,
-            evidence_review.confidence_cap,
-        ),
-        2,
-    )
-
-    if evidence_review.blocking_finding_codes:
-        reason = (
-            "Decision confidence is constrained by blocking evidence findings: "
-            + ", ".join(evidence_review.blocking_finding_codes)
-            + "."
-        )
-    elif evidence_quality.missing_evidence:
-        reason = (
-            "Decision confidence is constrained by missing evidence: "
-            + ", ".join(evidence_quality.missing_evidence)
-            + "."
-        )
-    elif evidence_review.findings:
-        finding_codes = [finding.code for finding in evidence_review.findings[:5]]
-        reason = (
-            "Decision confidence is constrained by evidence review findings: "
-            + ", ".join(finding_codes)
-            + "."
-        )
-    elif asset.asset_type == "cbom_cryptographic_asset":
-        reason = "Decision confidence is constrained by partial CBOM context."
-    else:
-        reason = "Decision confidence is based on available inventory, scoring, and standards context."
-
-    return DecisionConfidence(score=confidence, reason=reason)
 
 
 def _mission_context(asset: CryptographicAsset, score: ScoreResult) -> MissionContext:
@@ -587,20 +494,6 @@ def _target_state_suggestions(
             requires_human_review=True,
         )
     ]
-
-
-def _human_review_required(
-    score: ScoreResult,
-    evidence_quality: EvidenceQuality,
-    evidence_review: EvidenceReview,
-    decision_confidence: DecisionConfidence,
-) -> bool:
-    return (
-        evidence_review.human_review_required
-        or evidence_quality.score < 0.75
-        or decision_confidence.score < 0.7
-        or score.priority_band in {"critical", "high"}
-    )
 
 
 def _assumptions(
