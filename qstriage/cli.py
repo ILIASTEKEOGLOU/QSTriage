@@ -504,7 +504,7 @@ def export_scores_command(
         readable=True,
     ),
 ) -> None:
-    """Export score results as JSON or CSV."""
+    """Export canonical decision-aware score results as JSON or CSV."""
     inventory = _load_inventory_or_exit(inventory_path)
     config = _load_config_or_exit(config_path)
     resolved_format = export_format or ExportFormat(config.exports.default_format)

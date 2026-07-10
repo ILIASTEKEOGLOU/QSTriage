@@ -7,8 +7,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from qstriage.assessment import AssetAssessment, assess_inventory
 from qstriage.models import Inventory
-from qstriage.scoring import ScoreResult, score_inventory
+from qstriage.scoring import ScoreResult
 from qstriage.simulator import ImpactSimulationResult, simulate_inventory
 
 
@@ -17,19 +18,22 @@ class ExportFormat(str, Enum):
     csv = "csv"
 
 
+SCORE_EXPORT_VERSION = "0.2"
+
+
 def export_score_results(
     inventory: Inventory,
     output_path: str | Path,
     export_format: ExportFormat | str,
 ) -> Path:
-    results = score_inventory(inventory)
+    assessments = assess_inventory(inventory)
     destination = Path(output_path)
     normalized_format = _normalize_export_format(export_format)
 
     if normalized_format == ExportFormat.json:
-        _write_json(destination, [_to_json_ready(result) for result in results])
+        _write_json(destination, _score_result_records(assessments))
     elif normalized_format == ExportFormat.csv:
-        _write_csv(destination, _score_result_rows(results))
+        _write_csv(destination, _score_result_rows(assessments))
     else:
         raise ValueError(f"Unsupported export format: {export_format}")
 
@@ -69,31 +73,91 @@ def _to_json_ready(value: Any) -> dict[str, Any]:
     return asdict(value)
 
 
-def _score_result_rows(results: list[ScoreResult]) -> list[dict[str, Any]]:
+def _score_result_records(
+    assessments: list[AssetAssessment],
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+
+    for assessment in assessments:
+        score = assessment.score
+        decision = assessment.decision
+        records.append(
+            {
+                "asset_id": score.asset_id,
+                "asset_name": score.asset_name,
+                "score_export_version": SCORE_EXPORT_VERSION,
+                "priority_score": score.priority_score,
+                "priority_band": score.priority_band,
+                # Compatibility alias retained for existing consumers. The value now
+                # comes from the canonical decision rather than score heuristics.
+                "recommended_action": decision.action_type.value,
+                "confidence": score.confidence,
+                "execution_state": decision.execution_state.value,
+                "action_type": decision.action_type.value,
+                "verification_priority": decision.verification_priority.value,
+                "verification_requirements": [
+                    requirement.value
+                    for requirement in decision.verification_requirements
+                ],
+                "decision_confidence": decision.decision_confidence,
+                "human_review_required": decision.human_review_required,
+                "reason_codes": list(decision.reason_codes),
+                "breakdown": _to_json_ready(score.breakdown),
+                "explanation": _decision_safe_explanation(score),
+            }
+        )
+
+    return records
+
+
+def _score_result_rows(
+    assessments: list[AssetAssessment],
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
 
-    for result in results:
+    for assessment in assessments:
+        score = assessment.score
+        decision = assessment.decision
         rows.append(
             {
-                "asset_id": result.asset_id,
-                "asset_name": result.asset_name,
-                "priority_score": result.priority_score,
-                "priority_band": result.priority_band,
-                "recommended_action": result.recommended_action,
-                "confidence": result.confidence,
-                "cryptographic_risk": result.breakdown.cryptographic_risk,
-                "shelf_life_risk": result.breakdown.shelf_life_risk,
-                "exposure_risk": result.breakdown.exposure_risk,
-                "criticality_score": result.breakdown.criticality_score,
-                "graph_blast_radius": result.breakdown.graph_blast_radius,
-                "deadline_pressure": result.breakdown.deadline_pressure,
-                "effort_penalty": result.breakdown.effort_penalty,
-                "total": result.breakdown.total,
-                "explanation": " | ".join(result.explanation),
+                "asset_id": score.asset_id,
+                "asset_name": score.asset_name,
+                "score_export_version": SCORE_EXPORT_VERSION,
+                "priority_score": score.priority_score,
+                "priority_band": score.priority_band,
+                "recommended_action": decision.action_type.value,
+                "confidence": score.confidence,
+                "execution_state": decision.execution_state.value,
+                "action_type": decision.action_type.value,
+                "verification_priority": decision.verification_priority.value,
+                "verification_requirements": " | ".join(
+                    requirement.value
+                    for requirement in decision.verification_requirements
+                ),
+                "decision_confidence": decision.decision_confidence,
+                "human_review_required": decision.human_review_required,
+                "reason_codes": " | ".join(decision.reason_codes),
+                "cryptographic_risk": score.breakdown.cryptographic_risk,
+                "shelf_life_risk": score.breakdown.shelf_life_risk,
+                "exposure_risk": score.breakdown.exposure_risk,
+                "criticality_score": score.breakdown.criticality_score,
+                "graph_blast_radius": score.breakdown.graph_blast_radius,
+                "deadline_pressure": score.breakdown.deadline_pressure,
+                "effort_penalty": score.breakdown.effort_penalty,
+                "total": score.breakdown.total,
+                "explanation": " | ".join(_decision_safe_explanation(score)),
             }
         )
 
     return rows
+
+
+def _decision_safe_explanation(score: ScoreResult) -> list[str]:
+    return [
+        line
+        for line in score.explanation
+        if not line.startswith("Recommended action:")
+    ]
 
 
 def _simulation_result_rows(results: list[ImpactSimulationResult]) -> list[dict[str, Any]]:

@@ -111,9 +111,9 @@ Generate a Markdown report:
 qstriage report examples/sample_inventory.yaml --output reports/sample_report.md
 ```
 
-Markdown reports use the same canonical assessment boundary as the CLI and PDR. Score-derived action text is retained only in structured legacy score exports until their separate contract migration.
+Markdown reports and structured score exports use the same canonical assessment boundary as the CLI and PDR.
 
-Export score results:
+Export canonical decision-aware score results:
 
 ```bash
 qstriage export scores examples/sample_inventory.yaml --format json --output reports/scores.json

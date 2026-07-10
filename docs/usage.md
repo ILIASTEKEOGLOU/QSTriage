@@ -208,7 +208,7 @@ The generated report includes:
 - dependency graph views
 - method notes
 
-The report and `qstriage score` command use the shared canonical assessment boundary. Structured score exports remain on the legacy score-result contract until the dedicated export-alignment track.
+The report, `qstriage score`, and structured score exports use the shared canonical assessment boundary.
 
 Reports are written locally. Generated report artifacts should not be committed unless intentionally promoted as examples.
 
@@ -226,7 +226,7 @@ Export scores as CSV:
 qstriage export scores examples/sample_inventory.yaml --format csv --output reports/scores.csv
 ```
 
-The JSON export preserves nested score breakdowns and explanations. The CSV export flattens score fields for spreadsheet-style review.
+Score export contract `0.2` retains planning-score fields while projecting canonical `execution_state`, `action_type`, verification state, decision confidence, human-review state, and reason codes. The compatibility field `recommended_action` now aliases canonical `action_type`; score-derived action text is removed from explanations. JSON preserves nested score breakdowns, while CSV flattens score fields for spreadsheet-style review.
 
 ## Export simulation results
 
