@@ -4,6 +4,13 @@ from dataclasses import dataclass
 
 import networkx as nx
 
+from qstriage.context import (
+    DataSensitivity,
+    ExposureCategory,
+    normalize_asset_context,
+    normalize_data_sensitivity,
+    normalize_exposure,
+)
 from qstriage.graph import build_dependency_graph, calculate_graph_amplified_blast_radius
 from qstriage.models import CryptographicAsset, Inventory, RiskLevel
 from qstriage.standards import AlgorithmClassification, classify_algorithm
@@ -131,7 +138,7 @@ def _cryptographic_risk(
 
 
 def _shelf_life_risk(retention_years: int, data_class: str) -> float:
-    data_class_normalized = data_class.lower()
+    sensitivity = normalize_data_sensitivity(data_class).canonical_value
 
     if retention_years >= 10:
         base = 9.0
@@ -144,24 +151,24 @@ def _shelf_life_risk(retention_years: int, data_class: str) -> float:
     else:
         base = 1.0
 
-    if any(token in data_class_normalized for token in ["pii", "identity", "medical", "payment"]):
+    if sensitivity == DataSensitivity.sensitive:
         base += 1.0
 
     return min(10.0, base)
 
 
 def _exposure_risk(exposure: str) -> float:
-    normalized = exposure.lower()
+    category = normalize_exposure(exposure).canonical_value
 
-    if "public" in normalized or "internet" in normalized:
+    if category == ExposureCategory.public:
         return 9.0
-    if "partner" in normalized:
+    if category == ExposureCategory.partner:
         return 7.0
-    if "restricted" in normalized:
+    if category == ExposureCategory.restricted:
         return 5.0
-    if "internal" in normalized:
+    if category == ExposureCategory.internal:
         return 4.0
-    if "isolated" in normalized:
+    if category == ExposureCategory.isolated:
         return 2.0
 
     return 5.0
@@ -178,7 +185,11 @@ def _deadline_pressure(
     ) >= 8.0:
         return 5.0
 
-    if asset.retention_years >= 5 and asset.exposure in {"public_internet", "partner_network"}:
+    exposure_category = normalize_asset_context(asset).exposure.canonical_value
+    if asset.retention_years >= 5 and exposure_category in {
+        ExposureCategory.public,
+        ExposureCategory.partner,
+    }:
         return 3.0
 
     return 1.0

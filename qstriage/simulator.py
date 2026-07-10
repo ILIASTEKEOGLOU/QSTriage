@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import networkx as nx
 
 from qstriage.graph import build_dependency_graph
+from qstriage.context import ExposureCategory, normalize_asset_context
 from qstriage.models import CryptographicAsset, Inventory, MigrationScenario, RiskLevel
 
 
@@ -168,11 +169,11 @@ def _fragmentation_risk(mtu_ratio: float) -> str:
 
 
 def _middlebox_risk(asset: CryptographicAsset, mtu_ratio: float) -> str:
-    exposure = asset.exposure.lower()
+    exposure_category = normalize_asset_context(asset).exposure.canonical_value
     protocol = asset.protocol.upper()
     asset_type = asset.asset_type.lower()
 
-    external_path = "public" in exposure or "partner" in exposure
+    external_path = exposure_category in {ExposureCategory.public, ExposureCategory.partner}
     tls_like = "TLS" in protocol or "HTTPS" in protocol
     constrained_path = "ot" in asset_type or "industrial" in asset_type or "gateway" in asset_type
 

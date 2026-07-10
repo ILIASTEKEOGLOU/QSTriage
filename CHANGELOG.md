@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- Added a shared typed context-normalization layer that preserves raw values and records declared, missing, defaulted, or unmapped state.
+
+### Changed
+
+- Policy, scoring, simulation, context review, and decision gating now consume the same canonical data-sensitivity and exposure categories.
+
+### Fixed
+
+- Realistic context aliases no longer receive contradictory cross-module interpretations, while unknown or unmapped values require verification instead of being guessed.
+
 ## v1.1.0 - 2026-07-08
 
 ### Added
