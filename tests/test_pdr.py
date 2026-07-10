@@ -345,3 +345,69 @@ def test_pdr_hashes_are_stable_for_relative_and_absolute_source_paths() -> None:
     )
     assert relative.input_snapshot.source_path == SAMPLE_INVENTORY.name
     assert absolute.input_snapshot.source_path == SAMPLE_INVENTORY.name
+
+
+def test_pdr_projects_canonical_decision_for_score_action_divergence() -> None:
+    inventory = load_inventory(SAMPLE_INVENTORY)
+
+    document = generate_pdr_document(inventory, source_path=SAMPLE_INVENTORY)
+    record_by_asset = {
+        record.observed_state.asset_id: record for record in document.records
+    }
+
+    payments = record_by_asset["payments-api"]
+    ot_gateway = record_by_asset["ot-gateway"]
+
+    assert document.pdr_version == "0.2"
+    assert payments.pdr_version == "0.2"
+    assert payments.decision.risk_attention_score == 81.0
+    assert payments.decision.risk_attention_band == "high"
+    assert payments.decision.execution_state.value == "justified"
+    assert payments.decision.action_type.value == "simulate_before_migration"
+    assert payments.decision.verification_priority.value == "none"
+    assert payments.decision.verification_requirements == []
+    assert "migration:simulation_required" in payments.decision.reason_codes
+
+    assert ot_gateway.decision.risk_attention_band == "medium"
+    assert ot_gateway.decision.action_type.value == "simulate_before_migration"
+    assert ot_gateway.decision.human_review_required is True
+
+    serialized = payments.decision.model_dump(mode="json")
+    assert "priority_score" not in serialized
+    assert "priority_band" not in serialized
+    assert "recommended_action" not in serialized
+
+
+def test_cbom_pdr_projects_canonical_gating_and_verification() -> None:
+    inventory = import_cbom_inventory(SAMPLE_CBOM)
+
+    document = generate_pdr_document(
+        inventory,
+        source_path=SAMPLE_CBOM,
+        source_type="cyclonedx_cbom",
+        source_version="1.6",
+    )
+    record_by_asset = {
+        record.observed_state.asset_id: record for record in document.records
+    }
+
+    rsa_record = record_by_asset["crypto-rsa-2048"]
+
+    assert rsa_record.decision.execution_state.value == "gated"
+    assert rsa_record.decision.action_type.value == "migration_planning"
+    assert rsa_record.decision.verification_priority.value == "high"
+    assert {
+        requirement.value
+        for requirement in rsa_record.decision.verification_requirements
+    } == {
+        "business_context",
+        "dependency_context",
+        "operational_context",
+        "supply_chain_context",
+        "policy_resolution",
+    }
+    assert rsa_record.decision.confidence_score == 0.0
+    assert rsa_record.decision.human_review_required is True
+    assert "confidence:below_decision_grade_threshold" in (
+        rsa_record.decision.reason_codes
+    )

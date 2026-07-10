@@ -28,11 +28,24 @@ def test_pdr_generate_inventory_writes_json_document(tmp_path: Path) -> None:
 
     document = json.loads(output.read_text(encoding="utf-8"))
 
-    assert document["pdr_version"] == "0.1"
+    assert document["pdr_version"] == "0.2"
     assert document["input_snapshot"]["source_type"] == "qstriage_inventory"
     assert document["input_snapshot"]["source_hash"].startswith("sha256:")
     assert document["document_hash"].startswith("sha256:")
     assert len(document["records"]) == 5
+
+    decision = document["records"][0]["decision"]
+    assert set(decision) == {
+        "risk_attention_score",
+        "risk_attention_band",
+        "execution_state",
+        "action_type",
+        "verification_priority",
+        "verification_requirements",
+        "confidence_score",
+        "human_review_required",
+        "reason_codes",
+    }
 
 
 def test_pdr_generate_cbom_writes_cyclonedx_pdr_document(tmp_path: Path) -> None:
