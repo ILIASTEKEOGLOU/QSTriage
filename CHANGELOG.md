@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added versioned canonical execution, action, verification, confidence, review, and reason-code fields to JSON and CSV score exports.
 - Added deterministic inventory-level assessment assembly for analyst-facing output surfaces.
 - Added canonical execution, action, verification, confidence, review, and reason-code detail to Markdown reports.
 - Added a shared asset-assessment boundary that gathers classification, scoring, normalized context, evidence review, policy evaluation, decision confidence, and canonical decision state.
@@ -12,6 +13,7 @@
 
 ### Changed
 
+- Score exports now use assessment contract `0.2`; the compatibility field `recommended_action` aliases canonical `action_type`, and score-derived action text is omitted from explanations.
 - CLI score output and Markdown reports now project the shared canonical decision instead of the legacy score-derived action.
 - Bumped the PDR contract version from `0.1` to `0.2`; record and document hashes therefore change with the new serialized decision contract.
 - PDR generation now projects `CanonicalDecision` instead of rebuilding action and human-review state from score fields.
@@ -19,6 +21,7 @@
 
 ### Fixed
 
+- JSON and CSV score exports no longer publish score-derived action text that can contradict the canonical decision.
 - Markdown score explanations no longer repeat a legacy action that can contradict the canonical decision.
 - PDR records no longer expose score-derived action text that can contradict canonical execution and verification state.
 - Realistic context aliases no longer receive contradictory cross-module interpretations, while unknown or unmapped values require verification instead of being guessed.

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from qstriage.cbom import import_cbom_inventory
 from qstriage.exporters import export_score_results, export_simulation_results
 from qstriage.models import (
     CryptographicAsset,
@@ -24,8 +25,16 @@ def test_export_score_results_as_json(tmp_path: Path) -> None:
 
     assert len(data) == 5
     assert data[0]["asset_id"]
+    assert data[0]["score_export_version"] == "0.2"
     assert "breakdown" in data[0]
     assert "priority_score" in data[0]
+    assert "execution_state" in data[0]
+    assert "action_type" in data[0]
+    assert data[0]["recommended_action"] == data[0]["action_type"]
+    assert not any(
+        line.startswith("Recommended action:")
+        for line in data[0]["explanation"]
+    )
 
 
 def test_export_score_results_as_csv(tmp_path: Path) -> None:
@@ -39,8 +48,61 @@ def test_export_score_results_as_csv(tmp_path: Path) -> None:
 
     assert len(rows) == 5
     assert "asset_id" in rows[0]
+    assert rows[0]["score_export_version"] == "0.2"
     assert "priority_score" in rows[0]
+    assert "execution_state" in rows[0]
+    assert "action_type" in rows[0]
+    assert rows[0]["recommended_action"] == rows[0]["action_type"]
     assert "cryptographic_risk" in rows[0]
+    assert "Recommended action:" not in rows[0]["explanation"]
+
+
+def test_score_exports_project_canonical_actions_for_known_divergences(
+    tmp_path: Path,
+) -> None:
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    json_path = tmp_path / "scores.json"
+    csv_path = tmp_path / "scores.csv"
+
+    export_score_results(inventory, json_path, "json")
+    export_score_results(inventory, csv_path, "csv")
+
+    json_rows = {
+        row["asset_id"]: row
+        for row in json.loads(json_path.read_text(encoding="utf-8"))
+    }
+    with csv_path.open("r", encoding="utf-8", newline="") as file:
+        csv_rows = {row["asset_id"]: row for row in csv.DictReader(file)}
+
+    for rows in (json_rows, csv_rows):
+        assert rows["payments-api"]["action_type"] == "simulate_before_migration"
+        assert rows["payments-api"]["recommended_action"] == (
+            "simulate_before_migration"
+        )
+        assert rows["ot-gateway"]["action_type"] == "simulate_before_migration"
+        assert rows["ot-gateway"]["recommended_action"] == (
+            "simulate_before_migration"
+        )
+
+
+def test_score_export_projects_gated_cbom_decision(tmp_path: Path) -> None:
+    inventory = import_cbom_inventory(Path("tests/fixtures/sample_cbom.json"))
+    output_path = tmp_path / "cbom-scores.json"
+
+    export_score_results(inventory, output_path, "json")
+
+    rows = {
+        row["asset_id"]: row
+        for row in json.loads(output_path.read_text(encoding="utf-8"))
+    }
+    rsa = rows["crypto-rsa-2048"]
+
+    assert rsa["execution_state"] == "gated"
+    assert rsa["action_type"] == "migration_planning"
+    assert rsa["verification_priority"] == "high"
+    assert rsa["human_review_required"] is True
+    assert "business_context" in rsa["verification_requirements"]
+    assert "policy_resolution" in rsa["verification_requirements"]
 
 
 def test_export_simulation_results_as_json(tmp_path: Path) -> None:
