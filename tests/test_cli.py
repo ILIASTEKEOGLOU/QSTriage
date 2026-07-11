@@ -419,3 +419,43 @@ def test_policy_show_command_rejects_unknown_policy_pack() -> None:
     assert result.exit_code == 1
     assert "Policy lookup failed" in result.output
     assert "Unknown policy pack" in result.output
+
+
+def test_score_command_neutralizes_terminal_markup_and_controls(tmp_path: Path) -> None:
+    import yaml
+
+    inventory_path = tmp_path / "malicious.yaml"
+    inventory_path.write_text(
+        yaml.safe_dump(
+            {
+                "assets": [
+                    {
+                        "id": "asset",
+                        "name": "[red]X[/red]\x1b[2J\nFORGED\u202e",
+                        "environment": "prod",
+                        "asset_type": "service",
+                        "protocol": "TLS",
+                        "algorithm": "RSA",
+                        "data_class": "sensitive",
+                        "retention_years": 10,
+                        "exposure": "public",
+                        "criticality": "high",
+                        "local_blast_radius": "high",
+                        "migration_effort": "medium",
+                    }
+                ]
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["score", str(inventory_path)])
+
+    assert result.exit_code == 0, result.output
+    assert "\x1b" not in result.output
+    assert "\u202e" not in result.output
+    assert "[red]X[/red]" in result.output
+    assert r"\x1b" in result.output
+    assert r"\nFORGED\u202e" in result.output

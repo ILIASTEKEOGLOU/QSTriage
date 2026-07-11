@@ -70,3 +70,39 @@ def test_write_markdown_report_creates_file(tmp_path: Path) -> None:
     content = written_path.read_text(encoding="utf-8")
 
     assert "QSTriage PQC Migration Assessment Report" in content
+
+
+def test_generate_markdown_report_neutralizes_untrusted_structure() -> None:
+    from qstriage.models import Inventory
+
+    inventory = Inventory.model_validate(
+        {
+            "assets": [
+                {
+                    "id": "asset`id\nforged",
+                    "name": "Attacker | row\n## Forged\n<script>alert(1)</script>\u202e",
+                    "environment": "prod",
+                    "asset_type": "service",
+                    "protocol": "TLS",
+                    "algorithm": "RSA```text",
+                    "data_class": "sensitive",
+                    "retention_years": 10,
+                    "exposure": "public",
+                    "criticality": "high",
+                    "local_blast_radius": "high",
+                    "migration_effort": "medium",
+                }
+            ]
+        }
+    )
+
+    report = generate_markdown_report(inventory)
+
+    assert "\u202e" not in report
+    assert "\n## Forged\n" not in report
+    assert "<script>" not in report
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in report
+    assert r"Attacker \| row" in report
+    assert r"\n## Forged\n" in report
+    assert "````text" in report
+    assert report.count("````") >= 2
