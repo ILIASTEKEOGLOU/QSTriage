@@ -148,7 +148,11 @@ def load_yaml_limited(text: str, *, label: str) -> Any:
         elif isinstance(event, (MappingEndEvent, SequenceEndEvent)):
             depth = max(0, depth - 1)
 
-    return yaml.load(text, Loader=_UniqueKeySafeLoader)
+    loader = _UniqueKeySafeLoader(text)
+    try:
+        return loader.get_single_data()
+    finally:
+        loader.dispose()
 
 
 class TraversalBudget:

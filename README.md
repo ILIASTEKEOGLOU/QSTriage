@@ -1,6 +1,7 @@
 # QSTriage
 
 [![CI](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/ci.yml/badge.svg)](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/ci.yml)
+[![Security](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/security.yml/badge.svg)](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/security.yml)
 
 **QSTriage — Cryptographic Policy & Justification Engine**
 
