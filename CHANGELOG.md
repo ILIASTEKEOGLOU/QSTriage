@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added an explicit pinned build backend, a hashed Python 3.11 release toolchain contract, build-twice reproducibility checks, deterministic source-distribution normalization, CycloneDX SBOM generation, SHA-256 manifests, and GitHub artifact attestations.
+
 - Added a hashed Python 3.11 dependency lock, automated vulnerability and static-analysis workflows, full-history secret scanning, and Dependabot coverage for Python and GitHub Actions.
 
 - Added immutable GitHub Actions references, bounded CI execution, non-persistent checkout credentials, and dependency-consistency verification.
