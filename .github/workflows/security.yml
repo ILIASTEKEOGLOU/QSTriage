@@ -21,7 +21,7 @@ env:
 jobs:
   dependency-audit:
     name: dependency audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
 
     steps:
@@ -30,6 +30,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Python 3.11
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+
       - name: Audit hashed application and development lock
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:
@@ -37,10 +42,10 @@ jobs:
           require-hashes: true
           no-deps: true
 
-      - name: Audit hashed release-tool lock
+      - name: Audit hashed Linux release-tool lock
         uses: pypa/gh-action-pip-audit@1220774d901786e6f652ae159f7b6bc8fea6d266 # v1.1.0
         with:
-          inputs: requirements/release-py311.lock
+          inputs: requirements/release-linux-py311.lock
           require-hashes: true
           no-deps: true
 
