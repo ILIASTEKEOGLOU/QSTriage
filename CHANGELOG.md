@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added a hashed Python 3.11 dependency lock, automated vulnerability and static-analysis workflows, full-history secret scanning, and Dependabot coverage for Python and GitHub Actions.
+
 - Added immutable GitHub Actions references, bounded CI execution, non-persistent checkout credentials, and dependency-consistency verification.
 
 - Added a read-once PDR input capture boundary that parses and hashes the same exact source bytes.
@@ -18,6 +20,8 @@
 - Added a shared typed context-normalization layer that preserves raw values and records declared, missing, defaulted, or unmapped state.
 
 ### Changed
+
+- CI now installs the exact hashed dependency resolution and uses current immutable Node 24-compatible checkout and Python setup actions.
 
 - CI now installs a pinned pip release and the development dependency floor excludes pytest versions affected by CVE-2025-71176.
 

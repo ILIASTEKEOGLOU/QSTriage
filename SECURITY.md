@@ -30,7 +30,7 @@ Security fixes are handled on the latest `main` branch and the most recent tagge
 
 ## CI trust boundary
 
-The primary CI workflow uses read-only repository permissions, immutable full-length action commit references, non-persistent checkout credentials, bounded job execution, and dependency-consistency checks. Project dependency locking, automated vulnerability scanning, release artifact provenance, and SBOM evidence are tracked separately and must be closed before the next release candidate.
+The primary CI workflow uses read-only repository permissions, immutable full-length action commit references, non-persistent checkout credentials, bounded job execution, and dependency-consistency checks. The Python 3.11 CI environment is installed from a hashed dependency lock. A separate read-only security workflow runs dependency vulnerability auditing, Bandit static analysis, and full-history Gitleaks scanning. Dependabot monitors Python and GitHub Actions updates. Release artifact provenance and SBOM evidence remain tracked separately and must be closed before the next release candidate.
 
 ## Operational safety
 

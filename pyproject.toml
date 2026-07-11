@@ -26,3 +26,8 @@ pythonpath = ["."]
 
 [tool.setuptools]
 packages = ["qstriage"]
+
+[tool.pip-tools]
+generate-hashes = true
+strip-extras = true
+resolver = "backtracking"
