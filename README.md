@@ -113,6 +113,8 @@ qstriage report examples/sample_inventory.yaml --output reports/sample_report.md
 
 Markdown reports and structured score exports use the same canonical assessment boundary as the CLI and PDR.
 
+All generated artifacts use a private safe-write boundary. Existing files are not replaced by default; rerun a write command with `--overwrite` only when replacement is intentional. QSTriage rejects symlink output paths and output paths that collide with the active input or configuration file, writes complete artifacts before atomic publication, and creates new output files with owner-only permissions where the platform supports POSIX modes.
+
 Export canonical decision-aware score results:
 
 ```bash

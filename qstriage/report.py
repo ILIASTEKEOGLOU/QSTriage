@@ -6,6 +6,7 @@ from pathlib import Path
 
 from qstriage.assessment import AssetAssessment, assess_inventory
 from qstriage.graph import build_dependency_graph, render_text_graph
+from qstriage.file_output import write_private_text
 from qstriage.models import Inventory, load_inventory
 from qstriage.presentation import (
     markdown_code_block,
@@ -117,15 +118,23 @@ def generate_markdown_report(inventory: Inventory) -> str:
     return "\n".join(lines)
 
 
-def write_markdown_report(inventory_path: str | Path, output_path: str | Path) -> Path:
+def write_markdown_report(
+    inventory_path: str | Path,
+    output_path: str | Path,
+    *,
+    overwrite: bool = False,
+    protected_paths: tuple[str | Path | None, ...] = (),
+) -> Path:
     inventory = load_inventory(inventory_path)
     report = generate_markdown_report(inventory)
 
     destination = Path(output_path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(report, encoding="utf-8")
-
-    return destination
+    return write_private_text(
+        destination,
+        report,
+        overwrite=overwrite,
+        protected_paths=(inventory_path, *protected_paths),
+    )
 
 
 def _render_decision_context_review(review: InventoryContextReview) -> list[str]:

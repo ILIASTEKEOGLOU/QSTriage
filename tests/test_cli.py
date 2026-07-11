@@ -459,3 +459,115 @@ def test_score_command_neutralizes_terminal_markup_and_controls(tmp_path: Path) 
     assert "[red]X[/red]" in result.output
     assert r"\x1b" in result.output
     assert r"\nFORGED\u202e" in result.output
+
+
+def test_report_command_refuses_existing_output_without_overwrite(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "report.md"
+    output_path.write_text("existing report", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "report",
+            "examples/sample_inventory.yaml",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "pass --overwrite" in result.output
+    assert output_path.read_text(encoding="utf-8") == "existing report"
+
+
+def test_report_command_overwrites_only_with_explicit_flag(tmp_path: Path) -> None:
+    output_path = tmp_path / "report.md"
+    output_path.write_text("existing report", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "report",
+            "examples/sample_inventory.yaml",
+            "--output",
+            str(output_path),
+            "--overwrite",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "QSTriage PQC Migration Assessment Report" in output_path.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_report_command_refuses_input_output_collision(tmp_path: Path) -> None:
+    inventory_path = tmp_path / "inventory.yaml"
+    original = Path("examples/sample_inventory.yaml").read_text(encoding="utf-8")
+    inventory_path.write_text(original, encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "report",
+            str(inventory_path),
+            "--output",
+            str(inventory_path),
+            "--overwrite",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "protected input/config" in result.output
+    assert inventory_path.read_text(encoding="utf-8") == original
+
+
+def test_score_export_refuses_config_output_collision(tmp_path: Path) -> None:
+    config_path = tmp_path / "qstriage.yaml"
+    config_text = (
+        "outputs:\n"
+        f"  scores_path: {config_path.as_posix()}\n"
+    )
+    config_path.write_text(config_text, encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "export",
+            "scores",
+            "examples/sample_inventory.yaml",
+            "--config",
+            str(config_path),
+            "--overwrite",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "protected input/config" in result.output
+    assert config_path.read_text(encoding="utf-8") == config_text
+
+
+def test_simulation_export_refuses_input_output_collision(tmp_path: Path) -> None:
+    inventory_path = tmp_path / "inventory.yaml"
+    original = Path("examples/sample_inventory.yaml").read_text(encoding="utf-8")
+    inventory_path.write_text(original, encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "export",
+            "simulations",
+            str(inventory_path),
+            "--format",
+            "json",
+            "--output",
+            str(inventory_path),
+            "--overwrite",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "protected input/config" in result.output
+    assert inventory_path.read_text(encoding="utf-8") == original
