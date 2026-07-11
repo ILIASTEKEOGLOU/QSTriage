@@ -28,6 +28,10 @@ QSTriage is not a production scanner, certificate manager, deployment tool, or a
 
 Security fixes are handled on the latest `main` branch and the most recent tagged release.
 
+## CI trust boundary
+
+The primary CI workflow uses read-only repository permissions, immutable full-length action commit references, non-persistent checkout credentials, bounded job execution, and dependency-consistency checks. Project dependency locking, automated vulnerability scanning, release artifact provenance, and SBOM evidence are tracked separately and must be closed before the next release candidate.
+
 ## Operational safety
 
 Use sanitized inventories and examples when testing or reporting issues.

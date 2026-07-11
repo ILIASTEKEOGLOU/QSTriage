@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added immutable GitHub Actions references, bounded CI execution, non-persistent checkout credentials, and dependency-consistency verification.
+
 - Added a read-once PDR input capture boundary that parses and hashes the same exact source bytes.
 - Added a documented input and workload safety boundary covering file size, collection size, string length, YAML structure, simulation fan-out, and graph traversal/output budgets.
 - Added a shared private file-output boundary with atomic publication, owner-only file permissions, symlink rejection, and protected input/config collision checks.
@@ -16,6 +18,8 @@
 - Added a shared typed context-normalization layer that preserves raw values and records declared, missing, defaulted, or unmapped state.
 
 ### Changed
+
+- CI now installs a pinned pip release and the development dependency floor excludes pytest versions affected by CVE-2025-71176.
 
 - File-backed PDR generation now derives inventory data, CBOM version metadata, and `source_hash` from one immutable captured byte snapshot.
 - Inventory, configuration, and CBOM loading now reject oversized, structurally invalid, duplicate-key, or unsupported alias-based input before analysis begins.
