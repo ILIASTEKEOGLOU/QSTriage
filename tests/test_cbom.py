@@ -159,6 +159,42 @@ def test_cbom_import_normalizes_aes_family_and_key_size_for_registry() -> None:
     assert asset.key_size_bits == 256
 
 
+@pytest.mark.parametrize(
+    ("component_name", "oid", "expected_algorithm"),
+    [
+        ("aes256-CBC", "2.16.840.1.101.3.4.1.42", "AES-256-CBC"),
+        ("aes256-GCM", "2.16.840.1.101.3.4.1.46", "AES-256-GCM"),
+    ],
+)
+def test_cbom_import_normalizes_cdxgen_aes_names_for_registry(
+    component_name: str,
+    oid: str,
+    expected_algorithm: str,
+) -> None:
+    cbom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.7",
+        "components": [
+            {
+                "type": "cryptographic-asset",
+                "bom-ref": f"crypto/algorithm/{component_name}",
+                "name": component_name,
+                "cryptoProperties": {
+                    "assetType": "algorithm",
+                    "oid": oid,
+                },
+            }
+        ],
+    }
+
+    inventory = inventory_from_cbom(cbom)
+
+    asset = inventory.assets[0]
+
+    assert asset.algorithm == expected_algorithm
+    assert asset.key_size_bits == 256
+
+
 def test_cbom_rejects_non_object_root() -> None:
     with pytest.raises(ValueError, match="root must be a JSON object"):
         inventory_from_cbom([])  # type: ignore[arg-type]
