@@ -194,3 +194,42 @@ def test_render_text_graph_neutralizes_untrusted_presentation_controls() -> None
     assert r"\x1b[2J\nforged" in rendered
     assert r"RSA\u202e" in rendered
     assert r"TLS\x07\nFAKE" in rendered
+
+
+def test_blast_radius_respects_shared_traversal_budget() -> None:
+    from qstriage.limits import ResourceLimitError, TraversalBudget
+
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    graph = build_dependency_graph(inventory)
+
+    with pytest.raises(ResourceLimitError, match="graph traversal budget"):
+        calculate_graph_amplified_blast_radius(
+            graph,
+            "public-api-gateway",
+            budget=TraversalBudget(limit=1),
+        )
+
+
+def test_render_text_graph_rejects_excessive_output() -> None:
+    from qstriage.limits import ResourceLimitError
+
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    graph = build_dependency_graph(inventory)
+
+    with pytest.raises(ResourceLimitError, match="rendering exceeded"):
+        render_text_graph(
+            graph,
+            "public-api-gateway",
+            max_lines=2,
+            output_encoding="utf-8",
+        )
+
+
+def test_critical_paths_rejects_excessive_path_count() -> None:
+    from qstriage.limits import ResourceLimitError
+
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    graph = build_dependency_graph(inventory)
+
+    with pytest.raises(ResourceLimitError, match="Critical-path enumeration"):
+        critical_paths(graph, max_paths=1)

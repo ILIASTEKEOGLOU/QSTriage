@@ -327,3 +327,26 @@ Show the built-in NIST PQC baseline policy pack:
 The `policy_pack_hash` field is deterministic and is used in PDR policy context.
 
 Current PDR records also include asset-level `policy_evaluation` results. These results record the applied policy rule IDs, policy findings, standards applied, and thresholds applied for each asset. `policy_context` remains document-level policy pack provenance.
+
+## Supported input and workload limits
+
+QSTriage treats inventory, CBOM, and configuration files as untrusted input. The current supported contract is intentionally conservative:
+
+- QSTriage inventory YAML: maximum 10 MiB
+- CycloneDX CBOM JSON: maximum 32 MiB and 10,000 components
+- QSTriage configuration YAML: maximum 1 MiB
+- inventory assets: 1 to 1,000
+- inventory dependencies: at most 10,000
+- migration scenarios: at most 100
+- generated asset/scenario simulation results: at most 20,000
+- identifiers: at most 256 characters
+- ordinary text fields: at most 512 characters
+- notes: at most 4,096 characters
+- YAML nesting: at most 64 collection levels
+- YAML parser events: at most 200,000
+- YAML aliases/anchors: not supported for untrusted input
+- shared graph blast-radius traversal: at most 250,000 states per inventory scoring run
+- rendered dependency graph: at most 5,000 lines
+- critical-path enumeration: at most 10,000 paths
+
+A limit violation is a controlled validation failure, not a partial result. Reduce dependency density, remove irrelevant records, or split the inventory into smaller decision scopes. These limits protect deterministic local operation and are not claims about enterprise-wide discovery capacity.

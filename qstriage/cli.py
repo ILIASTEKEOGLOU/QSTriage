@@ -17,6 +17,7 @@ from qstriage.evidence import review_inventory_evidence
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
 from qstriage.file_output import UnsafeOutputError, write_private_text
 from qstriage.graph import build_dependency_graph, render_text_graph
+from qstriage.limits import ResourceLimitError
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document
 from qstriage.presentation import sanitize_terminal_text
@@ -251,7 +252,11 @@ def score(
 ) -> None:
     """Print the explainable migration priority backlog."""
     inventory = _load_inventory_or_exit(inventory_path)
-    assessments = assess_inventory(inventory)
+    try:
+        assessments = assess_inventory(inventory)
+    except ResourceLimitError as error:
+        _safe_print(f"Scoring failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
 
     table = Table(title="QSTriage Canonical Decision Backlog", box=None)
     table.add_column("Rank", justify="right")
@@ -299,7 +304,13 @@ def graph(
     inventory = _load_inventory_or_exit(inventory_path)
     dependency_graph = build_dependency_graph(inventory)
 
-    console.print(render_text_graph(dependency_graph, asset_id), markup=False)
+    try:
+        rendered = render_text_graph(dependency_graph, asset_id)
+    except (KeyError, ResourceLimitError) as error:
+        _safe_print(f"Graph rendering failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+
+    console.print(rendered, markup=False)
 
 
 @app.command("report")
@@ -345,7 +356,7 @@ def report(
             overwrite=overwrite,
             protected_paths=(inventory_path, config_path),
         )
-    except (UnsafeOutputError, OSError) as error:
+    except (ResourceLimitError, UnsafeOutputError, OSError) as error:
         _safe_print(f"Report generation failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
@@ -572,7 +583,7 @@ def export_scores_command(
             overwrite=overwrite,
             protected_paths=(inventory_path, config_path),
         )
-    except (UnsafeOutputError, OSError) as error:
+    except (ResourceLimitError, UnsafeOutputError, OSError) as error:
         _safe_print(f"Score export failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
@@ -630,7 +641,7 @@ def export_simulations_command(
             overwrite=overwrite,
             protected_paths=(inventory_path, config_path),
         )
-    except (UnsafeOutputError, OSError) as error:
+    except (ResourceLimitError, UnsafeOutputError, OSError) as error:
         _safe_print(f"Simulation export failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 

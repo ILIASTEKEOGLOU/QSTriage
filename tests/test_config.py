@@ -64,3 +64,30 @@ def test_load_config_rejects_unknown_export_format(tmp_path: Path) -> None:
 def test_load_config_rejects_missing_file(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         load_config(tmp_path / "missing.yaml")
+
+
+def test_load_config_rejects_yaml_aliases(tmp_path: Path) -> None:
+    from qstriage.limits import ResourceLimitError
+
+    config_path = tmp_path / "qstriage.yaml"
+    config_path.write_text(
+        "base: &base\n  default_format: json\nexports: *base\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ResourceLimitError, match="YAML aliases"):
+        load_config(config_path)
+
+
+def test_load_config_rejects_oversized_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import qstriage.config as config_module
+
+    config_path = tmp_path / "qstriage.yaml"
+    config_path.write_text("exports:\n  default_format: json\n", encoding="utf-8")
+    monkeypatch.setattr(config_module, "MAX_CONFIG_FILE_BYTES", 8)
+
+    with pytest.raises(ValueError, match="supported size limit"):
+        load_config(config_path)

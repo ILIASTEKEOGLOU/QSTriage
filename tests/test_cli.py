@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from qstriage.cli import app
@@ -571,3 +572,84 @@ def test_simulation_export_refuses_input_output_collision(tmp_path: Path) -> Non
     assert result.exit_code == 1
     assert "protected input/config" in result.output
     assert inventory_path.read_text(encoding="utf-8") == original
+
+
+def test_validate_command_rejects_empty_inventory_without_traceback(tmp_path: Path) -> None:
+    inventory_path = tmp_path / "empty.yaml"
+    inventory_path.write_text("assets: []\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["validate", str(inventory_path)])
+
+    assert result.exit_code == 1
+    assert "Inventory validation failed" in result.output
+    assert "at least 1 item" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_score_command_reports_resource_limit_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from qstriage.limits import ResourceLimitError
+    import qstriage.cli as cli_module
+
+    def fail_assessment(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise ResourceLimitError("synthetic scoring budget exceeded")
+
+    monkeypatch.setattr(cli_module, "assess_inventory", fail_assessment)
+
+    result = runner.invoke(app, ["score", "examples/sample_inventory.yaml"])
+
+    assert result.exit_code == 1
+    assert "Scoring failed: synthetic scoring budget exceeded" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_graph_command_reports_resource_limit_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from qstriage.limits import ResourceLimitError
+    import qstriage.cli as cli_module
+
+    def fail_render(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise ResourceLimitError("synthetic graph budget exceeded")
+
+    monkeypatch.setattr(cli_module, "render_text_graph", fail_render)
+
+    result = runner.invoke(
+        app,
+        ["graph", "examples/sample_inventory.yaml", "public-api-gateway"],
+    )
+
+    assert result.exit_code == 1
+    assert "Graph rendering failed: synthetic graph budget exceeded" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_report_command_reports_resource_limit_without_partial_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from qstriage.limits import ResourceLimitError
+    import qstriage.cli as cli_module
+
+    output_path = tmp_path / "report.md"
+
+    def fail_report(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise ResourceLimitError("synthetic report budget exceeded")
+
+    monkeypatch.setattr(cli_module, "generate_markdown_report", fail_report)
+
+    result = runner.invoke(
+        app,
+        [
+            "report",
+            "examples/sample_inventory.yaml",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Report generation failed: synthetic report budget exceeded" in result.output
+    assert not output_path.exists()
+    assert "Traceback" not in result.output

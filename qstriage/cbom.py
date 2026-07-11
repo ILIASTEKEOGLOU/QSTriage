@@ -8,6 +8,12 @@ from typing import Any
 import yaml
 
 from qstriage.file_output import write_private_text
+from qstriage.limits import (
+    MAX_CBOM_COMPONENTS,
+    MAX_CBOM_FILE_BYTES,
+    ResourceLimitError,
+    read_text_limited,
+)
 from qstriage.models import CryptographicAsset, Inventory
 
 
@@ -19,15 +25,34 @@ REVIEW_REQUIRED_NOTE = (
 
 def load_cbom_json(path: str | Path) -> dict[str, Any]:
     cbom_path = Path(path)
-    return json.loads(cbom_path.read_text(encoding="utf-8"))
+    text = read_text_limited(
+        cbom_path,
+        max_bytes=MAX_CBOM_FILE_BYTES,
+        label="CBOM file",
+    )
+
+    try:
+        payload = json.loads(text, object_pairs_hook=_object_without_duplicate_keys)
+    except RecursionError as error:
+        raise ResourceLimitError(
+            "CBOM JSON exceeds the supported nesting depth."
+        ) from error
+
+    _validate_cbom_document(payload)
+    return payload
 
 
 def inventory_from_cbom(cbom: dict[str, Any]) -> Inventory:
+    _validate_cbom_document(cbom)
+    components = cbom.get("components", [])
     assets = [
         _asset_from_component(component)
-        for component in cbom.get("components", [])
+        for component in components
         if _is_cryptographic_asset(component)
     ]
+
+    if not assets:
+        raise ValueError("CBOM contains no cryptographic asset components.")
 
     return Inventory(assets=assets, dependencies=[], scenarios=[])
 
@@ -54,6 +79,101 @@ def write_imported_inventory(
         overwrite=overwrite,
         protected_paths=(input_path,),
     )
+
+
+def _object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"CBOM JSON contains duplicate key '{key}'.")
+        result[key] = value
+    return result
+
+
+def _validate_cbom_document(payload: Any) -> None:
+    if not isinstance(payload, dict):
+        raise ValueError("CBOM document root must be a JSON object.")
+
+    components = payload.get("components", [])
+    if not isinstance(components, list):
+        raise ValueError("CBOM field 'components' must be a JSON array.")
+    if len(components) > MAX_CBOM_COMPONENTS:
+        raise ResourceLimitError(
+            f"CBOM contains {len(components)} components; the supported limit is "
+            f"{MAX_CBOM_COMPONENTS}."
+        )
+
+    for index, component in enumerate(components):
+        if not isinstance(component, dict):
+            raise ValueError(f"CBOM components[{index}] must be a JSON object.")
+
+        for field in ("bom-ref", "name", "type"):
+            _validate_optional_scalar(
+                component.get(field),
+                location=f"components[{index}].{field}",
+            )
+
+        crypto_properties = component.get("cryptoProperties")
+        if crypto_properties is None:
+            continue
+        if not isinstance(crypto_properties, dict):
+            raise ValueError(
+                f"CBOM components[{index}].cryptoProperties must be a JSON object."
+            )
+
+        for field in ("assetType", "executionEnvironment"):
+            _validate_optional_scalar(
+                crypto_properties.get(field),
+                location=f"components[{index}].cryptoProperties.{field}",
+            )
+
+        for field in ("algorithmProperties", "protocolProperties"):
+            nested = crypto_properties.get(field)
+            if nested is not None and not isinstance(nested, dict):
+                raise ValueError(
+                    f"CBOM components[{index}].cryptoProperties.{field} "
+                    "must be a JSON object."
+                )
+
+        algorithm_properties = crypto_properties.get("algorithmProperties") or {}
+        for field in (
+            "parameterSetIdentifier",
+            "algorithm",
+            "algorithmFamily",
+            "primitive",
+            "executionEnvironment",
+            "keySize",
+            "keySizeBits",
+            "keyLength",
+            "publicKeySize",
+            "classicalSecurityLevel",
+            "nistQuantumSecurityLevel",
+        ):
+            _validate_optional_scalar(
+                algorithm_properties.get(field),
+                location=(
+                    f"components[{index}].cryptoProperties."
+                    f"algorithmProperties.{field}"
+                ),
+            )
+
+        protocol_properties = crypto_properties.get("protocolProperties") or {}
+        for field in ("protocol", "name"):
+            _validate_optional_scalar(
+                protocol_properties.get(field),
+                location=(
+                    f"components[{index}].cryptoProperties."
+                    f"protocolProperties.{field}"
+                ),
+            )
+
+
+def _validate_optional_scalar(value: Any, *, location: str) -> None:
+    if value is None:
+        return
+    if isinstance(value, (str, int, float, bool)):
+        return
+    raise ValueError(f"CBOM {location} must be a JSON scalar value.")
 
 
 def _is_cryptographic_asset(component: dict[str, Any]) -> bool:
@@ -197,6 +317,8 @@ def _normalize_cbom_algorithm_string(
 def _string_or_none(value: Any) -> str | None:
     if value is None:
         return None
+    if isinstance(value, (dict, list)):
+        raise ValueError("CBOM scalar field cannot be an object or array.")
 
     cleaned = str(value).strip()
     if not cleaned:

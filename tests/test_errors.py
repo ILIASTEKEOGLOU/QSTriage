@@ -99,3 +99,17 @@ def test_format_yaml_error_includes_line_and_column() -> None:
     assert "Inventory YAML is malformed in broken.yaml" in message
     assert "line" in message
     assert "column" in message
+
+
+def test_format_resource_limit_error_as_input_rejection() -> None:
+    from qstriage.limits import ResourceLimitError
+
+    message = format_inventory_load_error(
+        ResourceLimitError("Inventory file exceeds the supported size limit."),
+        path="inventory.yaml",
+    )
+
+    assert message == (
+        "Input rejected in inventory.yaml: "
+        "Inventory file exceeds the supported size limit."
+    )

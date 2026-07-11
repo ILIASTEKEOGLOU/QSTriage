@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 import yaml
 
 from qstriage.cbom import (
@@ -156,3 +157,81 @@ def test_cbom_import_normalizes_aes_family_and_key_size_for_registry() -> None:
 
     assert asset.algorithm == "AES-256"
     assert asset.key_size_bits == 256
+
+
+def test_cbom_rejects_non_object_root() -> None:
+    with pytest.raises(ValueError, match="root must be a JSON object"):
+        inventory_from_cbom([])  # type: ignore[arg-type]
+
+
+def test_cbom_rejects_components_object() -> None:
+    with pytest.raises(ValueError, match="components.*JSON array"):
+        inventory_from_cbom({"components": {"type": "cryptographic-asset"}})
+
+
+def test_cbom_rejects_non_object_component() -> None:
+    with pytest.raises(ValueError, match=r"components\[0\].*JSON object"):
+        inventory_from_cbom({"components": ["not-an-object"]})
+
+
+def test_cbom_rejects_non_object_crypto_properties() -> None:
+    with pytest.raises(ValueError, match="cryptoProperties.*JSON object"):
+        inventory_from_cbom(
+            {
+                "components": [
+                    {
+                        "type": "cryptographic-asset",
+                        "cryptoProperties": "not-an-object",
+                    }
+                ]
+            }
+        )
+
+
+def test_cbom_rejects_document_without_crypto_assets() -> None:
+    with pytest.raises(ValueError, match="no cryptographic asset components"):
+        inventory_from_cbom({"components": [{"type": "library", "name": "lib"}]})
+
+
+def test_load_cbom_json_rejects_duplicate_keys(tmp_path: Path) -> None:
+    path = tmp_path / "duplicate.json"
+    path.write_text(
+        '{"components": [], "components": []}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate key 'components'"):
+        load_cbom_json(path)
+
+
+def test_load_cbom_json_rejects_oversized_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import qstriage.cbom as cbom_module
+
+    path = tmp_path / "large.json"
+    path.write_text('{"components": []}', encoding="utf-8")
+    monkeypatch.setattr(cbom_module, "MAX_CBOM_FILE_BYTES", 4)
+
+    with pytest.raises(ValueError, match="supported size limit"):
+        load_cbom_json(path)
+
+
+def test_cbom_rejects_object_where_scalar_metadata_is_expected() -> None:
+    with pytest.raises(ValueError, match="algorithm.*JSON scalar value"):
+        inventory_from_cbom(
+            {
+                "components": [
+                    {
+                        "type": "cryptographic-asset",
+                        "name": "Asset",
+                        "cryptoProperties": {
+                            "algorithmProperties": {
+                                "algorithm": {"unexpected": "object"}
+                            }
+                        },
+                    }
+                ]
+            }
+        )
