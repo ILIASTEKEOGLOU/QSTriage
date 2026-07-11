@@ -248,12 +248,17 @@ Current PDR records include `policy_evaluation` with applied rule IDs, policy fi
 
 ## Release integrity
 
-The release-artifact workflow builds the wheel and source distribution twice from independent source snapshots and requires byte-for-byte equality. It also publishes a deterministic `SHA256SUMS` manifest and a reproducible CycloneDX JSON SBOM. Tag-triggered and approved main-branch manual runs create GitHub build-provenance and SBOM attestations for the artifacts; the workflow does not create or publish a GitHub Release automatically.
+The release-artifact workflow builds the wheel and source distribution twice from independent source snapshots and requires byte-for-byte equality. It also publishes a deterministic `SHA256SUMS` manifest and a reproducible CycloneDX JSON SBOM. Tag-triggered and approved main-branch manual runs create GitHub build-provenance and SBOM attestations only when the repository is public. Private repository runs retain the reproducible artifacts, checksums, and SBOM while intentionally skipping GitHub-hosted attestations. The workflow does not create or publish a GitHub Release automatically.
 
 Verify downloaded artifacts from their release directory:
 
 ```bash
 sha256sum --check SHA256SUMS
+```
+
+When the repository is public and the attestation job has run, verify the GitHub attestations:
+
+```bash
 gh attestation verify qstriage-*.whl --repo ILIASTEKEOGLOU/QSTriage
 gh attestation verify qstriage-*.tar.gz --repo ILIASTEKEOGLOU/QSTriage
 ```
