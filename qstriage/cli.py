@@ -6,6 +6,7 @@ import yaml
 from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 
 from qstriage import __version__
 from qstriage.assessment import assess_inventory
@@ -17,6 +18,7 @@ from qstriage.exporters import ExportFormat, export_score_results, export_simula
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document
+from qstriage.presentation import sanitize_terminal_text
 from qstriage.policy import get_policy_pack, list_policy_packs
 from qstriage.report import generate_markdown_report
 from qstriage.review import review_decision_context
@@ -54,11 +56,19 @@ policy_app = typer.Typer(
 console = Console()
 
 
+def _safe_text(value: object, *, style: str | None = None) -> Text:
+    return Text(sanitize_terminal_text(value), style=style)
+
+
+def _safe_print(value: object, *, style: str | None = None) -> None:
+    console.print(_safe_text(value, style=style))
+
+
 def _load_inventory_or_exit(inventory_path: Path):
     try:
         return load_inventory(inventory_path)
     except (FileNotFoundError, yaml.YAMLError, ValidationError, ValueError) as error:
-        console.print(format_inventory_load_error(error, path=inventory_path), style="red")
+        _safe_print(format_inventory_load_error(error, path=inventory_path), style="red")
         raise typer.Exit(code=1) from error
 
 
@@ -66,7 +76,7 @@ def _load_config_or_exit(config_path: Path | None) -> QSTriageConfig:
     try:
         return load_config(config_path)
     except (FileNotFoundError, yaml.YAMLError, ValidationError, ValueError) as error:
-        console.print(format_inventory_load_error(error, path=config_path), style="red")
+        _safe_print(format_inventory_load_error(error, path=config_path), style="red")
         raise typer.Exit(code=1) from error
 
 
@@ -74,7 +84,7 @@ def _write_cbom_import_or_exit(input_path: Path, output_path: Path) -> Path:
     try:
         return write_imported_inventory(input_path, output_path)
     except (FileNotFoundError, json.JSONDecodeError, ValidationError, ValueError) as error:
-        console.print(f"[red]CBOM import failed:[/red] {error}")
+        _safe_print(f"CBOM import failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
 
@@ -92,7 +102,7 @@ def _load_inventory_for_review_or_exit(
 
         raise ValueError("Unsupported evidence review input format. Expected 'inventory' or 'cbom'.")
     except (FileNotFoundError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
-        console.print(f"[red]Evidence review failed:[/red] {error}")
+        _safe_print(f"Evidence review failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
 
@@ -137,7 +147,7 @@ def _write_pdr_document_or_exit(
         )
         return output_path
     except (FileNotFoundError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
-        console.print(f"[red]PDR generation failed:[/red] {error}")
+        _safe_print(f"PDR generation failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
 
@@ -153,9 +163,9 @@ def list_policy_pack_command() -> None:
 
     for policy_pack in list_policy_packs():
         table.add_row(
-            policy_pack.policy_pack_id,
-            policy_pack.version,
-            policy_pack.title,
+            _safe_text(policy_pack.policy_pack_id),
+            _safe_text(policy_pack.version),
+            _safe_text(policy_pack.title),
             str(len(policy_pack.rules)),
         )
 
@@ -173,7 +183,7 @@ def show_policy_pack_command(
     try:
         policy_pack = get_policy_pack(policy_pack_id)
     except ValueError as error:
-        console.print(f"[red]Policy lookup failed:[/red] {error}")
+        _safe_print(f"Policy lookup failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
     payload = policy_pack.model_dump(mode="json")
@@ -245,7 +255,7 @@ def score(
         decision = assessment.decision
         table.add_row(
             str(index),
-            assessment.asset.name,
+            _safe_text(assessment.asset.name),
             f"{decision.risk_attention_score:.2f} / "
             f"{decision.risk_attention_band}",
             "\n".join(
@@ -318,7 +328,7 @@ def report(
     resolved_output.parent.mkdir(parents=True, exist_ok=True)
     resolved_output.write_text(generate_markdown_report(inventory), encoding="utf-8")
 
-    console.print(f"[green]Report written:[/green] {resolved_output}")
+    _safe_print(f"Report written: {resolved_output}", style="green")
 
 
 @import_app.command("cbom")
@@ -341,7 +351,7 @@ def import_cbom_command(
     """Import CycloneDX CBOM JSON as a partial QSTriage inventory."""
     written_path = _write_cbom_import_or_exit(input_path, output)
 
-    console.print(f"[green]CBOM imported:[/green] {written_path}")
+    _safe_print(f"CBOM imported: {written_path}", style="green")
     console.print(
         "CBOM dependencies were not imported as QSTriage blast-radius dependencies.",
         style="yellow",
@@ -371,21 +381,21 @@ def review_context_command(
         console.print("")
         console.print("Inventory-level issues:")
         for issue in review.inventory_issues:
-            console.print(f"- {issue}")
+            _safe_print(f"- {issue}")
 
     for asset_review in review.asset_reviews:
         if asset_review.status == "complete":
             continue
 
         console.print("")
-        console.print(f"Asset: {asset_review.asset_name} ({asset_review.asset_id})")
+        _safe_print(f"Asset: {asset_review.asset_name} ({asset_review.asset_id})")
         console.print(f"Status: {asset_review.status}")
         console.print("Missing or defaulted context:")
 
         for issue in asset_review.issues:
-            console.print(f"- {issue.field}: {issue.message}")
+            _safe_print(f"- {issue.field}: {issue.message}")
 
-        console.print(f"Recommended action: {asset_review.recommended_action}")
+        _safe_print(f"Recommended action: {asset_review.recommended_action}")
 
 
 @review_app.command("evidence")
@@ -419,7 +429,7 @@ def review_evidence_command(
     for review in reviews:
         blocking = ", ".join(review.blocking_finding_codes) or "-"
         table.add_row(
-            review.asset_id or "-",
+            _safe_text(review.asset_id or "-"),
             review.decision_grade.value,
             f"{review.evidence_score:.2f}",
             f"{review.confidence_cap:.2f}",
@@ -433,7 +443,7 @@ def review_evidence_command(
     console.print("Evidence review details:")
     for review in reviews:
         blocking = ", ".join(review.blocking_finding_codes) or "-"
-        console.print(
+        _safe_print(
             f"- {review.asset_id or '-'}: "
             f"decision_grade={review.decision_grade.value}; "
             f"evidence_score={review.evidence_score:.2f}; "
@@ -468,7 +478,7 @@ def generate_pdr_command(
     """Generate a PQC Decision Record JSON document."""
     written_path = _write_pdr_document_or_exit(input_path, output, input_format)
 
-    console.print(f"[green]PDR written:[/green] {written_path}")
+    _safe_print(f"PDR written: {written_path}", style="green")
 
 
 @export_app.command("scores")
@@ -511,7 +521,7 @@ def export_scores_command(
     resolved_output = output or config.outputs.scores_path
     written_path = export_score_results(inventory, resolved_output, resolved_format)
 
-    console.print(f"[green]Scores exported:[/green] {written_path}")
+    _safe_print(f"Scores exported: {written_path}", style="green")
 
 
 @export_app.command("simulations")
@@ -554,7 +564,7 @@ def export_simulations_command(
     resolved_output = output or config.outputs.simulations_path
     written_path = export_simulation_results(inventory, resolved_output, resolved_format)
 
-    console.print(f"[green]Simulations exported:[/green] {written_path}")
+    _safe_print(f"Simulations exported: {written_path}", style="green")
 
 
 app.add_typer(import_app, name="import")

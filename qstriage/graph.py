@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import networkx as nx
 
 from qstriage.models import Inventory, RiskLevel
+from qstriage.presentation import sanitize_terminal_text
 
 
 RISK_LEVEL_SCORES: dict[RiskLevel, float] = {
@@ -189,11 +190,15 @@ def render_text_graph(
 
         edge_label = (
             f"{connector}({edge['dependency_type'].value}, "
-            f"{edge['protocol']}, w={edge['weight']:.2f}){style.edge_arrow} "
+            f"{sanitize_terminal_text(edge['protocol'])}, "
+            f"w={edge['weight']:.2f}){style.edge_arrow} "
         )
 
         if child_id in visited:
-            lines.append(f"{prefix}{edge_label}[{child_id}] (cycle/reference)")
+            lines.append(
+                f"{prefix}{edge_label}[{sanitize_terminal_text(child_id)}] "
+                "(cycle/reference)"
+            )
             return
 
         lines.append(f"{prefix}{edge_label}{_node_label(child_id, graph.nodes[child_id])}")
@@ -279,8 +284,8 @@ def _ensure_node_exists(graph: nx.DiGraph, asset_id: str) -> None:
 
 def _node_label(asset_id: str, node: dict) -> str:
     return (
-        f"[{asset_id}] "
-        f"{node['algorithm']} "
+        f"[{sanitize_terminal_text(asset_id)}] "
+        f"{sanitize_terminal_text(node['algorithm'])} "
         f"criticality={node['criticality'].value} "
         f"blast={node['local_blast_radius'].value}"
     )

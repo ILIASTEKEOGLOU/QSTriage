@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added a shared presentation-safety boundary for terminal and Markdown output generated from untrusted inventory or CBOM values.
 - Added versioned canonical execution, action, verification, confidence, review, and reason-code fields to JSON and CSV score exports.
 - Added deterministic inventory-level assessment assembly for analyst-facing output surfaces.
 - Added canonical execution, action, verification, confidence, review, and reason-code detail to Markdown reports.
@@ -21,6 +22,7 @@
 
 ### Fixed
 
+- Neutralized terminal control/markup injection and Markdown structure/raw-HTML injection while preserving suspicious values as visible escape sequences.
 - JSON and CSV score exports no longer publish score-derived action text that can contradict the canonical decision.
 - Markdown score explanations no longer repeat a legacy action that can contradict the canonical decision.
 - PDR records no longer expose score-derived action text that can contradict canonical execution and verification state.

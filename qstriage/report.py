@@ -7,6 +7,12 @@ from pathlib import Path
 from qstriage.assessment import AssetAssessment, assess_inventory
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import Inventory, load_inventory
+from qstriage.presentation import (
+    markdown_code_block,
+    markdown_code_span,
+    markdown_inline,
+    markdown_table_cell,
+)
 from qstriage.review import InventoryContextReview, review_decision_context
 from qstriage.simulator import ImpactSimulationResult, simulate_inventory
 
@@ -42,7 +48,8 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append(f"- Migration scenarios analyzed: {max(1, len(inventory.scenarios))}")
     highest = assessments[0]
     lines.append(
-        f"- Highest risk-attention asset: {highest.asset.name} "
+        "- Highest risk-attention asset: "
+        f"{markdown_inline(highest.asset.name)} "
         f"({highest.decision.risk_attention_score})"
     )
     lines.append("")
@@ -57,7 +64,7 @@ def generate_markdown_report(inventory: Inventory) -> str:
     for index, assessment in enumerate(assessments, start=1):
         decision = assessment.decision
         lines.append(
-            f"| {index} | {assessment.asset.name} | "
+            f"| {index} | {markdown_table_cell(assessment.asset.name)} | "
             f"{decision.risk_attention_score:.2f} | "
             f"{decision.risk_attention_band} | {decision.execution_state.value} | "
             f"{decision.action_type.value} | "
@@ -83,11 +90,14 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append("")
 
     for assessment in assessments[:3]:
-        lines.append(f"### {assessment.asset.name}")
+        lines.append(f"### {markdown_inline(assessment.asset.name)}")
         lines.append("")
-        lines.append("```text")
-        lines.append(render_text_graph(graph, assessment.asset.id))
-        lines.append("```")
+        lines.append(
+            markdown_code_block(
+                render_text_graph(graph, assessment.asset.id),
+                language="text",
+            )
+        )
         lines.append("")
 
     lines.append("## Method Notes")
@@ -148,16 +158,22 @@ def _render_decision_context_review(review: InventoryContextReview) -> list[str]
         if asset_review.status == "complete":
             continue
 
-        lines.append(f"### {asset_review.asset_name}")
+        lines.append(f"### {markdown_inline(asset_review.asset_name)}")
         lines.append("")
-        lines.append(f"- Asset ID: `{asset_review.asset_id}`")
+        lines.append(f"- Asset ID: {markdown_code_span(asset_review.asset_id)}")
         lines.append(f"- Status: {asset_review.status}")
         lines.append("- Missing or defaulted context:")
 
         for issue in asset_review.issues:
-            lines.append(f"  - `{issue.field}`: {issue.message}")
+            lines.append(
+                f"  - {markdown_code_span(issue.field)}: "
+                f"{issue.message}"
+            )
 
-        lines.append(f"- Recommended action: {asset_review.recommended_action}")
+        lines.append(
+            "- Recommended action: "
+            f"{asset_review.recommended_action}"
+        )
         lines.append("")
 
     return lines
@@ -178,9 +194,9 @@ def _render_asset_finding(
     ) or "none"
     reason_codes = ", ".join(decision.reason_codes) or "none"
 
-    lines.append(f"### {asset.name}")
+    lines.append(f"### {markdown_inline(asset.name)}")
     lines.append("")
-    lines.append(f"- Asset ID: `{asset.id}`")
+    lines.append(f"- Asset ID: {markdown_code_span(asset.id)}")
     lines.append(f"- Risk attention score: **{decision.risk_attention_score:.2f}**")
     lines.append(f"- Risk attention band: **{decision.risk_attention_band}**")
     lines.append(f"- Execution state: **{decision.execution_state.value}**")
@@ -197,14 +213,23 @@ def _render_asset_finding(
 
     lines.append("Algorithm classification:")
     lines.append("")
-    lines.append(f"- Input algorithm: `{classification.input_algorithm}`")
-    lines.append(f"- Algorithm family: {classification.algorithm_family}")
+    lines.append(
+        f"- Input algorithm: {markdown_code_span(classification.input_algorithm)}"
+    )
+    lines.append(
+        f"- Algorithm family: {classification.algorithm_family}"
+    )
     lines.append(f"- Primitive: {classification.primitive}")
     lines.append(f"- Quantum status: {classification.quantum_status}")
     lines.append(f"- Standard status: {classification.standard_status}")
-    lines.append(f"- Registry action: {classification.recommended_action}")
+    lines.append(
+        f"- Registry action: {classification.recommended_action}"
+    )
     lines.append(f"- Registry rationale: {classification.rationale}")
-    lines.append(f"- Registry sources: {', '.join(classification.source_ids)}")
+    lines.append(
+        "- Registry sources: "
+        f"{', '.join(classification.source_ids)}"
+    )
     lines.append("")
     lines.append("Score breakdown:")
     lines.append("")
@@ -222,7 +247,7 @@ def _render_asset_finding(
     for explanation_line in score.explanation:
         if explanation_line.startswith("Recommended action:"):
             continue
-        lines.append(f"- {explanation_line}")
+        lines.append(f"- {markdown_inline(explanation_line)}")
 
     if simulations:
         lines.append("")
@@ -231,9 +256,9 @@ def _render_asset_finding(
 
         for simulation in simulations:
             lines.append(
-                f"- Scenario `{simulation.scenario_id}`: estimated handshake "
-                f"{simulation.estimated_handshake_bytes} bytes, MTU ratio "
-                f"{simulation.mtu_ratio:.2f}, fragmentation risk "
+                f"- Scenario {markdown_code_span(simulation.scenario_id)}: "
+                f"estimated handshake {simulation.estimated_handshake_bytes} bytes, "
+                f"MTU ratio {simulation.mtu_ratio:.2f}, fragmentation risk "
                 f"{simulation.fragmentation_risk}, middlebox risk "
                 f"{simulation.middlebox_risk}, compatibility risk "
                 f"{simulation.compatibility_risk}."

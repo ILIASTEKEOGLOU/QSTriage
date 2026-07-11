@@ -129,3 +129,68 @@ def test_unknown_asset_raises_key_error() -> None:
 
     with pytest.raises(KeyError):
         downstream_assets(graph, "missing-asset")
+
+
+def test_render_text_graph_neutralizes_untrusted_presentation_controls() -> None:
+    from qstriage.models import Inventory
+
+    inventory = Inventory.model_validate(
+        {
+            "assets": [
+                {
+                    "id": "root\x1b[2J\nforged",
+                    "name": "Root",
+                    "environment": "prod",
+                    "asset_type": "service",
+                    "protocol": "TLS",
+                    "algorithm": "RSA\u202e",
+                    "data_class": "sensitive",
+                    "retention_years": 1,
+                    "exposure": "internal",
+                    "criticality": "high",
+                    "local_blast_radius": "high",
+                    "migration_effort": "medium",
+                },
+                {
+                    "id": "child",
+                    "name": "Child",
+                    "environment": "prod",
+                    "asset_type": "service",
+                    "protocol": "TLS",
+                    "algorithm": "ECDSA",
+                    "data_class": "sensitive",
+                    "retention_years": 1,
+                    "exposure": "internal",
+                    "criticality": "high",
+                    "local_blast_radius": "high",
+                    "migration_effort": "medium",
+                },
+            ],
+            "dependencies": [
+                {
+                    "id": "dep",
+                    "source": "root\x1b[2J\nforged",
+                    "target": "child",
+                    "direction": "outbound",
+                    "dependency_type": "api_call",
+                    "protocol": "TLS\x07\nFAKE",
+                    "weight": 1.0,
+                    "criticality": "high",
+                }
+            ],
+        }
+    )
+    graph = build_dependency_graph(inventory)
+
+    rendered = render_text_graph(
+        graph,
+        "root\x1b[2J\nforged",
+        output_encoding="utf-8",
+    )
+
+    assert "\x1b" not in rendered
+    assert "\x07" not in rendered
+    assert "\u202e" not in rendered
+    assert r"\x1b[2J\nforged" in rendered
+    assert r"RSA\u202e" in rendered
+    assert r"TLS\x07\nFAKE" in rendered
