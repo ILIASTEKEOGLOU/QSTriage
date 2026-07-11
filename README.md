@@ -115,6 +115,8 @@ Markdown reports and structured score exports use the same canonical assessment 
 
 All generated artifacts use a private safe-write boundary. Existing files are not replaced by default; rerun a write command with `--overwrite` only when replacement is intentional. QSTriage rejects symlink output paths and output paths that collide with the active input or configuration file, writes complete artifacts before atomic publication, and creates new output files with owner-only permissions where the platform supports POSIX modes.
 
+QSTriage also enforces a conservative supported-workload contract before decision analysis. Inventory YAML is limited to 10 MiB, CycloneDX CBOM JSON to 32 MiB, and configuration YAML to 1 MiB. Inventories must contain 1–1,000 assets, at most 10,000 dependencies and 100 scenarios, and no more than 20,000 asset/scenario simulation results. YAML aliases are rejected, nesting and parser events are bounded, user-controlled strings are length-limited, and graph traversal and rendered graph output stop with an explicit error when their deterministic budgets are exceeded. Split unusually large or dense inventories rather than bypassing these controls.
+
 Export canonical decision-aware score results:
 
 ```bash

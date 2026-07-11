@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from qstriage.models import CryptographicAsset, Inventory, RiskLevel, load_inventory
 from qstriage.scoring import score_inventory
 
@@ -126,3 +127,20 @@ def test_scoring_keeps_unknown_algorithm_as_conservative_medium_risk() -> None:
     assert result.breakdown.cryptographic_risk == 5.0
     assert "Algorithm registry classifies unknown as unknown" in joined
     assert "registry action is manual_review_required" in joined
+
+
+def test_score_inventory_enforces_shared_graph_traversal_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import qstriage.scoring as scoring_module
+    from qstriage.limits import ResourceLimitError, TraversalBudget
+
+    inventory = load_inventory(Path("examples/sample_inventory.yaml"))
+    monkeypatch.setattr(
+        scoring_module,
+        "TraversalBudget",
+        lambda: TraversalBudget(limit=1),
+    )
+
+    with pytest.raises(ResourceLimitError, match="graph traversal budget"):
+        scoring_module.score_inventory(inventory)

@@ -12,6 +12,7 @@ from qstriage.context import (
     normalize_exposure,
 )
 from qstriage.graph import build_dependency_graph, calculate_graph_amplified_blast_radius
+from qstriage.limits import TraversalBudget
 from qstriage.models import CryptographicAsset, Inventory, RiskLevel
 from qstriage.standards import AlgorithmClassification, classify_algorithm
 
@@ -42,11 +43,17 @@ class ScoreResult:
 
 def score_inventory(inventory: Inventory) -> list[ScoreResult]:
     graph = build_dependency_graph(inventory)
-    results = [score_asset(asset, graph) for asset in inventory.assets]
+    budget = TraversalBudget()
+    results = [score_asset(asset, graph, budget=budget) for asset in inventory.assets]
     return sorted(results, key=lambda result: result.priority_score, reverse=True)
 
 
-def score_asset(asset: CryptographicAsset, graph: nx.DiGraph) -> ScoreResult:
+def score_asset(
+    asset: CryptographicAsset,
+    graph: nx.DiGraph,
+    *,
+    budget: TraversalBudget | None = None,
+) -> ScoreResult:
     classification = classify_algorithm(asset.algorithm)
     cryptographic_risk = _cryptographic_risk(
         asset.algorithm,
@@ -56,7 +63,11 @@ def score_asset(asset: CryptographicAsset, graph: nx.DiGraph) -> ScoreResult:
     shelf_life_risk = _shelf_life_risk(asset.retention_years, asset.data_class)
     exposure_risk = _exposure_risk(asset.exposure)
     criticality_score = _risk_level_score(asset.criticality)
-    blast_radius = calculate_graph_amplified_blast_radius(graph, asset.id).total_score
+    blast_radius = calculate_graph_amplified_blast_radius(
+        graph,
+        asset.id,
+        budget=budget,
+    ).total_score
     deadline_pressure = _deadline_pressure(asset, classification)
     effort_penalty = _effort_penalty(asset.migration_effort)
 

@@ -110,3 +110,62 @@ def test_dependency_weight_must_be_between_zero_and_one() -> None:
 
     with pytest.raises(ValidationError):
         Inventory.model_validate(raw_dependency)
+
+
+def _asset(asset_id: str, *, name: str = "Asset") -> dict[str, object]:
+    return {
+        "id": asset_id,
+        "name": name,
+        "environment": "test",
+        "asset_type": "service",
+        "protocol": "TLS1.3",
+        "algorithm": "RSA-2048",
+        "key_size_bits": 2048,
+        "data_class": "test_data",
+        "retention_years": 1,
+        "exposure": "internal",
+        "criticality": "medium",
+        "local_blast_radius": "medium",
+        "migration_effort": "low",
+    }
+
+
+def test_inventory_requires_at_least_one_asset() -> None:
+    with pytest.raises(ValidationError):
+        Inventory.model_validate({"assets": []})
+
+
+def test_inventory_rejects_excessive_asset_count() -> None:
+    from qstriage.limits import MAX_ASSETS
+
+    assets = [_asset(f"asset-{index}") for index in range(MAX_ASSETS + 1)]
+
+    with pytest.raises(ValidationError):
+        Inventory.model_validate({"assets": assets})
+
+
+def test_inventory_rejects_overlong_asset_name() -> None:
+    from qstriage.limits import MAX_TEXT_LENGTH
+
+    with pytest.raises(ValidationError):
+        Inventory.model_validate(
+            {"assets": [_asset("asset-1", name="x" * (MAX_TEXT_LENGTH + 1))]}
+        )
+
+
+def test_inventory_rejects_excessive_simulation_cross_product() -> None:
+    from qstriage.limits import MAX_SIMULATION_RESULTS
+
+    assets = [_asset(f"asset-{index}") for index in range(201)]
+    scenarios = [
+        {
+            "id": f"scenario-{index}",
+            "name": f"Scenario {index}",
+            "pqc_profile": "ML-KEM-768 + X25519",
+        }
+        for index in range(100)
+    ]
+    assert len(assets) * len(scenarios) > MAX_SIMULATION_RESULTS
+
+    with pytest.raises(ValidationError, match="simulation results"):
+        Inventory.model_validate({"assets": assets, "scenarios": scenarios})

@@ -5,6 +5,12 @@ from dataclasses import dataclass
 
 import networkx as nx
 
+from qstriage.limits import (
+    MAX_CRITICAL_PATHS,
+    MAX_GRAPH_RENDER_LINES,
+    ResourceLimitError,
+    TraversalBudget,
+)
 from qstriage.models import Inventory, RiskLevel
 from qstriage.presentation import sanitize_terminal_text
 
@@ -108,8 +114,10 @@ def calculate_graph_amplified_blast_radius(
     *,
     depth_decay: float = 0.50,
     max_depth: int = 3,
+    budget: TraversalBudget | None = None,
 ) -> BlastRadiusResult:
     _ensure_node_exists(graph, asset_id)
+    traversal_budget = budget or TraversalBudget()
 
     local_level = graph.nodes[asset_id]["local_blast_radius"]
     local_score = _risk_score(local_level)
@@ -118,6 +126,7 @@ def calculate_graph_amplified_blast_radius(
     recursive_graph_exposure = 0.0
 
     for target in graph.successors(asset_id):
+        traversal_budget.consume(operation="Graph blast-radius analysis")
         edge = graph.edges[asset_id, target]
         direct_graph_exposure += edge["weight"] * _risk_score(graph.nodes[target]["criticality"])
 
@@ -130,6 +139,7 @@ def calculate_graph_amplified_blast_radius(
             return
 
         for target in graph.successors(current):
+            traversal_budget.consume(operation="Graph blast-radius analysis")
             if target in path:
                 continue
 
@@ -170,11 +180,22 @@ def render_text_graph(
     *,
     max_depth: int = 3,
     output_encoding: str | None = None,
+    max_lines: int = MAX_GRAPH_RENDER_LINES,
 ) -> str:
     _ensure_node_exists(graph, root_asset_id)
+    if max_lines < 1:
+        raise ValueError("Graph render line limit must be positive.")
     style = _text_graph_style(output_encoding)
 
     lines: list[str] = [_node_label(root_asset_id, graph.nodes[root_asset_id])]
+
+    def append_line(line: str) -> None:
+        if len(lines) >= max_lines:
+            raise ResourceLimitError(
+                f"Dependency graph rendering exceeded the supported limit of "
+                f"{max_lines} lines. Reduce dependency density or lower graph depth."
+            )
+        lines.append(line)
 
     def render_child(
         parent_id: str,
@@ -195,13 +216,13 @@ def render_text_graph(
         )
 
         if child_id in visited:
-            lines.append(
+            append_line(
                 f"{prefix}{edge_label}[{sanitize_terminal_text(child_id)}] "
                 "(cycle/reference)"
             )
             return
 
-        lines.append(f"{prefix}{edge_label}{_node_label(child_id, graph.nodes[child_id])}")
+        append_line(f"{prefix}{edge_label}{_node_label(child_id, graph.nodes[child_id])}")
 
         if depth >= max_depth:
             return
@@ -255,7 +276,14 @@ def _encoding_supports_unicode_tree(encoding: str | None) -> bool:
     return True
 
 
-def critical_paths(graph: nx.DiGraph, *, min_target_criticality: RiskLevel = RiskLevel.high) -> list[list[str]]:
+def critical_paths(
+    graph: nx.DiGraph,
+    *,
+    min_target_criticality: RiskLevel = RiskLevel.high,
+    max_paths: int = MAX_CRITICAL_PATHS,
+) -> list[list[str]]:
+    if max_paths < 1:
+        raise ValueError("Critical-path limit must be positive.")
     min_score = _risk_score(min_target_criticality)
     paths: list[list[str]] = []
 
@@ -268,6 +296,11 @@ def critical_paths(graph: nx.DiGraph, *, min_target_criticality: RiskLevel = Ris
             for path in nx.all_simple_paths(graph, source=source, target=target, cutoff=4):
                 if len(path) >= 2:
                     paths.append(path)
+                    if len(paths) > max_paths:
+                        raise ResourceLimitError(
+                            f"Critical-path enumeration exceeded the supported limit of "
+                            f"{max_paths} paths. Reduce dependency density or split the inventory."
+                        )
 
     paths.sort(key=lambda item: (len(item), item))
     return paths

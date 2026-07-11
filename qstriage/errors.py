@@ -6,6 +6,8 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
+from qstriage.limits import ResourceLimitError
+
 
 def format_inventory_load_error(error: Exception, *, path: str | Path | None = None) -> str:
     location = f" in {path}" if path is not None else ""
@@ -18,6 +20,9 @@ def format_inventory_load_error(error: Exception, *, path: str | Path | None = N
 
     if isinstance(error, ValidationError):
         return _format_validation_error(error, location)
+
+    if isinstance(error, ResourceLimitError):
+        return f"Input rejected{location}: {error}"
 
     if isinstance(error, ValueError):
         return f"Inventory validation failed{location}: {error}"

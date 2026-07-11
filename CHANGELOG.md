@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added a documented input and workload safety boundary covering file size, collection size, string length, YAML structure, simulation fan-out, and graph traversal/output budgets.
 - Added a shared private file-output boundary with atomic publication, owner-only file permissions, symlink rejection, and protected input/config collision checks.
 - Added a shared presentation-safety boundary for terminal and Markdown output generated from untrusted inventory or CBOM values.
 - Added versioned canonical execution, action, verification, confidence, review, and reason-code fields to JSON and CSV score exports.
@@ -15,6 +16,7 @@
 
 ### Changed
 
+- Inventory, configuration, and CBOM loading now reject oversized, structurally invalid, duplicate-key, or unsupported alias-based input before analysis begins.
 - Report, CBOM import, PDR, and JSON/CSV export commands now refuse to replace existing output unless `--overwrite` is explicitly provided.
 - Score exports now use assessment contract `0.2`; the compatibility field `recommended_action` aliases canonical `action_type`, and score-derived action text is omitted from explanations.
 - CLI score output and Markdown reports now project the shared canonical decision instead of the legacy score-derived action.
@@ -24,6 +26,7 @@
 
 ### Fixed
 
+- Replaced empty-inventory, malformed-CBOM, and excessive graph-work crashes with deterministic validation or resource-limit errors.
 - Prevented output paths from following symlinks, overwriting source/config files, or leaving a partially replaced artifact when publication fails.
 - Neutralized terminal control/markup injection and Markdown structure/raw-HTML injection while preserving suspicious values as visible escape sequences.
 - JSON and CSV score exports no longer publish score-derived action text that can contradict the canonical decision.

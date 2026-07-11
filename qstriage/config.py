@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
 from pydantic import BaseModel, ConfigDict, Field
+
+from qstriage.limits import MAX_CONFIG_FILE_BYTES, load_yaml_limited, read_text_limited
 
 
 class OutputConfig(BaseModel):
@@ -36,6 +37,11 @@ def load_config(config_path: str | Path | None = None) -> QSTriageConfig:
     if not path.exists():
         raise FileNotFoundError(path)
 
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    text = read_text_limited(
+        path,
+        max_bytes=MAX_CONFIG_FILE_BYTES,
+        label="Configuration file",
+    )
+    data = load_yaml_limited(text, label="Configuration YAML") or {}
 
     return QSTriageConfig.model_validate(data)

@@ -4,8 +4,20 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from qstriage.limits import (
+    MAX_ASSETS,
+    MAX_DEPENDENCIES,
+    MAX_IDENTIFIER_LENGTH,
+    MAX_INVENTORY_FILE_BYTES,
+    MAX_NOTES_LENGTH,
+    MAX_SCENARIOS,
+    MAX_SIMULATION_RESULTS,
+    MAX_TEXT_LENGTH,
+    load_yaml_limited,
+    read_text_limited,
+)
 
 
 class RiskLevel(str, Enum):
@@ -35,53 +47,53 @@ class DependencyType(str, Enum):
 class CryptographicAsset(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str = Field(min_length=1)
-    name: str = Field(min_length=1)
-    environment: str = Field(min_length=1)
-    asset_type: str = Field(min_length=1)
-    protocol: str = Field(min_length=1)
-    algorithm: str = Field(min_length=1)
+    id: str = Field(min_length=1, max_length=MAX_IDENTIFIER_LENGTH)
+    name: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
+    environment: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
+    asset_type: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
+    protocol: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
+    algorithm: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     key_size_bits: int | None = Field(default=None, ge=0)
-    data_class: str = Field(min_length=1)
+    data_class: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     retention_years: int = Field(ge=0)
-    exposure: str = Field(min_length=1)
+    exposure: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     criticality: RiskLevel
     local_blast_radius: RiskLevel
     migration_effort: RiskLevel
-    notes: str = ""
+    notes: str = Field(default="", max_length=MAX_NOTES_LENGTH)
 
 
 class Dependency(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str = Field(min_length=1)
-    source: str = Field(min_length=1)
-    target: str = Field(min_length=1)
+    id: str = Field(min_length=1, max_length=MAX_IDENTIFIER_LENGTH)
+    source: str = Field(min_length=1, max_length=MAX_IDENTIFIER_LENGTH)
+    target: str = Field(min_length=1, max_length=MAX_IDENTIFIER_LENGTH)
     direction: DependencyDirection
     dependency_type: DependencyType
-    protocol: str = Field(min_length=1)
+    protocol: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     weight: float = Field(ge=0.0, le=1.0)
     criticality: RiskLevel
     carries_crypto_context: bool = False
-    notes: str = ""
+    notes: str = Field(default="", max_length=MAX_NOTES_LENGTH)
 
 
 class MigrationScenario(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str = Field(min_length=1)
-    name: str = Field(min_length=1)
-    pqc_profile: str = Field(min_length=1)
+    id: str = Field(min_length=1, max_length=MAX_IDENTIFIER_LENGTH)
+    name: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
+    pqc_profile: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     mtu_bytes: int = Field(default=1500, ge=576)
-    notes: str = ""
+    notes: str = Field(default="", max_length=MAX_NOTES_LENGTH)
 
 
 class Inventory(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    assets: list[CryptographicAsset]
-    dependencies: list[Dependency] = Field(default_factory=list)
-    scenarios: list[MigrationScenario] = Field(default_factory=list)
+    assets: list[CryptographicAsset] = Field(min_length=1, max_length=MAX_ASSETS)
+    dependencies: list[Dependency] = Field(default_factory=list, max_length=MAX_DEPENDENCIES)
+    scenarios: list[MigrationScenario] = Field(default_factory=list, max_length=MAX_SCENARIOS)
 
     @model_validator(mode="after")
     def validate_inventory_integrity(self) -> Inventory:
@@ -94,6 +106,14 @@ class Inventory(BaseModel):
         _ensure_unique(scenario_ids, "scenario id")
 
         known_assets = set(asset_ids)
+
+        simulation_result_count = len(self.assets) * max(1, len(self.scenarios))
+        if simulation_result_count > MAX_SIMULATION_RESULTS:
+            raise ValueError(
+                "Inventory would generate "
+                f"{simulation_result_count} simulation results; the supported limit is "
+                f"{MAX_SIMULATION_RESULTS}. Reduce assets or scenarios."
+            )
 
         for dependency in self.dependencies:
             if dependency.source not in known_assets:
@@ -132,8 +152,12 @@ def _ensure_unique(values: list[str], label: str) -> None:
 def load_inventory(path: str | Path) -> Inventory:
     inventory_path = Path(path)
 
-    with inventory_path.open("r", encoding="utf-8") as file:
-        raw_data: Any = yaml.safe_load(file)
+    text = read_text_limited(
+        inventory_path,
+        max_bytes=MAX_INVENTORY_FILE_BYTES,
+        label="Inventory file",
+    )
+    raw_data: Any = load_yaml_limited(text, label="Inventory YAML")
 
     if raw_data is None:
         raw_data = {}
