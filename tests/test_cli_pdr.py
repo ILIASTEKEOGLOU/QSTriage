@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -30,7 +31,13 @@ def test_pdr_generate_inventory_writes_json_document(tmp_path: Path) -> None:
 
     assert document["pdr_version"] == "0.2"
     assert document["input_snapshot"]["source_type"] == "qstriage_inventory"
-    assert document["input_snapshot"]["source_hash"].startswith("sha256:")
+    expected_source_hash = (
+        "sha256:"
+        + hashlib.sha256(
+            Path("examples/sample_inventory.yaml").read_bytes()
+        ).hexdigest()
+    )
+    assert document["input_snapshot"]["source_hash"] == expected_source_hash
     assert document["document_hash"].startswith("sha256:")
     assert len(document["records"]) == 5
 
@@ -68,8 +75,15 @@ def test_pdr_generate_cbom_writes_cyclonedx_pdr_document(tmp_path: Path) -> None
 
     document = json.loads(output.read_text(encoding="utf-8"))
 
+    expected_source_hash = (
+        "sha256:"
+        + hashlib.sha256(
+            Path("tests/fixtures/sample_cbom.json").read_bytes()
+        ).hexdigest()
+    )
     assert document["input_snapshot"]["source_type"] == "cyclonedx_cbom"
     assert document["input_snapshot"]["source_version"] == "1.6"
+    assert document["input_snapshot"]["source_hash"] == expected_source_hash
     assert len(document["records"]) == 2
     assert document["records"][0]["record_integrity"]["record_hash"].startswith("sha256:")
 

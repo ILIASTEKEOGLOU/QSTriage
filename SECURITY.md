@@ -36,4 +36,6 @@ Do not run QSTriage on data you are not allowed to process.
 
 Generated artifacts are no-clobber by default. Use `--overwrite` only for an intentional replacement; symlink destinations and active input/config collisions are rejected even when overwrite is requested.
 
+File-backed PDR generation captures each inventory or CBOM once. The same bytes are parsed and hashed for `input_snapshot.source_hash`, preventing decision records from being bound to a later file state.
+
 Untrusted inventory, CBOM, and configuration files are processed only within documented size, structure, string, collection, simulation, and graph-work budgets. YAML aliases are not supported. Inputs that exceed these limits are rejected explicitly; do not remove the limits to force analysis of a large or highly connected dataset. Split the dataset into reviewable scopes instead.

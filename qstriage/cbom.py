@@ -23,13 +23,8 @@ REVIEW_REQUIRED_NOTE = (
 )
 
 
-def load_cbom_json(path: str | Path) -> dict[str, Any]:
-    cbom_path = Path(path)
-    text = read_text_limited(
-        cbom_path,
-        max_bytes=MAX_CBOM_FILE_BYTES,
-        label="CBOM file",
-    )
+def parse_cbom_json(text: str) -> dict[str, Any]:
+    """Parse one already-captured CycloneDX CBOM text snapshot."""
 
     try:
         payload = json.loads(text, object_pairs_hook=_object_without_duplicate_keys)
@@ -40,6 +35,16 @@ def load_cbom_json(path: str | Path) -> dict[str, Any]:
 
     _validate_cbom_document(payload)
     return payload
+
+
+def load_cbom_json(path: str | Path) -> dict[str, Any]:
+    cbom_path = Path(path)
+    text = read_text_limited(
+        cbom_path,
+        max_bytes=MAX_CBOM_FILE_BYTES,
+        label="CBOM file",
+    )
+    return parse_cbom_json(text)
 
 
 def inventory_from_cbom(cbom: dict[str, Any]) -> Inventory:
