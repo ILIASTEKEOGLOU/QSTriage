@@ -244,6 +244,22 @@ qstriage export simulations examples/sample_inventory.yaml --format csv --output
 
 Simulation exports include estimated handshake size, MTU ratio, fragmentation risk, middlebox risk, compatibility risk, crypto-bearing dependency count, and warnings.
 
+## Safe output behavior
+
+Report, CBOM import, PDR, and JSON/CSV export commands use the same safe file-output boundary.
+
+- Existing output files are not replaced by default.
+- Use `--overwrite` only when replacement is intentional.
+- `--overwrite` never permits writing through a symlink or replacing the active input/config file.
+- Output is written to a complete temporary file and published atomically. A failed replacement leaves the previous artifact intact.
+- New output files use owner-only permissions (`0600`) and newly created output directories use `0700` on platforms that support POSIX modes. Windows security remains governed by the directory ACL in addition to the no-clobber and atomic-publication checks.
+
+Example intentional replacement:
+
+```bash
+qstriage report examples/sample_inventory.yaml --output reports/qstriage_report.md --overwrite
+```
+
 ## Use a configuration file
 
 QSTriage includes an example config:

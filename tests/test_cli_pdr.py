@@ -93,3 +93,25 @@ def test_pdr_generate_rejects_unknown_input_format(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert "Unsupported PDR input format" in result.output
     assert not output.exists()
+
+
+def test_pdr_generate_refuses_input_output_collision(tmp_path: Path) -> None:
+    input_path = tmp_path / "inventory.yaml"
+    original = Path("examples/sample_inventory.yaml").read_text(encoding="utf-8")
+    input_path.write_text(original, encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "pdr",
+            "generate",
+            str(input_path),
+            "--output",
+            str(input_path),
+            "--overwrite",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "protected input/config" in result.output
+    assert input_path.read_text(encoding="utf-8") == original

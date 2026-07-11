@@ -33,3 +33,5 @@ Security fixes are handled on the latest `main` branch and the most recent tagge
 Use sanitized inventories and examples when testing or reporting issues.
 
 Do not run QSTriage on data you are not allowed to process.
+
+Generated artifacts are no-clobber by default. Use `--overwrite` only for an intentional replacement; symlink destinations and active input/config collisions are rejected even when overwrite is requested.

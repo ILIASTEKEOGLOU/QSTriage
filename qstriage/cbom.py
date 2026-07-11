@@ -7,6 +7,7 @@ from typing import Any
 
 import yaml
 
+from qstriage.file_output import write_private_text
 from qstriage.models import CryptographicAsset, Inventory
 
 
@@ -35,19 +36,24 @@ def import_cbom_inventory(input_path: str | Path) -> Inventory:
     return inventory_from_cbom(load_cbom_json(input_path))
 
 
-def write_imported_inventory(input_path: str | Path, output_path: str | Path) -> Path:
+def write_imported_inventory(
+    input_path: str | Path,
+    output_path: str | Path,
+    *,
+    overwrite: bool = False,
+) -> Path:
     inventory = import_cbom_inventory(input_path)
     destination = Path(output_path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
+    return write_private_text(
+        destination,
         yaml.safe_dump(
             inventory.model_dump(mode="json"),
             sort_keys=False,
             allow_unicode=True,
         ),
-        encoding="utf-8",
+        overwrite=overwrite,
+        protected_paths=(input_path,),
     )
-    return destination
 
 
 def _is_cryptographic_asset(component: dict[str, Any]) -> bool:

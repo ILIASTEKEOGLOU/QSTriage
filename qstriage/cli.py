@@ -15,6 +15,7 @@ from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
 from qstriage.evidence import review_inventory_evidence
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
+from qstriage.file_output import UnsafeOutputError, write_private_text
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document
@@ -80,10 +81,15 @@ def _load_config_or_exit(config_path: Path | None) -> QSTriageConfig:
         raise typer.Exit(code=1) from error
 
 
-def _write_cbom_import_or_exit(input_path: Path, output_path: Path) -> Path:
+def _write_cbom_import_or_exit(
+    input_path: Path,
+    output_path: Path,
+    *,
+    overwrite: bool,
+) -> Path:
     try:
-        return write_imported_inventory(input_path, output_path)
-    except (FileNotFoundError, json.JSONDecodeError, ValidationError, ValueError) as error:
+        return write_imported_inventory(input_path, output_path, overwrite=overwrite)
+    except (OSError, json.JSONDecodeError, ValidationError, ValueError) as error:
         _safe_print(f"CBOM import failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
@@ -101,7 +107,7 @@ def _load_inventory_for_review_or_exit(
             return import_cbom_inventory(input_path), "cyclonedx_cbom"
 
         raise ValueError("Unsupported evidence review input format. Expected 'inventory' or 'cbom'.")
-    except (FileNotFoundError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
+    except (OSError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
         _safe_print(f"Evidence review failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
@@ -110,6 +116,8 @@ def _write_pdr_document_or_exit(
     input_path: Path,
     output_path: Path,
     input_format: str,
+    *,
+    overwrite: bool,
 ) -> Path:
     try:
         normalized_format = input_format.strip().lower()
@@ -135,18 +143,18 @@ def _write_pdr_document_or_exit(
             source_version=source_version,
         )
 
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
+        return write_private_text(
+            output_path,
             json.dumps(
                 document.model_dump(mode="json"),
                 indent=2,
                 ensure_ascii=False,
             )
             + "\n",
-            encoding="utf-8",
+            overwrite=overwrite,
+            protected_paths=(input_path,),
         )
-        return output_path
-    except (FileNotFoundError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
+    except (OSError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
         _safe_print(f"PDR generation failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
@@ -320,13 +328,26 @@ def report(
         dir_okay=False,
         readable=True,
     ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Explicitly replace an existing regular output file.",
+    ),
 ) -> None:
     """Generate a narrative Markdown PQC migration report."""
     inventory = _load_inventory_or_exit(inventory_path)
     config = _load_config_or_exit(config_path)
     resolved_output = output or config.outputs.report_path
-    resolved_output.parent.mkdir(parents=True, exist_ok=True)
-    resolved_output.write_text(generate_markdown_report(inventory), encoding="utf-8")
+    try:
+        write_private_text(
+            resolved_output,
+            generate_markdown_report(inventory),
+            overwrite=overwrite,
+            protected_paths=(inventory_path, config_path),
+        )
+    except (UnsafeOutputError, OSError) as error:
+        _safe_print(f"Report generation failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
 
     _safe_print(f"Report written: {resolved_output}", style="green")
 
@@ -347,9 +368,18 @@ def import_cbom_command(
         "-o",
         help="Path where the imported QSTriage YAML inventory will be written.",
     ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Explicitly replace an existing regular output file.",
+    ),
 ) -> None:
     """Import CycloneDX CBOM JSON as a partial QSTriage inventory."""
-    written_path = _write_cbom_import_or_exit(input_path, output)
+    written_path = _write_cbom_import_or_exit(
+        input_path,
+        output,
+        overwrite=overwrite,
+    )
 
     _safe_print(f"CBOM imported: {written_path}", style="green")
     console.print(
@@ -474,9 +504,19 @@ def generate_pdr_command(
         "--input-format",
         help="Input format: inventory or cbom.",
     ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Explicitly replace an existing regular output file.",
+    ),
 ) -> None:
     """Generate a PQC Decision Record JSON document."""
-    written_path = _write_pdr_document_or_exit(input_path, output, input_format)
+    written_path = _write_pdr_document_or_exit(
+        input_path,
+        output,
+        input_format,
+        overwrite=overwrite,
+    )
 
     _safe_print(f"PDR written: {written_path}", style="green")
 
@@ -513,13 +553,28 @@ def export_scores_command(
         dir_okay=False,
         readable=True,
     ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Explicitly replace an existing regular output file.",
+    ),
 ) -> None:
     """Export canonical decision-aware score results as JSON or CSV."""
     inventory = _load_inventory_or_exit(inventory_path)
     config = _load_config_or_exit(config_path)
     resolved_format = export_format or ExportFormat(config.exports.default_format)
     resolved_output = output or config.outputs.scores_path
-    written_path = export_score_results(inventory, resolved_output, resolved_format)
+    try:
+        written_path = export_score_results(
+            inventory,
+            resolved_output,
+            resolved_format,
+            overwrite=overwrite,
+            protected_paths=(inventory_path, config_path),
+        )
+    except (UnsafeOutputError, OSError) as error:
+        _safe_print(f"Score export failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
 
     _safe_print(f"Scores exported: {written_path}", style="green")
 
@@ -556,13 +611,28 @@ def export_simulations_command(
         dir_okay=False,
         readable=True,
     ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Explicitly replace an existing regular output file.",
+    ),
 ) -> None:
     """Export simulation results as JSON or CSV."""
     inventory = _load_inventory_or_exit(inventory_path)
     config = _load_config_or_exit(config_path)
     resolved_format = export_format or ExportFormat(config.exports.default_format)
     resolved_output = output or config.outputs.simulations_path
-    written_path = export_simulation_results(inventory, resolved_output, resolved_format)
+    try:
+        written_path = export_simulation_results(
+            inventory,
+            resolved_output,
+            resolved_format,
+            overwrite=overwrite,
+            protected_paths=(inventory_path, config_path),
+        )
+    except (UnsafeOutputError, OSError) as error:
+        _safe_print(f"Simulation export failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
 
     _safe_print(f"Simulations exported: {written_path}", style="green")
 

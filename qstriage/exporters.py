@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import csv
+import io
 import json
+from collections.abc import Iterable
 from dataclasses import asdict
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
 from qstriage.assessment import AssetAssessment, assess_inventory
+from qstriage.file_output import write_private_text
 from qstriage.models import Inventory
 from qstriage.scoring import ScoreResult
 from qstriage.simulator import ImpactSimulationResult, simulate_inventory
@@ -25,15 +28,28 @@ def export_score_results(
     inventory: Inventory,
     output_path: str | Path,
     export_format: ExportFormat | str,
+    *,
+    overwrite: bool = False,
+    protected_paths: Iterable[str | Path | None] = (),
 ) -> Path:
     assessments = assess_inventory(inventory)
     destination = Path(output_path)
     normalized_format = _normalize_export_format(export_format)
 
     if normalized_format == ExportFormat.json:
-        _write_json(destination, _score_result_records(assessments))
+        _write_json(
+            destination,
+            _score_result_records(assessments),
+            overwrite=overwrite,
+            protected_paths=protected_paths,
+        )
     elif normalized_format == ExportFormat.csv:
-        _write_csv(destination, _score_result_rows(assessments))
+        _write_csv(
+            destination,
+            _score_result_rows(assessments),
+            overwrite=overwrite,
+            protected_paths=protected_paths,
+        )
     else:
         raise ValueError(f"Unsupported export format: {export_format}")
 
@@ -44,15 +60,28 @@ def export_simulation_results(
     inventory: Inventory,
     output_path: str | Path,
     export_format: ExportFormat | str,
+    *,
+    overwrite: bool = False,
+    protected_paths: Iterable[str | Path | None] = (),
 ) -> Path:
     results = simulate_inventory(inventory)
     destination = Path(output_path)
     normalized_format = _normalize_export_format(export_format)
 
     if normalized_format == ExportFormat.json:
-        _write_json(destination, [_to_json_ready(result) for result in results])
+        _write_json(
+            destination,
+            [_to_json_ready(result) for result in results],
+            overwrite=overwrite,
+            protected_paths=protected_paths,
+        )
     elif normalized_format == ExportFormat.csv:
-        _write_csv(destination, _simulation_result_rows(results))
+        _write_csv(
+            destination,
+            _simulation_result_rows(results),
+            overwrite=overwrite,
+            protected_paths=protected_paths,
+        )
     else:
         raise ValueError(f"Unsupported export format: {export_format}")
 
@@ -186,30 +215,45 @@ def _simulation_result_rows(results: list[ImpactSimulationResult]) -> list[dict[
     return rows
 
 
-def _write_json(destination: Path, data: list[dict[str, Any]]) -> None:
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
+def _write_json(
+    destination: Path,
+    data: list[dict[str, Any]],
+    *,
+    overwrite: bool,
+    protected_paths: Iterable[str | Path | None],
+) -> None:
+    write_private_text(
+        destination,
         json.dumps(data, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
+        overwrite=overwrite,
+        protected_paths=protected_paths,
     )
 
 
-def _write_csv(destination: Path, rows: list[dict[str, Any]]) -> None:
-    destination.parent.mkdir(parents=True, exist_ok=True)
+def _write_csv(
+    destination: Path,
+    rows: list[dict[str, Any]],
+    *,
+    overwrite: bool,
+    protected_paths: Iterable[str | Path | None],
+) -> None:
+    output = io.StringIO(newline="")
 
-    if not rows:
-        destination.write_text("", encoding="utf-8")
-        return
-
-    safe_rows = [
-        {key: _csv_safe_cell(value) for key, value in row.items()}
-        for row in rows
-    ]
-
-    with destination.open("w", encoding="utf-8", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=list(rows[0].keys()))
+    if rows:
+        safe_rows = [
+            {key: _csv_safe_cell(value) for key, value in row.items()}
+            for row in rows
+        ]
+        writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(safe_rows)
+
+    write_private_text(
+        destination,
+        output.getvalue(),
+        overwrite=overwrite,
+        protected_paths=protected_paths,
+    )
 
 
 def _csv_safe_cell(value: Any) -> Any:

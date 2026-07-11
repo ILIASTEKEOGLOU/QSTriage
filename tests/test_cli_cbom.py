@@ -32,3 +32,25 @@ def test_import_cbom_cli_writes_valid_qstriage_inventory(tmp_path: Path) -> None
     assert len(inventory.assets) == 2
     assert inventory.dependencies == []
     assert inventory.assets[0].id == "crypto-rsa-2048"
+
+
+def test_import_cbom_refuses_input_output_collision(tmp_path: Path) -> None:
+    input_path = tmp_path / "cbom.json"
+    original = Path("tests/fixtures/sample_cbom.json").read_text(encoding="utf-8")
+    input_path.write_text(original, encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "import",
+            "cbom",
+            str(input_path),
+            "--output",
+            str(input_path),
+            "--overwrite",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "protected input/config" in result.output
+    assert input_path.read_text(encoding="utf-8") == original
