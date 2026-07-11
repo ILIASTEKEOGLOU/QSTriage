@@ -316,6 +316,11 @@ def _normalize_cbom_algorithm_string(
     if family_upper == "AES" and key_size_bits is not None and cleaned_upper == "AES":
         return f"AES-{key_size_bits}"
 
+    cdxgen_aes = re.fullmatch(r"AES(128|192|256)-(CBC|GCM)", cleaned_upper)
+    if cdxgen_aes:
+        key_size, mode = cdxgen_aes.groups()
+        return f"AES-{key_size}-{mode}"
+
     return cleaned
 
 
