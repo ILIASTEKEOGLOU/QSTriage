@@ -101,6 +101,7 @@ qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --outp
 ```
 
 The PDR JSON document is the documented decision artifact. It includes input snapshot metadata, policy context, asset-level policy evaluation, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+File-backed PDR inputs are captured with a read-once boundary. Parsing, CBOM `specVersion` extraction, and `input_snapshot.source_hash` all use the same exact bytes; QSTriage never reparses or rehashes the path later in the generation flow.
 
 ### PDR output contract
 

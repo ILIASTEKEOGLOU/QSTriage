@@ -65,16 +65,17 @@ class ResourceLimitError(ValueError):
     """Raised when untrusted input exceeds a documented processing budget."""
 
 
-def read_text_limited(
+def read_bytes_limited(
     path: str | Path,
     *,
     max_bytes: int,
     label: str,
-) -> str:
-    """Read one UTF-8 text file without exceeding ``max_bytes``.
+) -> bytes:
+    """Read one file once without exceeding ``max_bytes``.
 
     The size is checked before and during the read so a file that changes after
-    ``stat`` cannot cause an unbounded allocation.
+    ``stat`` cannot cause an unbounded allocation. The returned bytes are the
+    exact material that callers may both parse and hash.
     """
 
     source = Path(path)
@@ -93,10 +94,28 @@ def read_text_limited(
             f"{label} exceeds the supported size limit of {max_bytes} bytes."
         )
 
+    return data
+
+
+def decode_utf8(data: bytes, *, label: str) -> str:
+    """Decode previously captured source bytes as UTF-8."""
+
     try:
         return data.decode("utf-8")
     except UnicodeDecodeError as error:
         raise ValueError(f"{label} must be valid UTF-8 text.") from error
+
+
+def read_text_limited(
+    path: str | Path,
+    *,
+    max_bytes: int,
+    label: str,
+) -> str:
+    """Read and decode one bounded UTF-8 text file."""
+
+    data = read_bytes_limited(path, max_bytes=max_bytes, label=label)
+    return decode_utf8(data, label=label)
 
 
 def load_yaml_limited(text: str, *, label: str) -> Any:

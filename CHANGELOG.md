@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added a read-once PDR input capture boundary that parses and hashes the same exact source bytes.
 - Added a documented input and workload safety boundary covering file size, collection size, string length, YAML structure, simulation fan-out, and graph traversal/output budgets.
 - Added a shared private file-output boundary with atomic publication, owner-only file permissions, symlink rejection, and protected input/config collision checks.
 - Added a shared presentation-safety boundary for terminal and Markdown output generated from untrusted inventory or CBOM values.
@@ -16,6 +17,7 @@
 
 ### Changed
 
+- File-backed PDR generation now derives inventory data, CBOM version metadata, and `source_hash` from one immutable captured byte snapshot.
 - Inventory, configuration, and CBOM loading now reject oversized, structurally invalid, duplicate-key, or unsupported alias-based input before analysis begins.
 - Report, CBOM import, PDR, and JSON/CSV export commands now refuse to replace existing output unless `--overwrite` is explicitly provided.
 - Score exports now use assessment contract `0.2`; the compatibility field `recommended_action` aliases canonical `action_type`, and score-derived action text is omitted from explanations.
@@ -26,6 +28,7 @@
 
 ### Fixed
 
+- Prevented PDR source-snapshot TOCTOU inconsistencies where decision state and `source_hash` could previously come from different file contents.
 - Replaced empty-inventory, malformed-CBOM, and excessive graph-work crashes with deterministic validation or resource-limit errors.
 - Prevented output paths from following symlinks, overwriting source/config files, or leaving a partially replaced artifact when publication fails.
 - Neutralized terminal control/markup injection and Markdown structure/raw-HTML injection while preserving suspicious values as visible escape sequences.

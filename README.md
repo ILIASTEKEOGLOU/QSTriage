@@ -161,6 +161,7 @@ qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --outp
 ```
 
 A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, asset-level policy evaluation, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
+For file-backed PDR generation, QSTriage reads the inventory or CBOM once and uses that same captured byte sequence for parsing, CBOM version detection, and `input_snapshot.source_hash`. A file change or symlink retarget after capture cannot make the decision state refer to different bytes than the recorded source hash.
 
 ### PDR output contract
 

@@ -149,14 +149,9 @@ def _ensure_unique(values: list[str], label: str) -> None:
         raise ValueError(f"Duplicate {label}: {joined}")
 
 
-def load_inventory(path: str | Path) -> Inventory:
-    inventory_path = Path(path)
+def parse_inventory_yaml(text: str) -> Inventory:
+    """Parse one already-captured inventory text snapshot."""
 
-    text = read_text_limited(
-        inventory_path,
-        max_bytes=MAX_INVENTORY_FILE_BYTES,
-        label="Inventory file",
-    )
     raw_data: Any = load_yaml_limited(text, label="Inventory YAML")
 
     if raw_data is None:
@@ -166,3 +161,14 @@ def load_inventory(path: str | Path) -> Inventory:
         return Inventory.model_validate(raw_data)
     except ValidationError:
         raise
+
+
+def load_inventory(path: str | Path) -> Inventory:
+    inventory_path = Path(path)
+
+    text = read_text_limited(
+        inventory_path,
+        max_bytes=MAX_INVENTORY_FILE_BYTES,
+        label="Inventory file",
+    )
+    return parse_inventory_yaml(text)

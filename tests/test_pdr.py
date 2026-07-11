@@ -1,10 +1,14 @@
+import hashlib
 from pathlib import Path
 
+import pytest
+
+import qstriage.pdr as pdr_module
 from qstriage import __version__
 from qstriage.cbom import import_cbom_inventory
 from qstriage.evidence import DecisionGrade
 from qstriage.models import CryptographicAsset, Inventory, load_inventory
-from qstriage.pdr import generate_pdr_document
+from qstriage.pdr import generate_pdr_document, load_pdr_input
 
 
 SAMPLE_INVENTORY = Path("examples/sample_inventory.yaml")
@@ -316,8 +320,6 @@ def test_pdr_policy_context_remains_document_level_provenance_only() -> None:
 
 
 def test_pdr_rejects_policy_pack_version_mismatch() -> None:
-    import pytest
-
     inventory = load_inventory(SAMPLE_INVENTORY)
 
     with pytest.raises(ValueError, match="version mismatch"):
@@ -411,3 +413,132 @@ def test_cbom_pdr_projects_canonical_gating_and_verification() -> None:
     assert "confidence:below_decision_grade_threshold" in (
         rsa_record.decision.reason_codes
     )
+
+
+def test_load_pdr_input_hashes_exact_inventory_bytes() -> None:
+    source_bytes = SAMPLE_INVENTORY.read_bytes()
+
+    captured = load_pdr_input(SAMPLE_INVENTORY, "inventory")
+
+    assert captured.input_snapshot.source_hash == (
+        "sha256:" + hashlib.sha256(source_bytes).hexdigest()
+    )
+    assert captured.input_snapshot.source_path == SAMPLE_INVENTORY.name
+    assert captured.input_snapshot.source_type == "qstriage_inventory"
+    assert captured.inventory == load_inventory(SAMPLE_INVENTORY)
+
+
+def test_load_pdr_input_hashes_exact_cbom_bytes_and_version() -> None:
+    source_bytes = SAMPLE_CBOM.read_bytes()
+
+    captured = load_pdr_input(SAMPLE_CBOM, "cbom")
+
+    assert captured.input_snapshot.source_hash == (
+        "sha256:" + hashlib.sha256(source_bytes).hexdigest()
+    )
+    assert captured.input_snapshot.source_path == SAMPLE_CBOM.name
+    assert captured.input_snapshot.source_type == "cyclonedx_cbom"
+    assert captured.input_snapshot.source_version == "1.6"
+    assert captured.inventory == import_cbom_inventory(SAMPLE_CBOM)
+
+
+def test_pdr_capture_remains_bound_when_inventory_file_changes_after_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_path = tmp_path / "inventory.yaml"
+    original_bytes = SAMPLE_INVENTORY.read_bytes()
+    source_path.write_bytes(original_bytes)
+
+    real_read = pdr_module.read_bytes_limited
+    read_count = 0
+
+    def read_then_replace(*args: object, **kwargs: object) -> bytes:
+        nonlocal read_count
+        read_count += 1
+        captured_bytes = real_read(*args, **kwargs)
+        source_path.write_text("assets: []\n", encoding="utf-8")
+        return captured_bytes
+
+    monkeypatch.setattr(pdr_module, "read_bytes_limited", read_then_replace)
+
+    captured = load_pdr_input(source_path, "inventory")
+    document = generate_pdr_document(
+        captured.inventory,
+        input_snapshot=captured.input_snapshot,
+    )
+
+    assert read_count == 1
+    assert document.input_snapshot.source_hash == (
+        "sha256:" + hashlib.sha256(original_bytes).hexdigest()
+    )
+    assert len(document.records) == len(captured.inventory.assets)
+    assert document.records[0].observed_state.asset_id == (
+        captured.inventory.assets[0].id
+    )
+    assert source_path.read_text(encoding="utf-8") == "assets: []\n"
+
+
+def test_pdr_capture_remains_bound_when_cbom_file_changes_after_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_path = tmp_path / "cbom.json"
+    original_bytes = SAMPLE_CBOM.read_bytes()
+    source_path.write_bytes(original_bytes)
+
+    real_read = pdr_module.read_bytes_limited
+    read_count = 0
+
+    def read_then_replace(*args: object, **kwargs: object) -> bytes:
+        nonlocal read_count
+        read_count += 1
+        captured_bytes = real_read(*args, **kwargs)
+        source_path.write_text("{}", encoding="utf-8")
+        return captured_bytes
+
+    monkeypatch.setattr(pdr_module, "read_bytes_limited", read_then_replace)
+
+    captured = load_pdr_input(source_path, "cbom")
+    document = generate_pdr_document(
+        captured.inventory,
+        input_snapshot=captured.input_snapshot,
+    )
+
+    assert read_count == 1
+    assert document.input_snapshot.source_hash == (
+        "sha256:" + hashlib.sha256(original_bytes).hexdigest()
+    )
+    assert document.input_snapshot.source_version == "1.6"
+    assert len(document.records) == len(captured.inventory.assets)
+    assert source_path.read_text(encoding="utf-8") == "{}"
+
+
+def test_file_backed_generation_rejects_inventory_source_mismatch(
+    tmp_path: Path,
+) -> None:
+    source_path = tmp_path / "inventory.yaml"
+    source_path.write_bytes(SAMPLE_INVENTORY.read_bytes())
+    inventory = load_inventory(SAMPLE_INVENTORY).model_copy(
+        update={
+            "assets": load_inventory(SAMPLE_INVENTORY).assets[:-1],
+        }
+    )
+
+    with pytest.raises(ValueError, match="do not match"):
+        generate_pdr_document(
+            inventory,
+            source_path=source_path,
+            source_type="qstriage_inventory",
+        )
+
+
+def test_generate_pdr_rejects_conflicting_snapshot_and_source_path() -> None:
+    captured = load_pdr_input(SAMPLE_INVENTORY, "inventory")
+
+    with pytest.raises(ValueError, match="either input_snapshot or source_path"):
+        generate_pdr_document(
+            captured.inventory,
+            input_snapshot=captured.input_snapshot,
+            source_path=SAMPLE_INVENTORY,
+        )

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -20,8 +21,15 @@ from qstriage.decision import (
     VerificationPriority,
     VerificationRequirement,
 )
+from qstriage.cbom import inventory_from_cbom, parse_cbom_json
 from qstriage.evidence import EvidenceReview
-from qstriage.models import CryptographicAsset, Inventory
+from qstriage.limits import (
+    MAX_CBOM_FILE_BYTES,
+    MAX_INVENTORY_FILE_BYTES,
+    decode_utf8,
+    read_bytes_limited,
+)
+from qstriage.models import CryptographicAsset, Inventory, parse_inventory_yaml
 from qstriage.policy import (
     BUILTIN_POLICY_PACK_ID,
     BUILTIN_POLICY_PACK_VERSION,
@@ -172,9 +180,68 @@ class PDRDocument(BaseModel):
     document_hash: str
 
 
+@dataclass(frozen=True)
+class CapturedPDRInput:
+    """One immutable parse-and-hash view of a file-backed PDR input."""
+
+    inventory: Inventory
+    input_snapshot: InputSnapshot
+
+
+def load_pdr_input(
+    source_path: str | Path,
+    input_format: str,
+) -> CapturedPDRInput:
+    """Read one PDR source exactly once, then parse and hash the same bytes."""
+
+    path = Path(source_path)
+    normalized_format = input_format.strip().lower()
+
+    if normalized_format == "inventory":
+        source_bytes = read_bytes_limited(
+            path,
+            max_bytes=MAX_INVENTORY_FILE_BYTES,
+            label="Inventory file",
+        )
+        source_text = decode_utf8(source_bytes, label="Inventory file")
+        inventory = parse_inventory_yaml(source_text)
+        source_type = "qstriage_inventory"
+        source_version = None
+    elif normalized_format == "cbom":
+        source_bytes = read_bytes_limited(
+            path,
+            max_bytes=MAX_CBOM_FILE_BYTES,
+            label="CBOM file",
+        )
+        source_text = decode_utf8(source_bytes, label="CBOM file")
+        cbom = parse_cbom_json(source_text)
+        inventory = inventory_from_cbom(cbom)
+        source_type = "cyclonedx_cbom"
+        source_version = (
+            str(cbom.get("specVersion"))
+            if cbom.get("specVersion")
+            else None
+        )
+    else:
+        raise ValueError(
+            "Unsupported PDR input format. Expected 'inventory' or 'cbom'."
+        )
+
+    return CapturedPDRInput(
+        inventory=inventory,
+        input_snapshot=InputSnapshot(
+            source_type=source_type,
+            source_version=source_version,
+            source_path=path.name,
+            source_hash=_hash_bytes(source_bytes),
+        ),
+    )
+
+
 def generate_pdr_document(
     inventory: Inventory,
     *,
+    input_snapshot: InputSnapshot | None = None,
     source_path: str | Path | None = None,
     source_type: str = "qstriage_inventory",
     source_version: str | None = None,
@@ -182,16 +249,46 @@ def generate_pdr_document(
     policy_pack_version: str = DEFAULT_POLICY_PACK_VERSION,
     previous_record_hashes: dict[str, str] | None = None,
 ) -> PDRDocument:
-    input_snapshot = _build_input_snapshot(
-        inventory,
-        source_path=source_path,
-        source_type=source_type,
-        source_version=source_version,
-    )
+    if input_snapshot is not None:
+        if source_path is not None:
+            raise ValueError(
+                "Provide either input_snapshot or source_path, not both."
+            )
+        snapshot = input_snapshot
+    elif source_path is not None:
+        captured = load_pdr_input(
+            source_path,
+            _input_format_for_source_type(source_type),
+        )
+        if captured.inventory != inventory:
+            raise ValueError(
+                "Captured source bytes do not match the inventory supplied for "
+                "PDR generation."
+            )
+
+        snapshot = captured.input_snapshot
+        if source_type == "qstriage_inventory" and source_version is not None:
+            snapshot = snapshot.model_copy(
+                update={"source_version": source_version}
+            )
+        elif (
+            source_version is not None
+            and snapshot.source_version != source_version
+        ):
+            raise ValueError(
+                "Captured source version does not match the requested "
+                f"source_version {source_version!r}."
+            )
+    else:
+        snapshot = _build_input_snapshot(
+            inventory,
+            source_type=source_type,
+            source_version=source_version,
+        )
     policy_pack = _load_policy_pack(policy_pack_id, policy_pack_version)
     policy_context = _build_policy_context(policy_pack)
-    run_id = _run_id(input_snapshot, policy_context)
-    lineage_id = _lineage_id(input_snapshot)
+    run_id = _run_id(snapshot, policy_context)
+    lineage_id = _lineage_id(snapshot)
     score_by_asset = {result.asset_id: result for result in score_inventory(inventory)}
 
     records = [
@@ -201,7 +298,7 @@ def generate_pdr_document(
             sequence_number=index,
             run_id=run_id,
             lineage_id=lineage_id,
-            input_snapshot=input_snapshot,
+            input_snapshot=snapshot,
             policy_context=policy_context,
             policy_pack=policy_pack,
             previous_record_hash=(
@@ -213,7 +310,7 @@ def generate_pdr_document(
 
     document = PDRDocument(
         run_id=run_id,
-        input_snapshot=input_snapshot,
+        input_snapshot=snapshot,
         policy_context=policy_context,
         records=records,
         document_hash="pending",
@@ -297,26 +394,29 @@ def _project_decision(assessment: AssetAssessment) -> PDRDecision:
     )
 
 
+def _input_format_for_source_type(source_type: str) -> str:
+    if source_type == "qstriage_inventory":
+        return "inventory"
+    if source_type == "cyclonedx_cbom":
+        return "cbom"
+    raise ValueError(
+        "File-backed PDR generation requires source_type "
+        "'qstriage_inventory' or 'cyclonedx_cbom', or an explicit "
+        "captured input_snapshot."
+    )
+
+
 def _build_input_snapshot(
     inventory: Inventory,
     *,
-    source_path: str | Path | None,
     source_type: str,
     source_version: str | None,
 ) -> InputSnapshot:
-    path = Path(source_path) if source_path is not None else None
-    if path is not None:
-        source_hash = _hash_file(path)
-        source_path_text = path.name
-    else:
-        source_hash = _hash_object(inventory.model_dump(mode="json"))
-        source_path_text = None
-
     return InputSnapshot(
         source_type=source_type,
         source_version=source_version,
-        source_path=source_path_text,
-        source_hash=source_hash,
+        source_path=None,
+        source_hash=_hash_object(inventory.model_dump(mode="json")),
     )
 
 
@@ -547,8 +647,8 @@ def _hash_model_without_field(model: BaseModel, field: str) -> str:
     return _hash_object(data)
 
 
-def _hash_file(path: Path) -> str:
-    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+def _hash_bytes(value: bytes) -> str:
+    return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
 def _hash_object(value: Any) -> str:

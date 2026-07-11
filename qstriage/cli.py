@@ -10,7 +10,7 @@ from rich.text import Text
 
 from qstriage import __version__
 from qstriage.assessment import assess_inventory
-from qstriage.cbom import import_cbom_inventory, load_cbom_json, write_imported_inventory
+from qstriage.cbom import import_cbom_inventory, write_imported_inventory
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
 from qstriage.evidence import review_inventory_evidence
@@ -19,7 +19,7 @@ from qstriage.file_output import UnsafeOutputError, write_private_text
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.limits import ResourceLimitError
 from qstriage.models import load_inventory
-from qstriage.pdr import generate_pdr_document
+from qstriage.pdr import generate_pdr_document, load_pdr_input
 from qstriage.presentation import sanitize_terminal_text
 from qstriage.policy import get_policy_pack, list_policy_packs
 from qstriage.report import generate_markdown_report
@@ -121,27 +121,11 @@ def _write_pdr_document_or_exit(
     overwrite: bool,
 ) -> Path:
     try:
-        normalized_format = input_format.strip().lower()
-
-        if normalized_format == "inventory":
-            inventory = load_inventory(input_path)
-            source_type = "qstriage_inventory"
-            source_version = None
-        elif normalized_format == "cbom":
-            cbom = load_cbom_json(input_path)
-            inventory = import_cbom_inventory(input_path)
-            source_type = "cyclonedx_cbom"
-            source_version = str(cbom.get("specVersion")) if cbom.get("specVersion") else None
-        else:
-            raise ValueError(
-                "Unsupported PDR input format. Expected 'inventory' or 'cbom'."
-            )
+        captured_input = load_pdr_input(input_path, input_format)
 
         document = generate_pdr_document(
-            inventory,
-            source_path=input_path,
-            source_type=source_type,
-            source_version=source_version,
+            captured_input.inventory,
+            input_snapshot=captured_input.input_snapshot,
         )
 
         return write_private_text(
