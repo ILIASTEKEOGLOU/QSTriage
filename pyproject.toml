@@ -1,3 +1,10 @@
+[build-system]
+requires = [
+    "setuptools==83.0.0",
+    "wheel==0.47.0",
+]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "qstriage"
 version = "1.1.0"

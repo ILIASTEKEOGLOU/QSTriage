@@ -11,3 +11,10 @@ build/
 qstriage_check.txt
 
 reports/
+# Local reproducible-release verification workspaces
+source-a/
+source-b/
+dist-a/
+dist-b/
+release-smoke-*/
+release/

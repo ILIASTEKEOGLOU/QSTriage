@@ -246,6 +246,20 @@ Policy pack output includes a deterministic `policy_pack_hash` used by PDR polic
 
 Current PDR records include `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for each asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
 
+## Release integrity
+
+The release-artifact workflow builds the wheel and source distribution twice from independent source snapshots and requires byte-for-byte equality. It also publishes a deterministic `SHA256SUMS` manifest and a reproducible CycloneDX JSON SBOM. Tag-triggered and approved main-branch manual runs create GitHub build-provenance and SBOM attestations for the artifacts; the workflow does not create or publish a GitHub Release automatically.
+
+Verify downloaded artifacts from their release directory:
+
+```bash
+sha256sum --check SHA256SUMS
+gh attestation verify qstriage-*.whl --repo ILIASTEKEOGLOU/QSTriage
+gh attestation verify qstriage-*.tar.gz --repo ILIASTEKEOGLOU/QSTriage
+```
+
+Release tags must match the package version exactly, for example `v1.2.0` for package version `1.2.0`.
+
 ## License
 
 Copyright 2026 Ilias Tekeoglou.
