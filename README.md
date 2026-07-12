@@ -7,263 +7,202 @@
 
 Cryptographic migration is not a scanner problem.
 
-A scanner can tell you where RSA is. It cannot tell you which decision must be made first, which exception is acceptable, or why a risky asset was allowed to remain unchanged.
+A scanner can tell you where RSA is. It cannot tell you which decision comes
+next, which uncertainty blocks action, or how that decision can be defended
+later.
 
-QSTriage turns cryptographic inventory and CycloneDX CBOM crypto evidence into auditable post-quantum cryptography decision records.
+QSTriage evaluates cryptographic inventories and supported CycloneDX CBOM
+evidence and produces deterministic PQC Decision Records (PDR 0.2). Each record
+preserves the evidence, policy context, confidence limits, and resulting action.
+QSTriage runs locally and does not modify production systems.
 
-It is local-first, deterministic, and designed for judgment before automation.
+## What QSTriage does
 
-QSTriage currently produces:
+QSTriage:
 
-- PQC Decision Record (PDR) JSON documents
-- asset-level policy evaluation with applied rule IDs, findings, standards, and thresholds
-- dependency-aware risk scores
-- documented deterministic scoring rationale
-- graph-amplified blast-radius analysis
-- hybrid PQC migration impact warnings
-- narrative Markdown migration reports
-- standards-backed algorithm classification evidence
-- decision context review for business-context completeness
-- evidence quality review with decision-grade status, confidence caps, blocking findings, and human-review actions
-- JSON and CSV exports
-- CycloneDX CBOM JSON import lite
-- CBOM algorithm identifier normalization for registry-ready imports
-- config-driven default output paths
+- validates native YAML inventories and supported CycloneDX CBOM JSON,
+- classifies cryptographic algorithms against a bounded standards registry,
+- separates risk attention from evidence, confidence, and verification needs,
+- reconciles those signals into one canonical decision per asset,
+- generates PDR 0.2 decision records with deterministic integrity hashes,
+- scores assets and models graph-amplified blast radius,
+- estimates basic hybrid-PQC migration pressure,
+- produces Markdown reports and JSON/CSV exports.
 
-## Current scope
+## Scope
 
-QSTriage reads a YAML inventory or CycloneDX CBOM crypto evidence, builds a directed dependency graph when QSTriage dependencies are present, classifies cryptographic algorithms using a standards-backed registry, reviews evidence quality, scores cryptographic assets, generates PQC Decision Records, simulates basic hybrid PQC migration impact, generates Markdown reports, and exports structured JSON/CSV results.
+QSTriage scores are deterministic prioritization indices. They rank assets for
+review; they do not estimate compromise probability, the arrival date of a
+cryptographically relevant quantum computer, or expected financial loss. See
+[Scoring Rationale](docs/scoring-rationale.md).
 
-Scoring is documented as a deterministic planning heuristic, not as an empirical probability or actuarial risk model. See [Scoring Rationale](docs/scoring-rationale.md).
-
-No production systems are touched.
-No certificates are rotated.
-No automatic rollout is performed.
-
-The first goal is judgment before automation.
+QSTriage stops at the decision boundary. It can recommend, gate, and explain an
+action, but it cannot execute that action. It does not modify production
+systems, rotate certificates, deploy cryptographic changes, or perform
+remediation.
 
 ## Quickstart
 
-From a fresh clone, create and activate a virtual environment for your platform.
+QSTriage requires Python 3.11 or later. The current CI and release baseline is
+Python 3.11. Use `python3` instead of `python` where that is the installed
+executable name.
+
+From a fresh clone, create a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Activate it with the command for your shell.
 
 Windows Git Bash:
 
 ```bash
-python -m venv .venv
 source .venv/Scripts/activate
 ```
 
-Linux/macOS:
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Linux or macOS:
 
 ```bash
-python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Then install QSTriage and run a small smoke path:
+Install QSTriage and generate a PDR from the sample inventory:
 
 ```bash
 python -m pip install --upgrade pip
 python -m pip install -e .
 python -m qstriage.cli version
 python -m qstriage.cli policy list
-python -m qstriage.cli pdr generate examples/sample_inventory.yaml --output reports/pdr.json
+python -m qstriage.cli pdr generate \
+  examples/sample_inventory.yaml \
+  --output reports/pdr.json
 ```
 
-Expected result: QSTriage prints its version, lists the built-in `nist-pqc-basic` policy pack, and writes a PDR JSON document under `reports/`.
+The final command writes `reports/pdr.json`. If that file already exists,
+QSTriage refuses to replace it unless `--overwrite` is supplied.
 
-The installed `qstriage` console command is also available after installation. The `python -m qstriage.cli` form is shown because it is explicit and works reliably in local virtual environments.
+The editable install also exposes the `qstriage` command. The module form above
+avoids shell-specific entry-point resolution.
 
-## Developer setup
+## Core workflow
 
-Create and activate a virtual environment as above, then install the development extra and run tests:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
-python -m pytest
+```text
+inventory/CBOM
+  -> classification
+  -> context and evidence review
+  -> risk scoring and policy evaluation
+  -> canonical decision
+  -> PDR, impact simulation, report, and export
 ```
 
-## CLI usage
-
-Validate an inventory:
+Common commands:
 
 ```bash
 qstriage validate examples/sample_inventory.yaml
-```
-
-Print the canonical decision backlog:
-
-```bash
 qstriage score examples/sample_inventory.yaml
-```
-
-The CLI separates risk attention from execution state and shows the canonical action, verification priority, and human-review requirement for each asset.
-
-Render a text dependency graph:
-
-```bash
-qstriage graph examples/sample_inventory.yaml public-api-gateway
-```
-
-Generate a Markdown report:
-
-```bash
-qstriage report examples/sample_inventory.yaml --output reports/sample_report.md
-```
-
-Markdown reports and structured score exports use the same canonical assessment boundary as the CLI and PDR.
-
-All generated artifacts use a private safe-write boundary. Existing files are not replaced by default; rerun a write command with `--overwrite` only when replacement is intentional. QSTriage rejects symlink output paths and output paths that collide with the active input or configuration file, writes complete artifacts before atomic publication, and creates new output files with owner-only permissions where the platform supports POSIX modes.
-
-QSTriage also enforces a conservative supported-workload contract before decision analysis. Inventory YAML is limited to 10 MiB, CycloneDX CBOM JSON to 32 MiB, and configuration YAML to 1 MiB. Inventories must contain 1–1,000 assets, at most 10,000 dependencies and 100 scenarios, and no more than 20,000 asset/scenario simulation results. YAML aliases are rejected, nesting and parser events are bounded, user-controlled strings are length-limited, and graph traversal and rendered graph output stop with an explicit error when their deterministic budgets are exceeded. Split unusually large or dense inventories rather than bypassing these controls.
-
-Export canonical decision-aware score results:
-
-```bash
-qstriage export scores examples/sample_inventory.yaml --format json --output reports/scores.json
-```
-
-Review whether an inventory has enough business context for decision-grade scoring:
-
-```bash
-qstriage review context examples/sample_inventory.yaml
-```
-
-Review evidence quality and decision-grade readiness:
-
-```bash
 qstriage review evidence examples/sample_inventory.yaml
-qstriage review evidence tests/fixtures/sample_cbom.json --input-format cbom
+qstriage report \
+  examples/sample_inventory.yaml \
+  --output reports/qstriage_report.md
 ```
 
-Import a CycloneDX CBOM JSON file as a partial QSTriage inventory:
+See the [Usage Guide](docs/usage.md) for the complete CLI workflow.
 
-```bash
-qstriage import cbom tests/fixtures/sample_cbom.json --output reports/imported_inventory.yaml
-```
+## Enforced workload limits
 
-CBOM imports are intentionally conservative. Imported cryptographic assets become QSTriage assets, but CBOM dependency relationships are not automatically treated as QSTriage business/security blast-radius dependencies.
+QSTriage refuses inputs that exceed its supported limits. It does not truncate
+them or continue with a partial decision result.
 
-During import, QSTriage normalizes split CBOM crypto metadata into stronger algorithm identifiers when possible. For example, `algorithmFamily=ML-KEM` with `parameterSetIdentifier=768` becomes `ML-KEM-768`, `algorithmFamily=RSA` with `keySize=2048` becomes `RSA-2048`, and `algorithmFamily=AES` with `keyLength=256` becomes `AES-256`.
+| Input or workload | Enforced limit |
+|---|---:|
+| Inventory YAML | 10 MiB |
+| CycloneDX CBOM JSON | 32 MiB |
+| CBOM components | 10,000 |
+| Configuration YAML | 1 MiB |
+| Assets per inventory | 1 to 1,000 |
+| Dependencies per inventory | 10,000 |
+| Migration scenarios | 100 |
+| Asset/scenario simulation results | 20,000 |
 
-## PQC Decision Records
+Additional limits cover field length, YAML structure, graph traversal,
+rendered output, and critical-path enumeration. See
+[Input Contracts](docs/input-contracts.md) for the complete enforced contract.
 
-Generate a PDR from a QSTriage inventory:
+## Documentation
 
-```bash
-qstriage pdr generate examples/sample_inventory.yaml --output reports/pdr.json
-```
+Reference documentation:
 
-Generate a PDR from CycloneDX CBOM crypto evidence:
+- [Usage Guide](docs/usage.md) — commands, workflows, examples, and configuration
+- [Input Contracts](docs/input-contracts.md) — supported inputs, limits, and parsing boundaries
+- [Standards and Classification](docs/standards-and-classification.md) — registry and normalization behavior
+- [Scoring Rationale](docs/scoring-rationale.md) — prioritization index and interpretation limits
+- [Simulation Rationale](docs/simulation-rationale.md) — model, warnings, assumptions, and non-claims
+- [Evidence and Context](docs/evidence-and-context.md) — normalization, completeness, evidence, and confidence
+- [Canonical Decision Model](docs/decision-model.md) — action gating, verification, and reason codes
+- [PDR 0.2 Contract](docs/pdr-contract.md) — structure, provenance, determinism, and versioning
+- [CBOM Compatibility](docs/cbom-compatibility.md) — tested artifact shapes and scanner boundaries
+- [Security Policy](SECURITY.md) — reporting and enforced trust boundaries
 
-```bash
-qstriage pdr generate tests/fixtures/sample_cbom.json --input-format cbom --output reports/cbom_pdr.json
-```
+Code and tests remain authoritative for executable behavior.
 
-A PDR is structured decision state, not a narrative report. It includes input snapshot hash, policy context, asset-level policy evaluation, observed crypto state, evidence quality, structured evidence review, decision-grade status, confidence caps, decision confidence, mission context, trade-offs, target-state suggestions, assumptions, human-review status, and record integrity hashes.
-For file-backed PDR generation, QSTriage reads the inventory or CBOM once and uses that same captured byte sequence for parsing, CBOM version detection, and `input_snapshot.source_hash`. A file change or symlink retarget after capture cannot make the decision state refer to different bytes than the recorded source hash.
+## Trust model
 
-### PDR output contract
+Generated files are no-clobber by default, and terminal/Markdown output
+neutralizes untrusted presentation characters. File-backed PDR generation
+parses and hashes the same captured bytes.
 
-QSTriage treats the PDR JSON document as a documented, evolving decision artifact.
+The CI and security workflows use read-only repository permissions, immutable
+action references, hashed dependency locks, vulnerability and static-analysis
+checks, and full-history secret scanning.
 
-PDR `0.2` projects the canonical decision contract into each record. The `decision` object separates `risk_attention_score` and `risk_attention_band` from `execution_state` and `action_type`, and records `verification_priority`, `verification_requirements`, `confidence_score`, `human_review_required`, and deterministic `reason_codes`.
+The release-artifact workflow builds twice from clean source snapshots and
+requires byte-for-byte reproducibility. It emits SHA-256 checksums and a
+reproducible CycloneDX SBOM. GitHub-hosted attestations are created only for
+eligible public-repository runs; private-repository runs retain the local
+integrity evidence.
 
-The public semantic contract includes the top-level PDR document, `policy_context`, `records`, per-record `policy_evaluation`, observed crypto state, evidence review, canonical decision state, assumptions, and record/document integrity hashes.
-
-Minor versions may add fields. Removing, renaming, or changing the meaning of documented PDR fields requires a PDR contract-version change.
-
-Exact `document_hash` and `record_hash` values are not guaranteed to remain the same across QSTriage versions. They are deterministic for the same QSTriage version, input snapshot, policy pack, and generated PDR content.
-
-## Standards-aware classification
-
-QSTriage classifies algorithm strings before they are used in scoring and reports.
-
-Examples:
-
-- `RSA-2048` -> quantum-vulnerable public-key cryptography
-- `ECDHE_RSA` -> quantum-vulnerable classical public-key composite
-- `ML-KEM-768` -> standardized PQC key encapsulation
-- `ML-DSA` -> standardized PQC digital signature
-- `SLH-DSA` -> standardized stateless hash-based PQC digital signature
-- `AES-256` -> symmetric encryption, separate from public-key PQC migration targets
-- unknown algorithms -> manual review required
-
-Classification output is shown in Markdown reports with registry action, rationale, and source IDs.
-
-
-Use configuration defaults:
-
-```bash
-qstriage report examples/sample_inventory.yaml --config examples/qstriage.yaml
-```
-
-## Current workflow
-
-```text
-inventory/CBOM -> algorithm classification -> evidence review -> scoring -> policy evaluation -> PDR -> impact simulation -> report/export
-```
-
-## Example output
-
-The sample inventory produces a priority backlog with assets such as:
-
-- Public API Gateway
-- Customer Database
-- Payments API
-- Authentication Service
-- OT Gateway
-
-The generated report includes:
-
-- executive summary
-- ranked migration backlog
-- asset-level scoring explanations
-- standards-backed algorithm classification evidence
-- decision context review for business-context completeness
-- registry source IDs for classification rationale
-- PQC impact simulation warnings
-- text dependency graph views
-- method notes
-
-## Project status
-
-QSTriage is an early public release for local cryptographic analysis, PQC migration planning, and auditable decision records. It is not a production migration orchestrator.
-
-## Policy packs and policy evaluation
-
-QSTriage includes a built-in policy pack registry and live asset-level policy evaluation in PDR records.
-
-Built-in pack: `nist-pqc-basic` policy pack version `0.2`.
-
-Commands:
-
-- `qstriage policy list`
-- `qstriage policy show nist-pqc-basic`
-
-Policy pack output includes a deterministic `policy_pack_hash` used by PDR policy context.
-
-Current PDR records include `policy_evaluation` with applied rule IDs, policy findings, standards applied, and thresholds applied for each asset. `policy_context` remains document-level policy pack provenance: policy pack ID, version, hash, and standards context.
-
-## Release integrity
-
-The release-artifact workflow builds the wheel and source distribution twice from independent source snapshots and requires byte-for-byte equality. It also publishes a deterministic `SHA256SUMS` manifest and a reproducible CycloneDX JSON SBOM. Tag-triggered and approved main-branch manual runs create GitHub build-provenance and SBOM attestations only when the repository is public. Private repository runs retain the reproducible artifacts, checksums, and SBOM while intentionally skipping GitHub-hosted attestations. The workflow does not create or publish a GitHub Release automatically.
-
-Verify downloaded artifacts from their release directory:
+Verify a downloaded release bundle from its directory with:
 
 ```bash
 sha256sum --check SHA256SUMS
 ```
 
-When the repository is public and the attestation job has run, verify the GitHub attestations:
+For an eligible public run with GitHub attestations:
 
 ```bash
 gh attestation verify qstriage-*.whl --repo ILIASTEKEOGLOU/QSTriage
 gh attestation verify qstriage-*.tar.gz --repo ILIASTEKEOGLOU/QSTriage
 ```
 
-Release tags must match the package version exactly, for example `v1.2.0` for package version `1.2.0`.
+Release tags must match the package version exactly, for example `v1.2.0` for
+package version `1.2.0`.
+
+## Development
+
+For development work intended to match CI, use Python 3.11. Create and activate
+the virtual environment as described in Quickstart, then install the development
+dependencies:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest
+```
+
+The development extra includes the test dependency. CI installs the exact
+hashed dependency resolution recorded in `requirements/py311.lock`.
+
+## Project status
+
+QSTriage is an early public release for local cryptographic analysis, PQC
+migration planning, and PDR generation. It is not a production migration
+orchestrator or a universal cryptography-discovery scanner.
 
 ## License
 
