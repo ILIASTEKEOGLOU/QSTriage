@@ -4,6 +4,9 @@ QSTriage is a local-first Cryptographic Policy & Justification Engine. This
 guide covers the supported CLI workflows; the linked contract documents define
 the meaning and boundaries of their outputs.
 
+Multiline examples use POSIX/Git Bash backslash continuation. In PowerShell,
+enter the same command and arguments on one line.
+
 ## Install for local development
 
 Use Python 3.11 to match the current CI baseline. From the repository root,

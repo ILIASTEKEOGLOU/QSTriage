@@ -155,4 +155,4 @@ The safest interpretation is:
 
 > QSTriage scores are deterministic, explainable planning heuristics for cryptographic migration prioritization.
 
-When input evidence changes, scores may change. When policy rules change, scores may change. That is expected and should be tracked through review, PDR generation, and future governance workflows.
+When input evidence or algorithm-classification rules used by scoring change, scores may change. Policy rules do not directly change the numeric score; they can change findings, gating, and the canonical decision. Those changes should be tracked through review and PDR generation.

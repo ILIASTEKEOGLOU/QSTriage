@@ -80,9 +80,7 @@ python -m pip install --upgrade pip
 python -m pip install -e .
 python -m qstriage.cli version
 python -m qstriage.cli policy list
-python -m qstriage.cli pdr generate \
-  examples/sample_inventory.yaml \
-  --output reports/pdr.json
+python -m qstriage.cli pdr generate examples/sample_inventory.yaml --output reports/pdr.json
 ```
 
 The final command writes `reports/pdr.json`. If that file already exists,
@@ -108,9 +106,7 @@ Common commands:
 qstriage validate examples/sample_inventory.yaml
 qstriage score examples/sample_inventory.yaml
 qstriage review evidence examples/sample_inventory.yaml
-qstriage report \
-  examples/sample_inventory.yaml \
-  --output reports/qstriage_report.md
+qstriage report examples/sample_inventory.yaml --output reports/qstriage_report.md
 ```
 
 See the [Usage Guide](docs/usage.md) for the complete CLI workflow.

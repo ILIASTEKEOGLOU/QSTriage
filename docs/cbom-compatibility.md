@@ -155,7 +155,7 @@ QSTriage preserves the source evidence hash but does not copy every scanner fiel
 The external compatibility lab was completed on 2026-07-12 with:
 
 - QSTriage 1.1.0 at main commit `645a10b`,
-- PDR schema 0.2,
+- PDR contract 0.2,
 - cdxgen 12.7.1,
 - Node.js 24.17.0,
 - CycloneDX 1.7 output,
@@ -169,7 +169,7 @@ The upstream cdxgen `cbom-js-repotest` fixture emitted eight algorithm assets co
 
 Import and PDR generation succeeded.
 
-The run exposed unsupported cdxgen identifiers `aes256-CBC` and `aes256-GCM`. QSTriage added tests-first normalization and now maps them to canonical AES identifiers without changing PDR schema, scoring, policy, confidence semantics, or raw evidence.
+The run exposed unsupported cdxgen identifiers `aes256-CBC` and `aes256-GCM`. QSTriage added tests-first normalization and now maps them to canonical AES identifiers without changing the PDR contract, scoring, policy, confidence semantics, or raw evidence.
 
 ### Real-world cases
 
