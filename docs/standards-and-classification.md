@@ -104,6 +104,27 @@ The current registry emits these stable source IDs:
 
 Source IDs establish classification provenance. They do not imply that the cited standards publish QSTriage scores, policy rules, or migration approvals.
 
+## Registry maintenance boundary
+
+The algorithm registry is bundled with each QSTriage release. It is not
+downloaded or refreshed from the network during analysis. Classification
+changes are reviewed source changes and must use official standards,
+specifications, or primary project documentation as implementation authority.
+
+A registry change must:
+
+- update direct identifier matching and CBOM normalization together when their
+  contracts overlap,
+- add tests for accepted identifiers, aliases, parameter forms, and inputs that
+  must remain unknown,
+- preserve conservative manual review outside the supported match boundary,
+- update source IDs and this document when public behavior or provenance
+  changes.
+
+The registry does not currently have an independent public version or hash.
+The PDR records the QSTriage engine version and the policy-pack version and
+hash; those policy fields are not an algorithm-registry version.
+
 ## Bounded interpretation
 
 A recognized classification means that the input matched a current deterministic registry rule. It does not establish:

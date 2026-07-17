@@ -262,6 +262,11 @@ Policy output includes the deterministic `policy_pack_hash` used by PDR policy
 context. Asset-level PDR records include applied rules, findings, standards,
 thresholds, and review status.
 
+The current CLI exposes only the built-in policy-pack registry. It does not
+load external policy files, accept a custom rule language, or integrate with
+OPA/Rego. The built-in pack provides QSTriage decision policy; it is not a
+general compliance certification for every standard or framework it cites.
+
 ## Operational boundary
 
 QSTriage does not rotate certificates, modify live cryptographic settings,
