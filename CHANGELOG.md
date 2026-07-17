@@ -2,50 +2,28 @@
 
 ## Unreleased
 
+## v1.2.0 - 2026-07-17
+
 ### Added
 
-- Added an explicit pinned build backend, a hashed Python 3.11 release toolchain contract, build-twice reproducibility checks, deterministic source-distribution normalization, CycloneDX SBOM generation, SHA-256 manifests, and GitHub artifact attestations.
-
-- Added a hashed Python 3.11 dependency lock, automated vulnerability and static-analysis workflows, full-history secret scanning, and Dependabot coverage for Python and GitHub Actions.
-
-- Added immutable GitHub Actions references, bounded CI execution, non-persistent checkout credentials, and dependency-consistency verification.
-
-- Added a read-once PDR input capture boundary that parses and hashes the same exact source bytes.
-- Added a documented input and workload safety boundary covering file size, collection size, string length, YAML structure, simulation fan-out, and graph traversal/output budgets.
-- Added a shared private file-output boundary with atomic publication, owner-only file permissions, symlink rejection, and protected input/config collision checks.
-- Added a shared presentation-safety boundary for terminal and Markdown output generated from untrusted inventory or CBOM values.
-- Added versioned canonical execution, action, verification, confidence, review, and reason-code fields to JSON and CSV score exports.
-- Added deterministic inventory-level assessment assembly for analyst-facing output surfaces.
-- Added canonical execution, action, verification, confidence, review, and reason-code detail to Markdown reports.
-- Added a shared asset-assessment boundary that gathers classification, scoring, normalized context, evidence review, policy evaluation, decision confidence, and canonical decision state.
-- Added canonical execution, action, verification, review, and reason-code fields to PDR decision records.
-- Added a shared typed context-normalization layer that preserves raw values and records declared, missing, defaulted, or unmapped state.
+- Added one canonical decision contract across PDR, CLI, Markdown reports, and JSON/CSV exports, separating risk attention, execution state, verification priority, confidence, review state, and stable reason codes.
+- Added shared asset assessment and typed context normalization so policy, scoring, simulation, evidence review, and decision gating use the same context categories without discarding raw values.
+- Added bounded input and workload validation, exact-byte PDR capture, and secure file and presentation boundaries.
+- Added hashed dependency locks, security scans, immutable CI actions, reproducible release artifacts, CycloneDX SBOMs, SHA-256 manifests, and eligible GitHub attestations.
+- Added canonical public references for inputs, classification, scoring, simulation, evidence and context, decisions, PDR 0.2, and tested CBOM compatibility.
 
 ### Changed
 
-- CI now installs the exact hashed dependency resolution and uses current immutable Node 24-compatible checkout and Python setup actions.
-
-- CI now installs a pinned pip release and the development dependency floor excludes pytest versions affected by CVE-2025-71176.
-
-- File-backed PDR generation now derives inventory data, CBOM version metadata, and `source_hash` from one immutable captured byte snapshot.
-- Inventory, configuration, and CBOM loading now reject oversized, structurally invalid, duplicate-key, or unsupported alias-based input before analysis begins.
-- Report, CBOM import, PDR, and JSON/CSV export commands now refuse to replace existing output unless `--overwrite` is explicitly provided.
-- Score exports now use assessment contract `0.2`; the compatibility field `recommended_action` aliases canonical `action_type`, and score-derived action text is omitted from explanations.
-- CLI score output and Markdown reports now project the shared canonical decision instead of the legacy score-derived action.
-- Bumped the PDR contract version from `0.1` to `0.2`; record and document hashes therefore change with the new serialized decision contract.
-- PDR generation now projects `CanonicalDecision` instead of rebuilding action and human-review state from score fields.
-- Policy, scoring, simulation, context review, and decision gating now consume the same canonical data-sensitivity and exposure categories.
+- Bumped the PDR contract from `0.1` to `0.2` and score exports to contract `0.2`; serialized PDR hashes therefore change in this release.
+- `recommended_action` remains as a compatibility alias for canonical `action_type`, while analyst-facing surfaces now consume the canonical decision instead of deriving action text from the score.
+- Normalized cdxgen `aes256-CBC` and `aes256-GCM` identifiers and aligned realistic context aliases across policy, scoring, simulation, review, and decision gating.
+- File-producing commands now refuse existing destinations unless `--overwrite` is supplied and publish complete output atomically.
 
 ### Fixed
 
-- Prevented PDR source-snapshot TOCTOU inconsistencies where decision state and `source_hash` could previously come from different file contents.
-- Replaced empty-inventory, malformed-CBOM, and excessive graph-work crashes with deterministic validation or resource-limit errors.
-- Prevented output paths from following symlinks, overwriting source/config files, or leaving a partially replaced artifact when publication fails.
-- Neutralized terminal control/markup injection and Markdown structure/raw-HTML injection while preserving suspicious values as visible escape sequences.
-- JSON and CSV score exports no longer publish score-derived action text that can contradict the canonical decision.
-- Markdown score explanations no longer repeat a legacy action that can contradict the canonical decision.
-- PDR records no longer expose score-derived action text that can contradict canonical execution and verification state.
-- Realistic context aliases no longer receive contradictory cross-module interpretations, while unknown or unmapped values require verification instead of being guessed.
+- Prevented PDR decisions and `source_hash` from being derived from different reads of a changing input file.
+- Replaced malformed input and excessive graph-work crashes with deterministic validation or resource-limit errors.
+- Rejected unsafe output paths and neutralized terminal and Markdown injection without hiding the original suspicious value.
 
 ## v1.1.0 - 2026-07-08
 
