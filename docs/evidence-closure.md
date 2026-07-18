@@ -64,7 +64,7 @@ The MCP server is read-only and exposes exactly `inspect_evidence_gaps`, `genera
 
 Use the `qstriage-evidence-closure` skill. It inspects first, asks only about returned gaps, accepts unknown, distinguishes declared from verified, validates a complete draft, displays claims and provenance, then stops for explicit human approval. It never runs patch application; it gives the exact command for the human.
 
-Exact Codex model verification pending before submission.
+Primary Build Week Codex session model: gpt-5.6-sol, verified through the Codex /model selector before submission.
 
 ## Five-minute judge quickstart
 

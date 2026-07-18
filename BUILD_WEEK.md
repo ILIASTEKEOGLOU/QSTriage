@@ -23,7 +23,7 @@ The candidate adds structured evidence-gap diagnostics; strict provenance assert
 - MCP is read-only. The core workflow has no secrets, telemetry, or network access.
 - Decision-grade evidence is not production or migration authorization.
 
-Exact Codex model verification pending before submission.
+Primary Build Week Codex session model: gpt-5.6-sol, verified through the Codex /model selector before submission.
 
 ## Test strategy
 
