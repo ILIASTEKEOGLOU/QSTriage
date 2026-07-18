@@ -161,7 +161,7 @@ python -m qstriage.cli closure compare imported.yaml enriched.yaml --format json
 
 The optional MCP integration is installed by `python -m pip install -e ".[mcp]"`. The model may ask questions and draft a patch, but it cannot establish truth, approve evidence, apply changes, alter scores, or authorize migration. The human applies an approved patch, and QSTriage remains the deterministic decision authority. In the demo, evidence becomes decision-grade while the migration action remains gated; this is not production authorization.
 
-See [Evidence Closure](docs/evidence-closure.md) and the [Build Week traceability ledger](BUILD_WEEK.md).
+See [Evidence Closure](docs/evidence-closure.md), the [demo script](docs/build-week-demo-script.md), the [submission draft](docs/build-week-submission.md), and the [Build Week traceability ledger](BUILD_WEEK.md).
 
 ## Enforced workload limits
 
@@ -199,6 +199,8 @@ Reference documentation:
 - [Security Policy](SECURITY.md) — reporting and enforced trust boundaries
 
 - [Evidence Closure](docs/evidence-closure.md) - provenance-aware enrichment and judge workflow
+- [Build Week Demo Script](docs/build-week-demo-script.md) - timed video actions and voiceover
+- [Build Week Submission Draft](docs/build-week-submission.md) - Devpost-ready project fields
 
 Code and tests remain authoritative for executable behavior.
 

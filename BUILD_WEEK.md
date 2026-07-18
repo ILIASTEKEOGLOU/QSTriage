@@ -45,7 +45,7 @@ The unchanged gate is intentional: supplied evidence closes evidence-quality gap
 
 ## Judging and release status
 
-Private-repository judges can clone the authorized branch, install `.[mcp]`, and run `python scripts/build_week_demo.py`; no external service or credential is required. A public release/tag has not been created. Release claims and exact model metadata must be verified separately before submission.
+Private-repository judges can clone the authorized branch, install `.[mcp]`, and run `python scripts/build_week_demo.py`; no external service or credential is required. A public release/tag has not been created. Public release status, repository judging access, YouTube URL, and the Codex /feedback Session ID must be verified separately before submission.
 
 ## Out of scope
 
