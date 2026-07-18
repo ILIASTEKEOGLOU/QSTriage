@@ -20,6 +20,11 @@ from qstriage.closure import (
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
 from qstriage.evidence import review_inventory_evidence
+from qstriage.enrichment import (
+    load_enrichment_patch,
+    validate_enrichment_patch,
+    write_enriched_inventory,
+)
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
 from qstriage.file_output import UnsafeOutputError, write_private_text
 from qstriage.graph import build_dependency_graph, render_text_graph
@@ -256,6 +261,41 @@ def closure_template_command(
         _safe_print(f"Closure template failed: {error}", style="red")
         raise typer.Exit(code=1) from error
     _safe_print(f"Enrichment template written: {output}", style="green")
+
+
+@closure_app.command("validate")
+def closure_validate_command(
+    inventory_path: Path = typer.Argument(...),
+    patch_path: Path = typer.Argument(...),
+) -> None:
+    """Validate an enrichment patch against its source inventory."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    try:
+        patch = load_enrichment_patch(patch_path)
+        validate_enrichment_patch(inventory, patch)
+    except (OSError, yaml.YAMLError, ValidationError, ValueError) as error:
+        _safe_print(f"Enrichment patch validation failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print("Enrichment patch is valid.", style="green")
+
+
+@closure_app.command("apply")
+def closure_apply_command(
+    inventory_path: Path = typer.Argument(...),
+    patch_path: Path = typer.Argument(...),
+    output: Path = typer.Option(..., "--output", "-o"),
+) -> None:
+    """Apply an approved enrichment patch to a new inventory file."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    try:
+        patch = load_enrichment_patch(patch_path)
+        write_enriched_inventory(
+            inventory, patch, output, input_path=inventory_path
+        )
+    except (OSError, yaml.YAMLError, ValidationError, ValueError) as error:
+        _safe_print(f"Enrichment patch apply failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"Enriched inventory written: {output}", style="green")
 
 
 @app.command("validate")

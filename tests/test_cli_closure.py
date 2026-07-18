@@ -55,3 +55,27 @@ def test_closure_commands_report_expected_errors_without_tracebacks(tmp_path) ->
     assert result.exit_code == 1
     assert "not found" in result.output.lower()
     assert "traceback" not in result.output.lower()
+
+
+def test_closure_validate_and_apply_commands(tmp_path) -> None:
+    inventory_path = _inventory_path(tmp_path)
+    template = tmp_path / "patch.yaml"
+    runner.invoke(app, ["closure", "template", str(inventory_path), "--output", str(template)])
+    payload = yaml.safe_load(template.read_text(encoding="utf-8"))
+    payload["assertions"] = [{
+        "asset_id": "crypto-rsa-2048", "field": "retention_years", "value": 0,
+        "state": "declared", "provenance": "user_declared",
+    }]
+    payload["relationship_assertions"] = []
+    template.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+    valid = runner.invoke(app, ["closure", "validate", str(inventory_path), str(template)])
+    output = tmp_path / "enriched.yaml"
+    applied = runner.invoke(app, ["closure", "apply", str(inventory_path), str(template), "--output", str(output)])
+    collision = runner.invoke(app, ["closure", "apply", str(inventory_path), str(template), "--output", str(inventory_path)])
+
+    assert valid.exit_code == 0
+    assert "valid" in valid.output.lower()
+    assert applied.exit_code == 0 and output.exists()
+    assert collision.exit_code == 1
+    assert "traceback" not in collision.output.lower()
