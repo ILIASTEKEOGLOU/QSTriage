@@ -81,4 +81,4 @@ Video link: `PENDING_YOUTUBE_URL`
 
 ## Codex /feedback Session ID
 
-Codex /feedback Session ID: `PENDING_FEEDBACK_SESSION_ID`
+Codex /feedback Session ID: `019f7434-a1d5-7f93-84ed-b3b24e1d666e`
