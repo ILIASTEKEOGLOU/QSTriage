@@ -44,4 +44,3 @@ def test_patch_template_has_only_empty_unresolved_assertion_skeletons() -> None:
     assert all(item["value"] is None for item in template["assertions"])
     assert all(item["state"] is None for item in template["assertions"])
     assert all(item["completeness"] is None for item in template["relationship_assertions"])
-

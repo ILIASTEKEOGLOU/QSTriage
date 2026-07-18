@@ -64,4 +64,3 @@ def test_partial_relationship_completeness_remains_unresolved() -> None:
 
     assert "unknown_dependency_completeness" in rsa.remaining_finding_codes
     assert "unknown_dependency_completeness" not in rsa.closed_finding_codes
-
