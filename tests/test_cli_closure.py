@@ -79,3 +79,23 @@ def test_closure_validate_and_apply_commands(tmp_path) -> None:
     assert applied.exit_code == 0 and output.exists()
     assert collision.exit_code == 1
     assert "traceback" not in collision.output.lower()
+
+
+def test_closure_compare_text_json_and_deterministic_output(tmp_path) -> None:
+    before = _inventory_path(tmp_path)
+    direct = runner.invoke(app, ["closure", "compare", str(before), str(before)])
+    json_direct = runner.invoke(
+        app, ["closure", "compare", str(before), str(before), "--format", "json"]
+    )
+    one = tmp_path / "one.json"
+    two = tmp_path / "two.json"
+    args = ["closure", "compare", str(before), str(before), "--format", "json"]
+    first = runner.invoke(app, [*args, "--output", str(one)])
+    second = runner.invoke(app, [*args, "--output", str(two)])
+
+    assert direct.exit_code == 0
+    assert "not production authorization" in direct.output.lower()
+    assert json_direct.exit_code == 0
+    assert json.loads(json_direct.output)["assets"]
+    assert first.exit_code == second.exit_code == 0
+    assert one.read_bytes() == two.read_bytes()

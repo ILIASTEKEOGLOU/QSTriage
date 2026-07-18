@@ -13,7 +13,10 @@ from qstriage.assessment import assess_inventory
 from qstriage.cbom import import_cbom_inventory, write_imported_inventory
 from qstriage.closure import (
     build_gap_manifest,
+    build_inventory_comparison,
     build_patch_template,
+    comparison_json,
+    comparison_text,
     manifest_json,
     manifest_text,
 )
@@ -296,6 +299,39 @@ def closure_apply_command(
         _safe_print(f"Enrichment patch apply failed: {error}", style="red")
         raise typer.Exit(code=1) from error
     _safe_print(f"Enriched inventory written: {output}", style="green")
+
+
+@closure_app.command("compare")
+def closure_compare_command(
+    before_path: Path = typer.Argument(...),
+    after_path: Path = typer.Argument(...),
+    output_format: str = typer.Option("text", "--format", "-f"),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Compare evidence findings and canonical decisions before and after enrichment."""
+    before = _load_inventory_or_exit(before_path)
+    after = _load_inventory_or_exit(after_path)
+    normalized_format = output_format.lower()
+    if normalized_format not in {"text", "json"}:
+        _safe_print("Closure comparison failed: format must be text or json.", style="red")
+        raise typer.Exit(code=1)
+    try:
+        comparison = build_inventory_comparison(before, after)
+        payload = (
+            comparison_json(comparison)
+            if normalized_format == "json"
+            else comparison_text(comparison)
+        )
+        if output is None:
+            typer.echo(payload, nl=False)
+            return
+        write_private_text(
+            output, payload, protected_paths=(before_path, after_path)
+        )
+    except (UnsafeOutputError, OSError, ValidationError, ValueError) as error:
+        _safe_print(f"Closure comparison failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"Closure comparison written: {output}", style="green")
 
 
 @app.command("validate")

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from qstriage.context import NormalizedAssetContext, normalize_asset_context
 from qstriage.decision import CanonicalDecision, DecisionContext, reconcile_decision
 from qstriage.evidence import EvidenceReview, review_asset_evidence
-from qstriage.models import CryptographicAsset, Inventory
+from qstriage.models import AssetEvidenceAssertions, CryptographicAsset, Inventory
 from qstriage.policy import (
     PolicyEvaluationResult,
     PolicyEvaluator,
@@ -52,6 +52,7 @@ def assess_asset(
     score: ScoreResult,
     policy_pack: PolicyPack,
     source_type: str = "qstriage_inventory",
+    asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> AssetAssessment:
     """Build one deterministic assessment for all decision-bearing outputs."""
 
@@ -62,7 +63,9 @@ def assess_asset(
 
     classification = classify_algorithm(asset.algorithm)
     normalized_context = normalize_asset_context(asset)
-    evidence_review = review_asset_evidence(asset, source_type=source_type)
+    evidence_review = review_asset_evidence(
+        asset, source_type=source_type, asset_evidence=asset_evidence
+    )
     policy_evaluation = PolicyEvaluator.evaluate_asset(
         asset,
         policy_pack,
@@ -111,6 +114,9 @@ def assess_inventory(
 
     resolved_policy_pack = policy_pack or get_policy_pack()
     asset_by_id = inventory.asset_by_id()
+    evidence_by_asset = (
+        inventory.evidence.assets if inventory.evidence is not None else {}
+    )
 
     return [
         assess_asset(
@@ -118,6 +124,7 @@ def assess_inventory(
             score=score,
             policy_pack=resolved_policy_pack,
             source_type=source_type,
+            asset_evidence=evidence_by_asset.get(score.asset_id),
         )
         for score in score_inventory(inventory)
     ]
