@@ -12,7 +12,11 @@ CUSTOM_COMPILE_COMMAND="python -m piptools compile pyproject.toml --extra dev --
     --extra dev \
     --generate-hashes \
     --output-file requirements/py311.lock
+python scripts/normalize_dev_lock.py requirements/py311.lock
 ```
+
+The development lock is consumed by Linux CI and also supports Windows
+development, so Windows-only dependencies retain explicit environment markers.
 
 Verify the lock before committing it:
 
