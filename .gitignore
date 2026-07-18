@@ -9,6 +9,7 @@ build/
 .env
 .DS_Store
 qstriage_check.txt
+build-week-demo-output/
 
 reports/
 # Local reproducible-release verification workspaces

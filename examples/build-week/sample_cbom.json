@@ -1,0 +1,21 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "customer-api-rsa",
+      "name": "Customer API RSA Signing Key",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "algorithmFamily": "RSA",
+          "parameterSetIdentifier": "RSA-2048"
+        }
+      }
+    }
+  ],
+  "dependencies": []
+}

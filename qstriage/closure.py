@@ -240,9 +240,18 @@ def comparison_text(comparison: InventoryClosureComparison) -> str:
     for asset in comparison.assets:
         closed = ", ".join(asset.closed_finding_codes) or "none"
         remaining = ", ".join(asset.remaining_finding_codes) or "none"
-        lines.append(
-            f"{asset.asset_id}: action {asset.action_before} -> {asset.action_after}; "
-            f"closed: {closed}; remaining: {remaining}"
-        )
+        introduced = ", ".join(asset.introduced_finding_codes) or "none"
+        lines.extend([
+            f"Asset: {asset.asset_id}",
+            f"  Action: {asset.action_before} -> {asset.action_after}",
+            f"  Execution: {asset.execution_state_before} -> {asset.execution_state_after}",
+            f"  Evidence score: {asset.evidence_score_before:.2f} -> {asset.evidence_score_after:.2f}",
+            f"  Confidence cap: {asset.confidence_cap_before:.2f} -> {asset.confidence_cap_after:.2f}",
+            "  Verification priority: "
+            f"{asset.verification_priority_before} -> {asset.verification_priority_after}",
+            f"  Closed findings: {closed}",
+            f"  Remaining findings: {remaining}",
+            f"  Introduced findings: {introduced}",
+        ])
     lines.append("This comparison is evidence diagnostics, not production authorization.")
     return "\n".join(lines) + "\n"
