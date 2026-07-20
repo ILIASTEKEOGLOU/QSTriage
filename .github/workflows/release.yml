@@ -318,4 +318,5 @@ jobs:
           subject-path: |
             release/*.whl
             release/*.tar.gz
-          sbom-path: ${{ steps.sbom.outputs.path }}
+          predicate-type: https://cyclonedx.org/bom
+          predicate-path: ${{ steps.sbom.outputs.path }}

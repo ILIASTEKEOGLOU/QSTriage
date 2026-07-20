@@ -22,3 +22,10 @@ def test_release_jobs_use_the_resolved_immutable_source() -> None:
     assert "artifact_name=qstriage-release-$source_sha" in text
     assert "name: ${{ needs.source.outputs.artifact_name }}" in text
     assert "qstriage-release-${{ github.sha }}" not in text
+
+def test_reproducible_cyclonedx_uses_the_canonical_predicate_type() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "predicate-type: https://cyclonedx.org/bom" in text
+    assert "predicate-path: ${{ steps.sbom.outputs.path }}" in text
+    assert "sbom-path: ${{ steps.sbom.outputs.path }}" not in text
