@@ -1,0 +1,13 @@
+[mcp_servers.qstriage]
+command = "python"
+args = ["-m", "qstriage.mcp_server"]
+enabled = true
+enabled_tools = [
+  "inspect_evidence_gaps",
+  "generate_patch_template",
+  "validate_enrichment_patch",
+  "compare_inventories",
+]
+default_tools_approval_mode = "approve"
+startup_timeout_sec = 20
+tool_timeout_sec = 45

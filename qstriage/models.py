@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -88,12 +88,79 @@ class MigrationScenario(BaseModel):
     notes: str = Field(default="", max_length=MAX_NOTES_LENGTH)
 
 
+class EvidenceAssertionState(str, Enum):
+    declared = "declared"
+    verified = "verified"
+
+
+class EvidenceAssertionProvenance(str, Enum):
+    user_declared = "user_declared"
+    supplier_authoritative = "supplier_authoritative"
+    third_party_asserted = "third_party_asserted"
+    tool_generated = "tool_generated"
+
+
+class RelationshipEvidenceCompleteness(str, Enum):
+    none = "none"
+    partial = "partial"
+    known = "known"
+
+
+class FieldEvidenceAssertion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    state: EvidenceAssertionState
+    provenance: EvidenceAssertionProvenance
+    source_reference: str | None = None
+    rationale: str | None = None
+
+    @model_validator(mode="after")
+    def require_verified_source_reference(self) -> FieldEvidenceAssertion:
+        if self.state == EvidenceAssertionState.verified and not self.source_reference:
+            raise ValueError("Verified evidence assertions require source_reference.")
+        return self
+
+
+class RelationshipEvidenceAssertion(FieldEvidenceAssertion):
+    value: RelationshipEvidenceCompleteness
+
+
+class AssetEvidenceAssertions(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    environment: FieldEvidenceAssertion | None = None
+    data_class: FieldEvidenceAssertion | None = None
+    retention_years: FieldEvidenceAssertion | None = None
+    exposure: FieldEvidenceAssertion | None = None
+    criticality: FieldEvidenceAssertion | None = None
+    local_blast_radius: FieldEvidenceAssertion | None = None
+    migration_effort: FieldEvidenceAssertion | None = None
+    relationship_completeness: RelationshipEvidenceAssertion | None = None
+
+    @model_validator(mode="after")
+    def require_assertion(self) -> AssetEvidenceAssertions:
+        if not any(value is not None for value in self.__dict__.values()):
+            raise ValueError("Asset evidence must contain at least one assertion.")
+        return self
+
+
+class InventoryEvidenceMetadata(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: Literal["0.1"]
+    source_inventory_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    assets: dict[str, AssetEvidenceAssertions] = Field(min_length=1)
+
+
 class Inventory(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     assets: list[CryptographicAsset] = Field(min_length=1, max_length=MAX_ASSETS)
     dependencies: list[Dependency] = Field(default_factory=list, max_length=MAX_DEPENDENCIES)
     scenarios: list[MigrationScenario] = Field(default_factory=list, max_length=MAX_SCENARIOS)
+    evidence: InventoryEvidenceMetadata | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def validate_inventory_integrity(self) -> Inventory:
@@ -106,6 +173,12 @@ class Inventory(BaseModel):
         _ensure_unique(scenario_ids, "scenario id")
 
         known_assets = set(asset_ids)
+
+        if self.evidence is not None:
+            unknown_evidence_assets = set(self.evidence.assets) - known_assets
+            if unknown_evidence_assets:
+                joined = ", ".join(sorted(unknown_evidence_assets))
+                raise ValueError(f"Evidence references unknown asset id: {joined}")
 
         simulation_result_count = len(self.assets) * max(1, len(self.scenarios))
         if simulation_result_count > MAX_SIMULATION_RESULTS:

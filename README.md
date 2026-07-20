@@ -111,6 +111,61 @@ qstriage report examples/sample_inventory.yaml --output reports/qstriage_report.
 
 See the [Usage Guide](docs/usage.md) for the complete CLI workflow.
 
+## OpenAI Build Week 2026 - Evidence Closure
+
+Evidence Closure is unreleased work developed after QSTriage `v1.2.0`. It is
+not part of the `v1.2.0` tag or its release artifacts.
+
+Before Build Week, QSTriage already provided CBOM import, cryptographic classification, evidence review, deterministic scoring and policy decisions, PDR generation, graph analysis, simulation, reporting, and exports. Build Week adds structured evidence gaps, provenance-aware source-bound enrichment, deterministic validate/apply/compare commands, read-only MCP tools, and the `qstriage-evidence-closure` Codex skill.
+
+The one-command judge demo is:
+
+```bash
+python scripts/build_week_demo.py
+```
+
+Five-minute setup from a fresh clone:
+
+```bash
+python -m venv .venv
+```
+
+Windows Git Bash:
+
+```bash
+source .venv/Scripts/activate
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+Install and run:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e ".[mcp]"
+python scripts/build_week_demo.py
+```
+
+Manual workflow:
+
+```bash
+python -m qstriage.cli import cbom examples/build-week/sample_cbom.json --output imported.yaml
+python -m qstriage.cli closure inspect imported.yaml --format json --output gaps.json
+python -m qstriage.cli closure validate imported.yaml examples/build-week/approved_enrichment.patch.yaml
+python -m qstriage.cli closure apply imported.yaml examples/build-week/approved_enrichment.patch.yaml --output enriched.yaml
+python -m qstriage.cli review evidence imported.yaml
+python -m qstriage.cli review evidence enriched.yaml
+python -m qstriage.cli closure compare imported.yaml enriched.yaml --format json --output comparison.json
+```
+
+The optional MCP integration is installed by `python -m pip install -e ".[mcp]"`. The model may ask questions and draft a patch, but it cannot establish truth, approve evidence, apply changes, alter scores, or authorize migration. The human applies an approved patch, and QSTriage remains the deterministic decision authority. In the demo, evidence becomes decision-grade while the migration action remains gated; this is not production authorization.
+
+See [Evidence Closure](docs/evidence-closure.md), the [demo script](docs/build-week-demo-script.md), the [submission draft](docs/build-week-submission.md), and the [Build Week traceability ledger](BUILD_WEEK.md).
+
 ## Enforced workload limits
 
 QSTriage refuses inputs that exceed its supported limits. It does not truncate
@@ -145,6 +200,10 @@ Reference documentation:
 - [PDR 0.2 Contract](docs/pdr-contract.md) — structure, provenance, determinism, and versioning
 - [CBOM Compatibility](docs/cbom-compatibility.md) — tested artifact shapes and scanner boundaries
 - [Security Policy](SECURITY.md) — reporting and enforced trust boundaries
+
+- [Evidence Closure](docs/evidence-closure.md) - provenance-aware enrichment and judge workflow
+- [Build Week Demo Script](docs/build-week-demo-script.md) - timed video actions and voiceover
+- [Build Week Submission Draft](docs/build-week-submission.md) - Devpost-ready project fields
 
 Code and tests remain authoritative for executable behavior.
 

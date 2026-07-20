@@ -5,7 +5,17 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from qstriage.models import CryptographicAsset, Dependency, Inventory, RiskLevel
+from qstriage.models import (
+    AssetEvidenceAssertions,
+    CryptographicAsset,
+    Dependency,
+    EvidenceAssertionProvenance,
+    EvidenceAssertionState,
+    FieldEvidenceAssertion,
+    Inventory,
+    RelationshipEvidenceCompleteness,
+    RiskLevel,
+)
 from qstriage.standards import classify_algorithm
 
 
@@ -263,12 +273,16 @@ def review_inventory_evidence(
     source_type: str = "qstriage_inventory",
 ) -> list[EvidenceReview]:
     dependency_count_by_asset = _dependency_count_by_asset(inventory.dependencies)
+    evidence_by_asset = (
+        inventory.evidence.assets if inventory.evidence is not None else {}
+    )
 
     return [
         review_asset_evidence(
             asset,
             source_type=source_type,
             dependency_count=dependency_count_by_asset.get(asset.id, 0),
+            asset_evidence=evidence_by_asset.get(asset.id),
         )
         for asset in inventory.assets
     ]
@@ -279,16 +293,24 @@ def review_asset_evidence(
     *,
     source_type: str = "qstriage_inventory",
     dependency_count: int = 0,
+    asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> EvidenceReview:
     findings: list[EvidenceFinding] = []
     is_cbom_imported = _is_cbom_imported_asset(asset, source_type)
 
-    findings.extend(_business_context_findings(asset, is_cbom_imported))
+    findings.extend(
+        _business_context_findings(
+            asset,
+            is_cbom_imported,
+            asset_evidence=asset_evidence,
+        )
+    )
     findings.extend(_cryptographic_context_findings(asset))
     findings.extend(
         _supply_chain_context_findings(
             asset,
             is_cbom_imported=is_cbom_imported,
+            asset_evidence=asset_evidence,
         )
     )
     findings.extend(
@@ -296,6 +318,7 @@ def review_asset_evidence(
             asset,
             is_cbom_imported=is_cbom_imported,
             dependency_count=dependency_count,
+            asset_evidence=asset_evidence,
         )
     )
 
@@ -305,6 +328,8 @@ def review_asset_evidence(
 def _business_context_findings(
     asset: CryptographicAsset,
     is_cbom_imported: bool,
+    *,
+    asset_evidence: AssetEvidenceAssertions | None,
 ) -> list[EvidenceFinding]:
     findings: list[EvidenceFinding] = []
     provenance = (
@@ -314,6 +339,7 @@ def _business_context_findings(
     )
 
     if _is_unknown_text(asset.data_class):
+        data_class_assertion = asset_evidence.data_class if asset_evidence else None
         findings.append(
             EvidenceFinding(
                 code="missing_data_class",
@@ -330,8 +356,12 @@ def _business_context_findings(
                 ],
                 asset_id=asset.id,
                 field_path=f"assets[{asset.id}].data_class",
-                evidence_state=EvidenceState.no_assertion,
-                provenance=provenance,
+                evidence_state=_assertion_state(
+                    data_class_assertion, default=EvidenceState.no_assertion
+                ),
+                provenance=_assertion_provenance(
+                    data_class_assertion, default=provenance
+                ),
                 human_action=HumanAction(
                     description=f"Set data_class for asset '{asset.id}'.",
                     field_path=f"assets[{asset.id}].data_class",
@@ -344,7 +374,12 @@ def _business_context_findings(
             )
         )
 
-    if asset.retention_years == 0 and is_cbom_imported:
+    retention_assertion = asset_evidence.retention_years if asset_evidence else None
+    if (
+        asset.retention_years == 0
+        and is_cbom_imported
+        and retention_assertion is None
+    ):
         findings.append(
             EvidenceFinding(
                 code="defaulted_retention_years",
@@ -373,6 +408,7 @@ def _business_context_findings(
         )
 
     if _is_unknown_text(asset.exposure):
+        exposure_assertion = asset_evidence.exposure if asset_evidence else None
         findings.append(
             EvidenceFinding(
                 code="missing_exposure",
@@ -389,8 +425,12 @@ def _business_context_findings(
                 ],
                 asset_id=asset.id,
                 field_path=f"assets[{asset.id}].exposure",
-                evidence_state=EvidenceState.no_assertion,
-                provenance=provenance,
+                evidence_state=_assertion_state(
+                    exposure_assertion, default=EvidenceState.no_assertion
+                ),
+                provenance=_assertion_provenance(
+                    exposure_assertion, default=provenance
+                ),
                 human_action=HumanAction(
                     description=f"Set exposure for asset '{asset.id}'.",
                     field_path=f"assets[{asset.id}].exposure",
@@ -469,6 +509,7 @@ def _supply_chain_context_findings(
     asset: CryptographicAsset,
     *,
     is_cbom_imported: bool,
+    asset_evidence: AssetEvidenceAssertions | None,
 ) -> list[EvidenceFinding]:
     if not is_cbom_imported:
         return []
@@ -478,6 +519,7 @@ def _supply_chain_context_findings(
             asset,
             field_name="criticality",
             value=asset.criticality,
+            assertion=asset_evidence.criticality if asset_evidence else None,
             message=(
                 "Criticality is defaulted to medium because imported CBOM "
                 "evidence does not carry QSTriage business criticality context."
@@ -487,6 +529,7 @@ def _supply_chain_context_findings(
             asset,
             field_name="local_blast_radius",
             value=asset.local_blast_radius,
+            assertion=asset_evidence.local_blast_radius if asset_evidence else None,
             message=(
                 "Local blast radius is defaulted to medium because imported CBOM "
                 "evidence does not carry QSTriage dependency impact context."
@@ -496,6 +539,7 @@ def _supply_chain_context_findings(
             asset,
             field_name="migration_effort",
             value=asset.migration_effort,
+            assertion=asset_evidence.migration_effort if asset_evidence else None,
             message=(
                 "Migration effort is defaulted to medium because imported CBOM "
                 "evidence does not carry QSTriage implementation effort context."
@@ -511,8 +555,32 @@ def _dependency_context_findings(
     *,
     is_cbom_imported: bool,
     dependency_count: int,
+    asset_evidence: AssetEvidenceAssertions | None,
 ) -> list[EvidenceFinding]:
     if is_cbom_imported:
+        relationship_assertion = (
+            asset_evidence.relationship_completeness if asset_evidence else None
+        )
+        if relationship_assertion is not None and relationship_assertion.value in {
+            RelationshipEvidenceCompleteness.none,
+            RelationshipEvidenceCompleteness.known,
+        }:
+            return []
+
+        relationship_completeness = RelationshipCompleteness.unknown
+        evidence_state = EvidenceState.unknown
+        provenance = EvidenceProvenance.tool_generated
+        if relationship_assertion is not None:
+            relationship_completeness = RelationshipCompleteness(
+                relationship_assertion.value.value
+            )
+            evidence_state = _assertion_state(
+                relationship_assertion, default=EvidenceState.unknown
+            )
+            provenance = _assertion_provenance(
+                relationship_assertion, default=EvidenceProvenance.tool_generated
+            )
+
         return [
             EvidenceFinding(
                 code="unknown_dependency_completeness",
@@ -528,9 +596,9 @@ def _dependency_context_findings(
                     EvidenceEffect.human_review_required,
                 ],
                 asset_id=asset.id,
-                evidence_state=EvidenceState.unknown,
-                provenance=EvidenceProvenance.tool_generated,
-                relationship_completeness=RelationshipCompleteness.unknown,
+                evidence_state=evidence_state,
+                provenance=provenance,
+                relationship_completeness=relationship_completeness,
                 human_action=HumanAction(
                     description=(
                         f"Add QSTriage dependency context or relationship completeness "
@@ -566,9 +634,10 @@ def _defaulted_risk_finding(
     *,
     field_name: str,
     value: RiskLevel,
+    assertion: FieldEvidenceAssertion | None,
     message: str,
 ) -> EvidenceFinding | None:
-    if value != RiskLevel.medium:
+    if value != RiskLevel.medium or assertion is not None:
         return None
 
     return EvidenceFinding(
@@ -613,6 +682,38 @@ def _is_cbom_imported_asset(asset: CryptographicAsset, source_type: str) -> bool
 
 def _is_unknown_text(value: str | None) -> bool:
     return value is None or value.strip().lower() in {"", "unknown", "no assertion"}
+
+
+def _assertion_state(
+    assertion: FieldEvidenceAssertion | None,
+    *,
+    default: EvidenceState,
+) -> EvidenceState:
+    if assertion is None:
+        return default
+    return {
+        EvidenceAssertionState.declared: EvidenceState.declared,
+        EvidenceAssertionState.verified: EvidenceState.verified,
+    }[assertion.state]
+
+
+def _assertion_provenance(
+    assertion: FieldEvidenceAssertion | None,
+    *,
+    default: EvidenceProvenance,
+) -> EvidenceProvenance:
+    if assertion is None:
+        return default
+    return {
+        EvidenceAssertionProvenance.user_declared: EvidenceProvenance.user_declared,
+        EvidenceAssertionProvenance.supplier_authoritative: (
+            EvidenceProvenance.supplier_authoritative
+        ),
+        EvidenceAssertionProvenance.third_party_asserted: (
+            EvidenceProvenance.third_party_asserted
+        ),
+        EvidenceAssertionProvenance.tool_generated: EvidenceProvenance.tool_generated,
+    }[assertion.provenance]
 
 
 def _requires_key_size(algorithm: str) -> bool:

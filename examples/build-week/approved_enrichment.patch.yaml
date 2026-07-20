@@ -1,0 +1,45 @@
+patch_version: '0.1'
+source_inventory_hash: sha256:237c747d8dfe9d55963c570418674ca9c99e784e3a5fa02d04b82f55366de3ab
+assertions:
+- asset_id: customer-api-rsa
+  field: data_class
+  value: customer_identity_claims
+  state: declared
+  provenance: user_declared
+  source_reference: architecture-review-AR-27
+- asset_id: customer-api-rsa
+  field: retention_years
+  value: 10
+  state: verified
+  provenance: supplier_authoritative
+  source_reference: records-policy-RP-14
+- asset_id: customer-api-rsa
+  field: exposure
+  value: public_internet
+  state: declared
+  provenance: user_declared
+  source_reference: architecture-review-AR-27
+- asset_id: customer-api-rsa
+  field: criticality
+  value: high
+  state: declared
+  provenance: user_declared
+  source_reference: service-owner-confirmation
+- asset_id: customer-api-rsa
+  field: local_blast_radius
+  value: high
+  state: declared
+  provenance: user_declared
+  source_reference: architecture-review-AR-27
+- asset_id: customer-api-rsa
+  field: migration_effort
+  value: medium
+  state: declared
+  provenance: user_declared
+  source_reference: migration-workshop-MW-03
+relationship_assertions:
+- asset_id: customer-api-rsa
+  completeness: none
+  state: declared
+  provenance: user_declared
+  source_reference: system-owner-confirmation

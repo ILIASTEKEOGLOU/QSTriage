@@ -1,0 +1,62 @@
+assets:
+- id: customer-api-rsa
+  name: Customer API RSA Signing Key
+  environment: unknown
+  asset_type: cbom_cryptographic_asset
+  protocol: signature
+  algorithm: RSA-2048
+  key_size_bits: 2048
+  data_class: customer_identity_claims
+  retention_years: 10
+  exposure: public_internet
+  criticality: high
+  local_blast_radius: high
+  migration_effort: medium
+  notes: 'Imported from CycloneDX CBOM. Business context requires human review. CBOM
+    dependency relationships are not imported as QSTriage blast-radius dependencies.
+    CBOM crypto metadata: assetType=algorithm, primitive=signature, algorithmFamily=RSA,
+    parameterSetIdentifier=RSA-2048.'
+dependencies: []
+scenarios: []
+evidence:
+  version: '0.1'
+  source_inventory_hash: sha256:237c747d8dfe9d55963c570418674ca9c99e784e3a5fa02d04b82f55366de3ab
+  assets:
+    customer-api-rsa:
+      environment: null
+      data_class:
+        state: declared
+        provenance: user_declared
+        source_reference: architecture-review-AR-27
+        rationale: null
+      retention_years:
+        state: verified
+        provenance: supplier_authoritative
+        source_reference: records-policy-RP-14
+        rationale: null
+      exposure:
+        state: declared
+        provenance: user_declared
+        source_reference: architecture-review-AR-27
+        rationale: null
+      criticality:
+        state: declared
+        provenance: user_declared
+        source_reference: service-owner-confirmation
+        rationale: null
+      local_blast_radius:
+        state: declared
+        provenance: user_declared
+        source_reference: architecture-review-AR-27
+        rationale: null
+      migration_effort:
+        state: declared
+        provenance: user_declared
+        source_reference: migration-workshop-MW-03
+        rationale: null
+      relationship_completeness:
+        state: declared
+        provenance: user_declared
+        source_reference: system-owner-confirmation
+        rationale: null
+        value: none

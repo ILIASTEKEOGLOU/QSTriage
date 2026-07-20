@@ -11,9 +11,23 @@ from rich.text import Text
 from qstriage import __version__
 from qstriage.assessment import assess_inventory
 from qstriage.cbom import import_cbom_inventory, write_imported_inventory
+from qstriage.closure import (
+    build_gap_manifest,
+    build_inventory_comparison,
+    build_patch_template,
+    comparison_json,
+    comparison_text,
+    manifest_json,
+    manifest_text,
+)
 from qstriage.config import QSTriageConfig, load_config
 from qstriage.errors import format_inventory_load_error
 from qstriage.evidence import review_inventory_evidence
+from qstriage.enrichment import (
+    load_enrichment_patch,
+    validate_enrichment_patch,
+    write_enriched_inventory,
+)
 from qstriage.exporters import ExportFormat, export_score_results, export_simulation_results
 from qstriage.file_output import UnsafeOutputError, write_private_text
 from qstriage.graph import build_dependency_graph, render_text_graph
@@ -52,6 +66,11 @@ pdr_app = typer.Typer(
 
 policy_app = typer.Typer(
     help="Inspect built-in cryptographic policy packs.",
+    no_args_is_help=True,
+)
+
+closure_app = typer.Typer(
+    help="Inspect and close structured inventory evidence gaps.",
     no_args_is_help=True,
 )
 
@@ -201,6 +220,118 @@ def main() -> None:
 def version() -> None:
     """Show QSTriage version."""
     typer.echo(f"QSTriage {__version__}")
+
+
+@closure_app.command("inspect")
+def closure_inspect_command(
+    inventory_path: Path = typer.Argument(...),
+    output_format: str = typer.Option("text", "--format", "-f"),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Inspect resolvable evidence gaps."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    normalized_format = output_format.lower()
+    if normalized_format not in {"text", "json"}:
+        _safe_print("Closure inspection failed: format must be text or json.", style="red")
+        raise typer.Exit(code=1)
+    manifest = build_gap_manifest(inventory)
+    payload = manifest_json(manifest) if normalized_format == "json" else manifest_text(manifest)
+    if output is None:
+        typer.echo(payload, nl=False)
+        return
+    try:
+        write_private_text(output, payload, protected_paths=(inventory_path,))
+    except (UnsafeOutputError, OSError, ValueError) as error:
+        _safe_print(f"Closure inspection failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"Evidence gaps written: {output}", style="green")
+
+
+@closure_app.command("template")
+def closure_template_command(
+    inventory_path: Path = typer.Argument(...),
+    output: Path = typer.Option(..., "--output", "-o"),
+) -> None:
+    """Write an empty enrichment patch template for unresolved gaps."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    try:
+        write_private_text(
+            output,
+            build_patch_template(inventory),
+            protected_paths=(inventory_path,),
+        )
+    except (UnsafeOutputError, OSError, ValueError) as error:
+        _safe_print(f"Closure template failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"Enrichment template written: {output}", style="green")
+
+
+@closure_app.command("validate")
+def closure_validate_command(
+    inventory_path: Path = typer.Argument(...),
+    patch_path: Path = typer.Argument(...),
+) -> None:
+    """Validate an enrichment patch against its source inventory."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    try:
+        patch = load_enrichment_patch(patch_path)
+        validate_enrichment_patch(inventory, patch)
+    except (OSError, yaml.YAMLError, ValidationError, ValueError) as error:
+        _safe_print(f"Enrichment patch validation failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print("Enrichment patch is valid.", style="green")
+
+
+@closure_app.command("apply")
+def closure_apply_command(
+    inventory_path: Path = typer.Argument(...),
+    patch_path: Path = typer.Argument(...),
+    output: Path = typer.Option(..., "--output", "-o"),
+) -> None:
+    """Apply an approved enrichment patch to a new inventory file."""
+    inventory = _load_inventory_or_exit(inventory_path)
+    try:
+        patch = load_enrichment_patch(patch_path)
+        write_enriched_inventory(
+            inventory, patch, output, input_path=inventory_path
+        )
+    except (OSError, yaml.YAMLError, ValidationError, ValueError) as error:
+        _safe_print(f"Enrichment patch apply failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"Enriched inventory written: {output}", style="green")
+
+
+@closure_app.command("compare")
+def closure_compare_command(
+    before_path: Path = typer.Argument(...),
+    after_path: Path = typer.Argument(...),
+    output_format: str = typer.Option("text", "--format", "-f"),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Compare evidence findings and canonical decisions before and after enrichment."""
+    before = _load_inventory_or_exit(before_path)
+    after = _load_inventory_or_exit(after_path)
+    normalized_format = output_format.lower()
+    if normalized_format not in {"text", "json"}:
+        _safe_print("Closure comparison failed: format must be text or json.", style="red")
+        raise typer.Exit(code=1)
+    try:
+        comparison = build_inventory_comparison(before, after)
+        payload = (
+            comparison_json(comparison)
+            if normalized_format == "json"
+            else comparison_text(comparison)
+        )
+        if output is None:
+            typer.echo(payload, nl=False)
+            return
+        write_private_text(
+            output, payload, protected_paths=(before_path, after_path)
+        )
+    except (UnsafeOutputError, OSError, ValidationError, ValueError) as error:
+        _safe_print(f"Closure comparison failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"Closure comparison written: {output}", style="green")
 
 
 @app.command("validate")
@@ -638,6 +769,7 @@ app.add_typer(review_app, name="review")
 app.add_typer(pdr_app, name="pdr")
 
 app.add_typer(policy_app, name="policy")
+app.add_typer(closure_app, name="closure")
 
 
 if __name__ == "__main__":

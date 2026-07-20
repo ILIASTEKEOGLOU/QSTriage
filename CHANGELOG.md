@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+- Added the Evidence Closure workflow for structured evidence-gap inspection,
+  provenance-aware enrichment, source-hash-bound patch validation, explicit
+  human apply, and deterministic before/after comparison.
+- Added four path-confined read-only MCP tools and the
+  `qstriage-evidence-closure` Codex skill. Neither surface can apply patches or
+  authorize migration.
+- Added deterministic Build Week fixtures, judge automation, cross-platform
+  dependency validation, and end-to-end workflow tests.
+
+### Release status
+
+- Evidence Closure was developed after `v1.2.0`. It is not part of the
+  `v1.2.0` tag or its release artifacts and remains unreleased pending final
+  review.
+
 ## v1.2.0 - 2026-07-17
 
 ### Added

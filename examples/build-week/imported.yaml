@@ -1,0 +1,20 @@
+assets:
+- id: customer-api-rsa
+  name: Customer API RSA Signing Key
+  environment: unknown
+  asset_type: cbom_cryptographic_asset
+  protocol: signature
+  algorithm: RSA-2048
+  key_size_bits: 2048
+  data_class: unknown
+  retention_years: 0
+  exposure: unknown
+  criticality: medium
+  local_blast_radius: medium
+  migration_effort: medium
+  notes: 'Imported from CycloneDX CBOM. Business context requires human review. CBOM
+    dependency relationships are not imported as QSTriage blast-radius dependencies.
+    CBOM crypto metadata: assetType=algorithm, primitive=signature, algorithmFamily=RSA,
+    parameterSetIdentifier=RSA-2048.'
+dependencies: []
+scenarios: []
