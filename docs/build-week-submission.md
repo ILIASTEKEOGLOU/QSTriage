@@ -54,7 +54,9 @@ Closing uncertainty is valuable even when the action does not change. Provenance
 
 ## What is next
 
-Next steps are judge feedback, broader real-world CBOM compatibility fixtures, usability improvements for evidence interviews, and submission metadata completion. No public release or tag is planned until the candidate is reviewed.
+Next steps are judge feedback, broader real-world CBOM compatibility fixtures,
+usability improvements for evidence interviews, and final video and submission
+metadata. Evidence Closure remains unreleased pending final product review.
 
 ## Testing instructions
 
@@ -71,13 +73,14 @@ python -m pip check
 
 The runner imports the synthetic CBOM, inspects gaps, validates and applies the approved synthetic patch, reviews evidence before and after, and produces deterministic comparison output.
 
-## Repository-access note
+## Repository access
 
-Judging currently uses the private repository and branch `build-week/evidence-closure`. Authorized judges need repository access. The core demo requires no secret, telemetry, production access, or network service after installation.
+Use the repository's default `main` branch. The core demo requires no secret,
+telemetry, production access, or network service after installation.
 
-## Video link
+## Video
 
-Video link: `PENDING_YOUTUBE_URL`
+The final submission video will be linked after it is recorded and published.
 
 ## Codex /feedback Session ID
 

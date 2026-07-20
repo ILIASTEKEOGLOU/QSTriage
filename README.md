@@ -239,6 +239,17 @@ gh attestation verify qstriage-*.tar.gz --repo ILIASTEKEOGLOU/QSTriage
 Release tags must match the package version exactly, for example `v1.2.0` for
 package version `1.2.0`.
 
+Manual release-artifact runs require an existing exact release tag. Run the
+workflow definition from `main` and supply the tag to rebuild:
+
+```bash
+gh workflow run release.yml --ref main -f release_tag=v1.2.0
+```
+
+The workflow resolves that tag to an immutable commit SHA, verifies that the
+tag matches the package version, and builds only that resolved source. It
+rejects branch names and mismatched release identities.
+
 ## Development
 
 For development work intended to match CI, use Python 3.11. Create and activate

@@ -10,8 +10,10 @@ rotate certificates, deploy cryptographic changes, or perform remediation.
 
 Do not open a public GitHub issue for a sensitive security report.
 
-Until private vulnerability reporting is configured for this repository,
-contact the maintainer privately before sharing technical exploit details.
+Use GitHub's
+[private vulnerability reporting](https://github.com/ILIASTEKEOGLOU/QSTriage/security/advisories/new)
+for sensitive reports. If that channel is unavailable, contact the maintainer
+privately before sharing technical exploit details.
 
 Do not include secrets, private keys, production inventories, customer data,
 credentials, access tokens, or confidential system diagrams in a report.
@@ -47,10 +49,10 @@ The repository uses:
 - Dependabot monitoring for Python and GitHub Actions,
 - reproducible wheel/source builds, SHA-256 manifests, and CycloneDX SBOMs.
 
-GitHub-hosted provenance and SBOM attestations run only for eligible
-public-repository events. Private-repository runs retain the reproducible
-release bundle and local integrity evidence without requesting attestation
-permissions.
+GitHub-hosted provenance and SBOM attestations run only for eligible tag pushes
+or explicit exact-tag rebuilds in a public repository. Private-repository runs
+retain the reproducible release bundle and local integrity evidence without
+requesting attestation permissions.
 
 ## Input and decision boundaries
 
