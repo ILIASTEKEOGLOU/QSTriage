@@ -113,6 +113,9 @@ See the [Usage Guide](docs/usage.md) for the complete CLI workflow.
 
 ## OpenAI Build Week 2026 - Evidence Closure
 
+Evidence Closure is unreleased work developed after QSTriage `v1.2.0`. It is
+not part of the `v1.2.0` tag or its release artifacts.
+
 Before Build Week, QSTriage already provided CBOM import, cryptographic classification, evidence review, deterministic scoring and policy decisions, PDR generation, graph analysis, simulation, reporting, and exports. Build Week adds structured evidence gaps, provenance-aware source-bound enrichment, deterministic validate/apply/compare commands, read-only MCP tools, and the `qstriage-evidence-closure` Codex skill.
 
 The one-command judge demo is:

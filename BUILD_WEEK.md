@@ -7,6 +7,8 @@
 - Build Week branch: `build-week/evidence-closure`
 - Candidate commit range: `91858aa..HEAD`
 - Status: implemented submission candidate; no public release or tag yet
+- Release identity: Evidence Closure is unreleased post-`v1.2.0` work and is
+  not contained in the `v1.2.0` tag or its release artifacts
 
 The baseline already included CycloneDX CBOM import, classification, evidence and context review, deterministic scoring, policy evaluation, canonical decisions, PDR generation, graph analysis, simulation, reporting, and exports.
 
