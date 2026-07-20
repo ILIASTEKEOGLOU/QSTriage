@@ -4,9 +4,9 @@
 
 - Existing project: QSTriage v1.2.0
 - Baseline SHA: `91858aa06494761baea378f7aaa1f41bd4218952`
-- Build Week branch: `build-week/evidence-closure`
-- Candidate commit range: `91858aa..HEAD`
-- Status: implemented submission candidate; no public release or tag yet
+- Build Week development branch: `build-week/evidence-closure` (merged by PR #35)
+- Candidate commit range: `91858aa..507de12`
+- Status: merged to `main`; Evidence Closure remains unreleased
 - Release identity: Evidence Closure is unreleased post-`v1.2.0` work and is
   not contained in the `v1.2.0` tag or its release artifacts
 
@@ -47,7 +47,11 @@ The unchanged gate is intentional: supplied evidence closes evidence-quality gap
 
 ## Judging and release status
 
-Private-repository judges can clone the authorized branch, install `.[mcp]`, and run `python scripts/build_week_demo.py`; no external service or credential is required. A public release/tag has not been created. Public release status, repository judging access, YouTube URL, and the Codex /feedback Session ID must be verified separately before submission.
+Judges can clone the default `main` branch, install `.[mcp]`, and run
+`python scripts/build_week_demo.py`; no external service or credential is
+required. Evidence Closure has no release tag and remains unreleased. The final
+video URL and Codex /feedback Session ID must be verified separately before
+submission.
 
 ## Out of scope
 
