@@ -449,6 +449,33 @@ def test_policy_evaluator_fires_unknown_algorithm_rule() -> None:
     assert result.findings[0].standards_applied == ["QSTRIAGE-SAFETY-POLICY"]
 
 
+def test_unverified_pqc_parameters_do_not_apply_standardized_pqc_rule() -> None:
+    result = _evaluate_asset(
+        _asset(
+            algorithm="ML-KEM-9999",
+            data_class="internal",
+            retention_years=1,
+            exposure="internal",
+        )
+    )
+
+    assert (
+        "standardized_pqc_can_be_retained_with_operational_review"
+        not in result.applied_rule_ids
+    )
+
+
+def test_classifier_hotfix_does_not_move_builtin_policy_pack_identity() -> None:
+    from qstriage.policy import get_policy_pack
+
+    pack = get_policy_pack("nist-pqc-basic")
+
+    assert pack.version == "0.2"
+    assert pack.policy_pack_hash() == (
+        "sha256:2d3dae46043cf68c63c05ab1ebd4b7d2dd5838323c09cb4211a797ed2a296b91"
+    )
+
+
 def test_policy_evaluator_fires_missing_business_context_for_unknown_data_class() -> None:
     result = _evaluate_asset(
         _asset(

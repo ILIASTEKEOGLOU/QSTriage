@@ -51,3 +51,39 @@ def test_report_contains_manual_review_evidence_for_unknown_algorithm() -> None:
     assert "Quantum status: unknown" in report
     assert "Registry action: manual_review_required" in report
     assert "Registry sources: QSTRIAGE-SAFETY-POLICY" in report
+
+
+def test_report_exposes_unverified_identifier_resolution_and_evidence_warning() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="unverified-pqc",
+                name="Unverified PQC",
+                environment="test",
+                asset_type="service",
+                protocol="custom",
+                algorithm="ML-DSA-17",
+                key_size_bits=None,
+                data_class="internal",
+                retention_years=1,
+                exposure="internal",
+                criticality=RiskLevel.medium,
+                local_blast_radius=RiskLevel.low,
+                migration_effort=RiskLevel.medium,
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    report = generate_markdown_report(inventory)
+
+    assert "Input algorithm: `ML-DSA-17`" in report
+    assert "Algorithm family: ML-DSA" in report
+    assert (
+        "Identifier resolution: recognized_family_unverified_parameters"
+        in report
+    )
+    assert "Quantum status: unknown" in report
+    assert "Standard status: unknown" in report
+    assert "unverified_algorithm_parameters" in report

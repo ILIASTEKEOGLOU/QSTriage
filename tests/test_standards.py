@@ -1,3 +1,5 @@
+import pytest
+
 from qstriage.standards import (
     SOURCE_FIPS_180_4,
     SOURCE_FIPS_197,
@@ -130,3 +132,146 @@ def test_classifies_compound_tls_public_key_identifier_as_quantum_vulnerable() -
     assert classification.quantum_status == "quantum_vulnerable"
     assert classification.recommended_action == "migrate_to_hybrid_or_pqc_path"
     assert classification.source_ids == (SOURCE_NIST_IR_8547,)
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    (
+        "universal-cipher",
+        "MARSALA",
+        "TORSA-HASH",
+        "APP-256",
+        "ECCENTRIC-V2",
+        "NOT-DIFFIE-HELLMANISH",
+        "FFDHELIUM",
+        "SHAKEWEIGHT",
+    ),
+)
+def test_adversarial_lookalikes_remain_unrecognized(algorithm: str) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == "unknown"
+    assert classification.identifier_resolution == "unrecognized_identifier"
+    assert classification.quantum_status == "unknown"
+    assert classification.standard_status == "unknown"
+    assert classification.recommended_action == "manual_review_required"
+
+
+@pytest.mark.parametrize(
+    ("algorithm", "family", "source_id"),
+    (
+        ("ML-KEM-512", "ML-KEM", SOURCE_FIPS_203),
+        ("ML-KEM-768", "ML-KEM", SOURCE_FIPS_203),
+        ("ML-KEM-1024", "ML-KEM", SOURCE_FIPS_203),
+        ("ML-DSA-44", "ML-DSA", SOURCE_FIPS_204),
+        ("ML-DSA-65", "ML-DSA", SOURCE_FIPS_204),
+        ("ML-DSA-87", "ML-DSA", SOURCE_FIPS_204),
+        ("SLH-DSA-SHA2-128S", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHA2-128F", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHA2-192S", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHA2-192F", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHA2-256S", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHA2-256F", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHAKE-128S", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHAKE-128F", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHAKE-192S", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHAKE-192F", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHAKE-256S", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-SHAKE-256F", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH_DSA_SHA2_128S", "SLH-DSA", SOURCE_FIPS_205),
+    ),
+)
+def test_only_exact_pqc_parameter_sets_receive_standardized_status(
+    algorithm: str,
+    family: str,
+    source_id: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == family
+    assert classification.identifier_resolution == "exact_identifier"
+    assert classification.quantum_status == "quantum_resistant"
+    assert classification.standard_status == "standardized_pqc"
+    assert source_id in classification.source_ids
+
+
+@pytest.mark.parametrize(
+    ("algorithm", "family", "family_source"),
+    (
+        ("ML-KEM", "ML-KEM", SOURCE_FIPS_203),
+        ("ML-KEM-9999", "ML-KEM", SOURCE_FIPS_203),
+        ("ML-DSA", "ML-DSA", SOURCE_FIPS_204),
+        ("ML-DSA-17", "ML-DSA", SOURCE_FIPS_204),
+        ("SLH-DSA", "SLH-DSA", SOURCE_FIPS_205),
+        ("SLH-DSA-BANANA", "SLH-DSA", SOURCE_FIPS_205),
+    ),
+)
+def test_pqc_family_with_unverified_parameters_preserves_family_without_approval(
+    algorithm: str,
+    family: str,
+    family_source: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == family
+    assert (
+        classification.identifier_resolution
+        == "recognized_family_unverified_parameters"
+    )
+    assert classification.quantum_status == "unknown"
+    assert classification.standard_status == "unknown"
+    assert (
+        classification.recommended_action
+        == "verify_exact_parameter_set_before_classification"
+    )
+    assert classification.source_ids == (
+        family_source,
+        SOURCE_QSTRIAGE_SAFETY_POLICY,
+    )
+
+
+@pytest.mark.parametrize(
+    ("algorithm", "family"),
+    (
+        ("RSA-OAEP", "RSA"),
+        ("RSASSA-PSS", "RSA"),
+        ("SHA256withRSA", "RSA"),
+        ("RSA2048", "RSA"),
+        ("ECDHE-RSA-AES128-GCM-SHA256", "classical_public_key_composite"),
+        ("ECDHE_RSA", "classical_public_key_composite"),
+        ("finite-field DH", "DH"),
+        ("ECDSA P-256", "ECC"),
+        ("X25519", "ECC"),
+        ("Ed25519", "ECC"),
+        ("SHA3-256", "SHA-3"),
+        ("SHAKE256", "SHA-3"),
+    ),
+)
+def test_existing_enterprise_identifier_forms_remain_exact_matches(
+    algorithm: str,
+    family: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == family
+    assert classification.identifier_resolution == "exact_identifier"
+
+
+def test_separator_runs_normalize_without_splitting_alphabetic_tokens() -> None:
+    classification = classify_algorithm("  ml__kem / 768  ")
+
+    assert classification.algorithm_family == "ML-KEM"
+    assert classification.identifier_resolution == "exact_identifier"
+    assert classification.standard_status == "standardized_pqc"
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    ("secp256r1", "prime256v1", "brainpoolP256r1", "X448", "Ed448"),
+)
+def test_deferred_curve_aliases_remain_outside_the_hotfix(algorithm: str) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == "unknown"
+    assert classification.identifier_resolution == "unrecognized_identifier"
+    assert classification.standard_status == "unknown"
