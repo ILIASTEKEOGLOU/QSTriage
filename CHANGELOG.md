@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## v1.2.1 - 2026-07-22
+
+### Added
+
+- Added a bounded algorithm-identifier grammar and a source-backed compatibility corpus covering supported RSA, finite-field DH, ECC, standardized PQC, hybrid, and classical-composite forms.
+- Added regression contracts that keep identifier resolution, quantum posture, standards status, evidence review, decisions, policy evaluation, scoring, reports, and PDR output aligned.
+
+### Fixed
+
+- Prevented family-name substrings, lookalike words, trailing junk, and unsupported parameter sets from receiving an unjustified positive classification.
+- Distinguished exact supported identifiers from recognized families with missing or unsupported parameters, preserving fail-closed parameter verification through downstream decision surfaces.
+- Closed compatibility gaps for bounded RSA, DH, and ECDSA identifier forms without broad fuzzy matching; X448 and Ed448 remain explicitly deferred.
+- Corrected reproducible CycloneDX attestation to use its canonical predicate type and predicate file.
+
+### Release
+
+- Added public package metadata and an environment-guarded PyPI Trusted Publishing path that rebuilds and verifies an exact existing release tag without stored PyPI credentials.
+- Kept PDR at `0.2` and the built-in `nist-pqc-basic` policy pack at `0.2`; this patch does not change scoring weights, policy rules, the importer contract, or the PDR schema.
+
 ## v1.2.0 - 2026-07-17
 
 ### Added

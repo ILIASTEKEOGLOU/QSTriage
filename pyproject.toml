@@ -7,10 +7,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qstriage"
-version = "1.2.0"
+version = "1.2.1"
 description = "Cryptographic Policy & Justification Engine"
 readme = "README.md"
+authors = [
+    { name = "Ilias Tekeoglou" },
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
+keywords = [
+    "post-quantum cryptography",
+    "PQC",
+    "CBOM",
+    "cryptographic inventory",
+    "decision support",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Security :: Cryptography",
+]
 dependencies = [
     "pydantic>=2.8",
     "pyyaml>=6.0",
@@ -18,6 +40,13 @@ dependencies = [
     "typer>=0.12",
     "rich>=13.7"
 ]
+
+[project.urls]
+Homepage = "https://github.com/ILIASTEKEOGLOU/QSTriage"
+Documentation = "https://github.com/ILIASTEKEOGLOU/QSTriage#documentation"
+Repository = "https://github.com/ILIASTEKEOGLOU/QSTriage"
+Issues = "https://github.com/ILIASTEKEOGLOU/QSTriage/issues"
+Changelog = "https://github.com/ILIASTEKEOGLOU/QSTriage/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

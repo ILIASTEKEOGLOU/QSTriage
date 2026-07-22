@@ -3,6 +3,16 @@ name: Release artifacts
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing exact release tag to rebuild, attest, and optionally publish
+        required: true
+        type: string
+      publish_pypi:
+        description: Publish the verified wheel and sdist to PyPI
+        required: true
+        default: false
+        type: boolean
   push:
     tags:
       - "v*"
@@ -11,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.workflow }}-${{ github.ref }}
+  group: release-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
   cancel-in-progress: false
 
 env:
@@ -19,7 +29,65 @@ env:
   PIP_NO_INPUT: "1"
 
 jobs:
+  source:
+    name: verify source identity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      artifact_name: ${{ steps.identity.outputs.artifact_name }}
+      package_version: ${{ steps.identity.outputs.package_version }}
+      source_epoch: ${{ steps.identity.outputs.source_epoch }}
+      source_sha: ${{ steps.identity.outputs.source_sha }}
+
+    steps:
+      - name: Check out requested source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          fetch-tags: true
+          persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
+
+      - name: Verify source and package identity
+        id: identity
+        env:
+          REQUESTED_RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          print(data["project"]["version"])
+          PY
+          )
+          source_sha=$(git rev-parse HEAD)
+          source_epoch=$(git show -s --format=%ct HEAD)
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            requested_tag="$REQUESTED_RELEASE_TAG"
+            if [[ ! "$requested_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "ERROR: release_tag must be an exact vMAJOR.MINOR.PATCH tag"
+              exit 1
+            fi
+            tag_sha=$(git rev-parse "refs/tags/$requested_tag^{commit}")
+            test "$tag_sha" = "$source_sha"
+            test "$requested_tag" = "v$version"
+          elif [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            tag_sha=$(git rev-parse "refs/tags/$GITHUB_REF_NAME^{commit}")
+            test "$tag_sha" = "$source_sha"
+            test "$GITHUB_REF_NAME" = "v$version"
+          fi
+
+          echo "artifact_name=qstriage-release-$source_sha" >> "$GITHUB_OUTPUT"
+          echo "package_version=$version" >> "$GITHUB_OUTPUT"
+          echo "source_epoch=$source_epoch" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+
   release-lock:
+    needs: source
     name: verify Linux release lock
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -32,6 +100,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          ref: ${{ needs.source.outputs.source_sha }}
 
       - name: Set up Python 3.11
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -81,7 +150,7 @@ jobs:
         if: steps.compare_lock.outputs.match != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: release-linux-py311-lock-${{ github.sha }}
+          name: release-linux-py311-lock-${{ needs.source.outputs.source_sha }}
           path: generated/release-linux-py311.lock
           if-no-files-found: error
           retention-days: 1
@@ -98,16 +167,22 @@ jobs:
           exit 1
 
   build:
-    needs: release-lock
+    needs:
+      - source
+      - release-lock
     name: reproducible build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      PACKAGE_VERSION: ${{ needs.source.outputs.package_version }}
+      SOURCE_DATE_EPOCH: ${{ needs.source.outputs.source_epoch }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          ref: ${{ needs.source.outputs.source_sha }}
 
       - name: Set up Python 3.11
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -122,25 +197,6 @@ jobs:
         run: |
           python -m pip install "pip==26.1.2"
           python -m pip install --require-hashes -r requirements/release-linux-py311.lock
-
-      - name: Derive release identity
-        shell: bash
-        run: |
-          set -euo pipefail
-          version=$(python - <<'PY'
-          import tomllib
-          from pathlib import Path
-
-          data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-          print(data["project"]["version"])
-          PY
-          )
-          epoch=$(git show -s --format=%ct HEAD)
-          echo "PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
-          echo "SOURCE_DATE_EPOCH=$epoch" >> "$GITHUB_ENV"
-          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
-            test "$GITHUB_REF_NAME" = "v$version"
-          fi
 
       - name: Materialize two clean source trees
         shell: bash
@@ -212,7 +268,7 @@ jobs:
       - name: Upload release bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: qstriage-release-${{ github.sha }}
+          name: ${{ needs.source.outputs.artifact_name }}
           path: release/*
           if-no-files-found: error
           retention-days: 14
@@ -222,9 +278,10 @@ jobs:
     name: attest release artifacts
     if: >-
       github.event.repository.private == false &&
-      (github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
-    needs: build
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs:
+      - source
+      - build
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -237,7 +294,7 @@ jobs:
       - name: Download release bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: qstriage-release-${{ github.sha }}
+          name: ${{ needs.source.outputs.artifact_name }}
           path: release
 
       - name: Verify downloaded checksums
@@ -266,4 +323,53 @@ jobs:
           subject-path: |
             release/*.whl
             release/*.tar.gz
-          sbom-path: ${{ steps.sbom.outputs.path }}
+          predicate-type: https://cyclonedx.org/bom
+          predicate-path: ${{ steps.sbom.outputs.path }}
+
+  publish-pypi:
+    name: publish verified distributions to PyPI
+    if: >-
+      github.event.repository.private == false &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_pypi
+    needs:
+      - source
+      - build
+      - attest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/qstriage
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download verified release bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.source.outputs.artifact_name }}
+          path: release
+
+      - name: Verify checksums and stage only Python distributions
+        env:
+          PACKAGE_VERSION: ${{ needs.source.outputs.package_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd release && sha256sum --check SHA256SUMS)
+
+          wheel="release/qstriage-${PACKAGE_VERSION}-py3-none-any.whl"
+          sdist="release/qstriage-${PACKAGE_VERSION}.tar.gz"
+          test -f "$wheel"
+          test -f "$sdist"
+
+          mkdir dist
+          cp -- "$wheel" "$sdist" dist/
+          test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 2
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
+        with:
+          packages-dir: dist/
+          attestations: true
