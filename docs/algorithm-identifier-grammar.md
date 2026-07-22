@@ -112,15 +112,41 @@ standardized identifiers.
 
 | Family | Accepted forms | Boundary rule |
 |---|---|---|
-| RSA | `RSA`, `RSA-<digits>`, `RSA<digits>`, `RSA-OAEP`, anchored `RSASSA-PSS`, anchored `SHA<digest>WITHRSA` | Never search for `RSA` inside an arbitrary alphabetic run |
-| Finite-field DH | `DH`, `DIFFIE-HELLMAN`, `FINITE-FIELD-DH`, and `FFDHE` followed only by a numeric group | `FFDHELIUM` and longer lookalike words do not match |
-| ECC | Exact `ECC`, `ECDH`, `ECDHE`, `ECDSA`, `P-256`, `P-384`, `P-521`, `CURVE25519`, `X25519`, and `ED25519` tokens | A marker must be the whole identifier or an exact separator-delimited token or sequence |
+| RSA | `RSA`, `RSA-<digits>`, `RSA<digits>`, exact OAEP/PSS and X.509 OID-name aliases, anchored `MD2/MD5/SHA<digest>WITHRSA[ENCRYPTION]`, and the two registered TLS RSA/AES-GCM forms in the compatibility corpus | Never search for `RSA` inside an arbitrary alphabetic run |
+| Finite-field DH | `DH`, `DHE`, `EDH`, `DIFFIE-HELLMAN`, `FINITE-FIELD-DH`, and `FFDHE` followed only by a numeric group | Role markers must be whole tokens; `DHELIUM`, `EDHELP`, and `FFDHELIUM` do not match |
+| ECC | Exact `ECC`, `ECDH`, `ECDHE`, `ECDSA`, `P-256`, `P-384`, `P-521`, `CURVE25519`, `X25519`, and `ED25519` tokens, plus anchored `SHA<digest>WITHECDSA` signature names | A marker must be the whole identifier, an exact separator-delimited token or sequence, or one complete supported signature name |
 | Classical composite | Two or more exact separator-delimited public-key role tokens in one supported composite | Composite recognition runs before leaf families |
+
+For composite classification, “two or more” means at least one explicit
+key-establishment token and a separate authentication or signature token. A
+TLS RSA key-transport suite such as `TLS_RSA_WITH_AES_128_GCM_SHA256` contains
+only one public-key primitive and therefore remains an RSA leaf. It is not a
+composite merely because its identifier also names symmetric and hash
+components.
 
 The compatibility corpus includes `RSA-OAEP`, `RSASSA-PSS`,
 `SHA256withRSA`, `RSA2048`, `ECDHE_RSA`,
 `ECDHE-RSA-AES128-GCM-SHA256`, `finite-field DH`, `ECDSA P-256`,
-`X25519`, and `Ed25519`.
+`X25519`, and `Ed25519`. The source-backed closure corpus in
+`tests/fixtures/algorithm_identifier_compatibility.json` additionally locks:
+
+- standalone `DHE` and the OpenSSL legacy alias `EDH` to the `DH` family as
+  new bounded aliases, not as restored v1.2.0 behavior;
+- separator-delimited `DH`/`DHE`/`EDH` plus `RSA` to
+  `classical_public_key_composite`;
+- `RSA-PSS`, `rsaEncryption`, `id-RSASSA-PSS`, `RSAES-OAEP`,
+  `id-RSAES-OAEP`, and digest-with-`RSAEncryption` forms to `RSA`;
+- the RFC 3279 `md2WithRSAEncryption` and `md5WithRSAEncryption` OID names,
+  their bounded JCA forms, and the SHA-1/SHA-2 JCA `withECDSA` names to their
+  RSA or ECC leaf families;
+- the registered `TLS_RSA_WITH_AES_128_GCM_SHA256` and
+  `TLS_RSA_WITH_AES_256_GCM_SHA384` forms to `RSA`.
+
+The corpus records its IANA, IETF, and OpenSSL references beside the expected
+family and labels each entry as restored coverage or a new bounded alias. It is
+the release compatibility guard. Differential comparison with a historical
+implementation may be used as a maintainer audit, but is not a test dependency
+and does not make old false positives part of the contract.
 
 ## Symmetric and hash grammar
 
@@ -148,6 +174,16 @@ family, quantum status, and standards status:
 - `NOT-DIFFIE-HELLMANISH`
 - `FFDHELIUM`
 - `SHAKEWEIGHT`
+- `DHELIUM`
+- `EDHELP`
+- `RSA-PSSX`
+- `rsaEncryptionExtra`
+- `id-RSASSA-PSS-EXTRA`
+- `md5WithRSAEncryptionExtra`
+- `MD5withRSAX`
+- `SHA256withECDSAX`
+- `SHA256withECDSAExtra`
+- `TLS_RSAX_WITH_AES_128_GCM_SHA256`
 
 This is a regression corpus, not an exhaustive denylist. The matcher succeeds
 only through the positive grammar above; it does not classify by checking that
@@ -161,6 +197,13 @@ The hotfix does not:
 - rewrite Kyber to ML-KEM or Dilithium to ML-DSA;
 - add `secp256r1`, `prime256v1`, `brainpoolP256r1`, `X448`, or `Ed448`;
 - add ChaCha20-Poly1305, TDEA/3DES, Blowfish, or Falcon;
+- parse SRP, PSK/RSA-PSK, or anonymous ECDH cipher-suite grammars, including
+  OpenSSL `SRP-RSA-*`, `RSA-PSK-*`, and `AECDH-*` aliases recorded by the
+  [IANA TLS registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-4)
+  and [OpenSSL cipher documentation](https://docs.openssl.org/3.0/man1/openssl-ciphers/);
+- accept compact non-canonical PSS spellings such as `rsassaPss` or `RSAPSS`;
+- decompose or classify classical/PQC hybrids such as `X25519MLKEM768` or
+  `ML-KEM-768+X25519`; the v1.2.1 data model has no hybrid-family result;
 - infer runtime implementation, key validity, protocol role, or policy
   approval from an identifier string;
 - change the policy-pack version, scoring formula, or PDR 0.2 schema.
@@ -168,6 +211,29 @@ The hotfix does not:
 The deferred curve identifiers remain `unrecognized_identifier` until a
 versioned, provenance-aware registry adds them. Conservative unknown handling
 is preferable to an unsupported positive claim.
+
+Deferred TLS and hybrid forms also remain fail-closed. `X25519MLKEM768` is
+unrecognized. A family-prefixed value such as `ML-KEM-768+X25519` may preserve
+the `ML-KEM` family only as `recognized_family_unverified_parameters`; it does
+not receive `quantum_resistant` or `standardized_pqc` status and must not be
+interpreted as a resolved single-family algorithm.
+
+## Phase 2 registry-driven maintainer audit
+
+The compatibility corpus bounds the v1.2.1 release, but hand-selected examples
+are not an exhaustive registry audit. Phase 2 should add an offline,
+deterministic maintainer command that compares classifier output against
+reviewed snapshots from:
+
+- the IANA TLS Cipher Suites registry;
+- `openssl ciphers -v ALL` output from a recorded OpenSSL version;
+- X.509 algorithm and OID names from RFC 3279, RFC 4055, and RFC 5480.
+
+The command should emit source-backed candidate gaps and semantic conflicts; it
+must not auto-approve identifiers or rewrite the production registry. Network
+retrieval and snapshot refresh belong to an explicit maintainer workflow. The
+normal test suite remains offline and consumes only the reviewed, versioned
+golden corpus.
 
 ## Cross-layer fail-closed behavior
 

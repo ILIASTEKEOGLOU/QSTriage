@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from qstriage.standards import (
@@ -12,6 +15,15 @@ from qstriage.standards import (
     SOURCE_SP_800_57,
     classify_algorithm,
 )
+
+
+COMPATIBILITY_CORPUS_PATH = (
+    Path(__file__).parent / "fixtures" / "algorithm_identifier_compatibility.json"
+)
+
+
+def _load_compatibility_corpus() -> dict[str, object]:
+    return json.loads(COMPATIBILITY_CORPUS_PATH.read_text(encoding="utf-8"))
 
 
 def test_classifies_rsa_as_quantum_vulnerable_public_key_crypto() -> None:
@@ -274,4 +286,105 @@ def test_deferred_curve_aliases_remain_outside_the_hotfix(algorithm: str) -> Non
 
     assert classification.algorithm_family == "unknown"
     assert classification.identifier_resolution == "unrecognized_identifier"
+    assert classification.standard_status == "unknown"
+
+
+@pytest.mark.parametrize(
+    "case",
+    _load_compatibility_corpus()["entries"],
+    ids=lambda case: case["identifier"],
+)
+def test_source_backed_identifier_compatibility_corpus(
+    case: dict[str, object],
+) -> None:
+    classification = classify_algorithm(str(case["identifier"]))
+
+    assert classification.algorithm_family == case["expected_family"]
+    assert classification.identifier_resolution == case["expected_resolution"]
+    assert classification.quantum_status == "quantum_vulnerable"
+    assert classification.standard_status == "classical_public_key"
+
+
+def test_compatibility_corpus_has_resolvable_provenance() -> None:
+    corpus = _load_compatibility_corpus()
+    sources = corpus["sources"]
+    entries = corpus["entries"]
+
+    assert corpus["schema_version"] == "1.0"
+    assert sources
+    assert all(str(url).startswith("https://") for url in sources.values())
+    assert len({case["identifier"] for case in entries}) == len(entries)
+    assert {
+        case["identifier"]
+        for case in entries
+        if case["change_kind"] == "new_bounded_alias"
+    } == {"DHE", "EDH"}
+
+    for case in entries:
+        assert case["reviewed_in"] == "v1.2.1"
+        assert case["change_kind"] in {
+            "compatibility_restoration",
+            "new_bounded_alias",
+        }
+        assert case["source_ids"]
+        assert set(case["source_ids"]) <= set(sources)
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    (
+        "DHELIUM",
+        "EDHELP",
+        "RSA-PSSX",
+        "rsaEncryptionExtra",
+        "id-RSASSA-PSS-EXTRA",
+        "RSAES-OAEP-EXTRA",
+        "id-RSAES-OAEP-EXTRA",
+        "SHA256withRSAEncryptionExtra",
+        "md5WithRSAEncryptionExtra",
+        "MD5withRSAX",
+        "SHA256withECDSAX",
+        "SHA256withECDSAExtra",
+        "XSHA256withECDSA",
+        "TLS_RSAX_WITH_AES_128_GCM_SHA256",
+        "TLS_RSA_WITH_AES_128_GCM_SHA256_EXTRA",
+    ),
+)
+def test_compatibility_alias_lookalikes_remain_unrecognized(
+    algorithm: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == "unknown"
+    assert classification.identifier_resolution == "unrecognized_identifier"
+    assert classification.quantum_status == "unknown"
+    assert classification.standard_status == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("algorithm", "family", "resolution"),
+    (
+        ("SRP-RSA-AES-256-CBC-SHA", "unknown", "unrecognized_identifier"),
+        ("RSA-PSK-AES128-GCM-SHA256", "unknown", "unrecognized_identifier"),
+        ("AECDH-NULL-SHA", "unknown", "unrecognized_identifier"),
+        ("rsassaPss", "unknown", "unrecognized_identifier"),
+        ("RSAPSS", "unknown", "unrecognized_identifier"),
+        ("X25519MLKEM768", "unknown", "unrecognized_identifier"),
+        (
+            "ML-KEM-768+X25519",
+            "ML-KEM",
+            "recognized_family_unverified_parameters",
+        ),
+    ),
+)
+def test_deferred_identifier_grammars_remain_fail_closed_in_v1_2_1(
+    algorithm: str,
+    family: str,
+    resolution: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == family
+    assert classification.identifier_resolution == resolution
+    assert classification.quantum_status == "unknown"
     assert classification.standard_status == "unknown"

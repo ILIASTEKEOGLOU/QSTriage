@@ -38,7 +38,10 @@ from qstriage.policy import (
     get_policy_pack,
 )
 from qstriage.scoring import ScoreResult, score_inventory
-from qstriage.standards import AlgorithmClassification
+from qstriage.standards import (
+    AlgorithmClassification,
+    requires_parameter_verification,
+)
 
 
 PDR_VERSION = "0.2"
@@ -573,6 +576,20 @@ def _target_state_suggestions(
             )
 
         return suggestions
+
+    if requires_parameter_verification(classification):
+        return [
+            TargetStateSuggestion(
+                option="manual_cryptographic_review_required",
+                standards=list(classification.source_ids),
+                rationale=(
+                    "The algorithm family is recognized, but the exact version or "
+                    "parameter set must be verified before PQC classification."
+                ),
+                operational_risk="high",
+                requires_human_review=True,
+            )
+        ]
 
     if classification.primitive in {"symmetric_encryption", "hash", "hash_or_xof"}:
         return [

@@ -1,0 +1,223 @@
+{
+  "schema_version": "1.0",
+  "sources": {
+    "iana_tls_parameters": "https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-4",
+    "openssl_ciphers_3_0": "https://docs.openssl.org/3.0/man1/openssl-ciphers/",
+    "openssl_rsa_pss_3_1": "https://docs.openssl.org/3.1/man7/RSA-PSS/",
+    "oracle_jca_standard_names": "https://docs.oracle.com/en/java/javase/25/docs/specs/security/standard-names.html",
+    "rfc3279": "https://www.rfc-editor.org/rfc/rfc3279.html",
+    "rfc4055": "https://www.rfc-editor.org/rfc/rfc4055.html",
+    "rfc5480": "https://www.rfc-editor.org/rfc/rfc5480.html",
+    "rfc8017": "https://www.rfc-editor.org/rfc/rfc8017.html"
+  },
+  "entries": [
+    {
+      "identifier": "DHE",
+      "expected_family": "DH",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters", "openssl_ciphers_3_0"],
+      "change_kind": "new_bounded_alias",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "EDH",
+      "expected_family": "DH",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["openssl_ciphers_3_0"],
+      "change_kind": "new_bounded_alias",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "DHE_RSA",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "DHE-RSA-AES128-GCM-SHA256",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["openssl_ciphers_3_0"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "EDH-RSA-DES-CBC3-SHA",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["openssl_ciphers_3_0"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "DH_RSA",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "DH-RSA-AES128-GCM-SHA256",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "TLS_DH_RSA_WITH_AES_256_GCM_SHA384",
+      "expected_family": "classical_public_key_composite",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "RSA-PSS",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["openssl_rsa_pss_3_1", "rfc8017"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "rsaEncryption",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc4055"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "id-RSASSA-PSS",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc4055"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "RSAES-OAEP",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc8017"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "id-RSAES-OAEP",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc4055"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "SHA256withRSAEncryption",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc4055"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "md2WithRSAEncryption",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc3279"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "md5WithRSAEncryption",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["rfc3279"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "MD2withRSA",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "MD5withRSA",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "SHA1withECDSA",
+      "expected_family": "ECC",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names", "rfc5480"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "SHA224withECDSA",
+      "expected_family": "ECC",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names", "rfc5480"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "SHA256withECDSA",
+      "expected_family": "ECC",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names", "rfc5480"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "SHA384withECDSA",
+      "expected_family": "ECC",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names", "rfc5480"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "SHA512withECDSA",
+      "expected_family": "ECC",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["oracle_jca_standard_names", "rfc5480"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    },
+    {
+      "identifier": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+      "expected_family": "RSA",
+      "expected_resolution": "exact_identifier",
+      "source_ids": ["iana_tls_parameters"],
+      "change_kind": "compatibility_restoration",
+      "reviewed_in": "v1.2.1"
+    }
+  ]
+}

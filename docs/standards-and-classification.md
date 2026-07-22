@@ -15,7 +15,13 @@ Each call produces an `AlgorithmClassification` with:
 - standards status,
 - registry recommendation,
 - rationale,
-- source identifiers.
+- source identifiers,
+- identifier resolution.
+
+Identifier resolution separates an exact supported form from a recognized PQC
+family whose parameter set is missing or unsupported, and from a wholly
+unrecognized identifier. The complete bounded grammar is documented in
+[Algorithm Identifier Grammar](algorithm-identifier-grammar.md).
 
 The registry recommendation is classification evidence. It is not the canonical execution decision. Canonical action, gating, verification, confidence, and human review are reconciled separately as described in [Decision Model](decision-model.md).
 
@@ -25,7 +31,9 @@ Before registry matching, QSTriage:
 
 1. trims leading and trailing whitespace,
 2. converts text to uppercase,
-3. converts underscores, slashes, and spaces to hyphens.
+3. treats underscores, slashes, whitespace, and hyphens as separators,
+4. collapses each internal separator run to one hyphen without extracting a
+   known marker from an arbitrary alphabetic token.
 
 Examples:
 
@@ -57,12 +65,27 @@ The table describes registry taxonomy, not a blanket security approval. In parti
 
 Matching is deterministic and order-sensitive.
 
-- ML-KEM, ML-DSA, and SLH-DSA accept the family identifier and identifiers beginning with the family plus a parameter suffix.
-- Classical composite identifiers are detected before the individual RSA and ECC families. A value such as `ECDHE_RSA` is therefore classified as a combined key-establishment/signature identifier.
-- RSA matching recognizes identifiers containing `RSA`.
-- ECC matching recognizes explicit markers including `ECC`, `ECDH`, `ECDHE`, `ECDSA`, `P-256`, `P-384`, `P-521`, `CURVE25519`, `X25519`, and `ED25519`.
-- AES matching recognizes `AES` and identifiers beginning with `AES-`.
-- SHA matching recognizes the explicit SHA-1, SHA-2, SHA-3, and SHAKE forms implemented by the registry.
+- ML-KEM, ML-DSA, and SLH-DSA receive standardized-PQC status only for exact
+  parameter sets in the bundled allowlists. A bare family or unsupported
+  parameter set preserves the family but requires parameter verification.
+- Classical composites are detected before leaf families. Composite means an
+  exact key-establishment role token such as `DH`, `DHE`, `EDH`, `ECDH`, or
+  `ECDHE` plus a separate exact authentication/signature token such as `RSA`.
+- A TLS RSA key-transport suite such as `TLS_RSA_WITH_AES_128_GCM_SHA256` has
+  only one public-key primitive and is classified as the RSA leaf, not as a
+  composite.
+- RSA matching uses exact or anchored forms for bounded RSA, OAEP/PSS,
+  standards-defined textual OID names, bounded MD2/MD5/SHA-with-RSA signature
+  names, and the explicit TLS RSA/AES-GCM compatibility forms. It never
+  searches for `RSA` inside an arbitrary alphabetic run.
+- Finite-field DH matching recognizes exact `DH`, the new bounded `DHE` and
+  legacy OpenSSL `EDH` aliases, exact Diffie-Hellman phrases, and numeric FFDHE
+  group syntax.
+- ECC matching recognizes exact markers including `ECC`, `ECDH`, `ECDHE`,
+  `ECDSA`, `P-256`, `P-384`, `P-521`, `CURVE25519`, `X25519`, and `ED25519`,
+  plus bounded SHA-1/SHA-2 JCA `withECDSA` signature names.
+- AES and SHA matching is confined to the structured forms listed in the
+  algorithm-identifier grammar; a familiar prefix is not a wildcard.
 
 Because matching is bounded to these rules, similar-looking enterprise or vendor terms can remain unknown. Unknown input does not automatically mean high cryptographic risk, but it does mean the current evidence is insufficient to justify a known classification.
 

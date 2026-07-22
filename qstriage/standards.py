@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 
@@ -13,6 +14,53 @@ SOURCE_FIPS_180_4 = "NIST-FIPS-180-4"
 SOURCE_FIPS_202 = "NIST-FIPS-202"
 SOURCE_QSTRIAGE_SAFETY_POLICY = "QSTRIAGE-SAFETY-POLICY"
 
+IDENTIFIER_EXACT = "exact_identifier"
+IDENTIFIER_FAMILY_UNVERIFIED = "recognized_family_unverified_parameters"
+IDENTIFIER_UNRECOGNIZED = "unrecognized_identifier"
+
+ML_KEM_PARAMETER_SETS = frozenset({"512", "768", "1024"})
+ML_DSA_PARAMETER_SETS = frozenset({"44", "65", "87"})
+SLH_DSA_PARAMETER_SETS = frozenset(
+    f"{hash_family}-{security_level}{variant}"
+    for hash_family in ("SHA2", "SHAKE")
+    for security_level in ("128", "192", "256")
+    for variant in ("S", "F")
+)
+
+_ML_KEM_IDENTIFIERS = frozenset(
+    f"ML-KEM-{parameter_set}" for parameter_set in ML_KEM_PARAMETER_SETS
+)
+_ML_DSA_IDENTIFIERS = frozenset(
+    f"ML-DSA-{parameter_set}" for parameter_set in ML_DSA_PARAMETER_SETS
+)
+_SLH_DSA_IDENTIFIERS = frozenset(
+    f"SLH-DSA-{parameter_set}" for parameter_set in SLH_DSA_PARAMETER_SETS
+)
+
+_CLASSICAL_KEY_ESTABLISHMENT_TOKENS = frozenset(
+    {"DH", "DHE", "EDH", "ECDH", "ECDHE", "X25519", "CURVE25519"}
+)
+_CLASSICAL_AUTHENTICATION_TOKENS = frozenset({"RSA", "ECDSA", "ED25519"})
+
+_RSA_EXACT_IDENTIFIERS = frozenset(
+    {
+        "RSA",
+        "RSA-OAEP",
+        "RSA-PSS",
+        "RSAENCRYPTION",
+        "RSASSA-PSS",
+        "ID-RSASSA-PSS",
+        "RSAES-OAEP",
+        "ID-RSAES-OAEP",
+    }
+)
+_TLS_RSA_KEY_TRANSPORT_IDENTIFIERS = frozenset(
+    {
+        "TLS-RSA-WITH-AES-128-GCM-SHA256",
+        "TLS-RSA-WITH-AES-256-GCM-SHA384",
+    }
+)
+
 
 @dataclass(frozen=True)
 class AlgorithmClassification:
@@ -24,6 +72,7 @@ class AlgorithmClassification:
     recommended_action: str
     rationale: str
     source_ids: tuple[str, ...]
+    identifier_resolution: str = IDENTIFIER_UNRECOGNIZED
 
 
 def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
@@ -33,7 +82,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
     if not normalized:
         return _unknown_classification(original)
 
-    if _matches_ml_kem(normalized):
+    if normalized in _ML_KEM_IDENTIFIERS:
         return AlgorithmClassification(
             input_algorithm=original,
             algorithm_family="ML-KEM",
@@ -46,9 +95,10 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "encapsulation mechanism."
             ),
             source_ids=(SOURCE_FIPS_203,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
-    if _matches_ml_dsa(normalized):
+    if normalized in _ML_DSA_IDENTIFIERS:
         return AlgorithmClassification(
             input_algorithm=original,
             algorithm_family="ML-DSA",
@@ -61,9 +111,10 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "signature algorithm."
             ),
             source_ids=(SOURCE_FIPS_204,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
-    if _matches_slh_dsa(normalized):
+    if normalized in _SLH_DSA_IDENTIFIERS:
         return AlgorithmClassification(
             input_algorithm=original,
             algorithm_family="SLH-DSA",
@@ -77,6 +128,17 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "should preserve operational caution for size and performance impact."
             ),
             source_ids=(SOURCE_FIPS_205,),
+            identifier_resolution=IDENTIFIER_EXACT,
+        )
+
+    pqc_family = _recognized_pqc_family(normalized)
+    if pqc_family is not None:
+        family, primitive, source_id = pqc_family
+        return _family_unverified_classification(
+            original,
+            family=family,
+            primitive=primitive,
+            source_id=source_id,
         )
 
     if _matches_classical_public_key_combo(normalized):
@@ -93,6 +155,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "for PQC migration planning."
             ),
             source_ids=(SOURCE_NIST_IR_8547,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     if _matches_rsa(normalized):
@@ -108,6 +171,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "for PQC migration planning."
             ),
             source_ids=(SOURCE_NIST_IR_8547,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     if _matches_diffie_hellman(normalized):
@@ -123,6 +187,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "key establishment for PQC migration planning."
             ),
             source_ids=(SOURCE_NIST_IR_8547,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     if _matches_ecc(normalized):
@@ -138,6 +203,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "quantum-vulnerable for PQC migration planning."
             ),
             source_ids=(SOURCE_NIST_IR_8547,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     if _matches_aes(normalized):
@@ -153,6 +219,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "a Shor-broken public-key migration target."
             ),
             source_ids=(SOURCE_FIPS_197, SOURCE_SP_800_57),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     if _matches_sha3(normalized):
@@ -168,6 +235,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "than public-key establishment or signature algorithms."
             ),
             source_ids=(SOURCE_FIPS_202,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     if _matches_sha2_or_sha1(normalized):
@@ -183,6 +251,7 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
                 "algorithms rather than public-key establishment or signature algorithms."
             ),
             source_ids=(SOURCE_FIPS_180_4,),
+            identifier_resolution=IDENTIFIER_EXACT,
         )
 
     return _unknown_classification(original)
@@ -201,55 +270,96 @@ def _unknown_classification(original: str) -> AlgorithmClassification:
             "standards registry. Conservative human review is required."
         ),
         source_ids=(SOURCE_QSTRIAGE_SAFETY_POLICY,),
+        identifier_resolution=IDENTIFIER_UNRECOGNIZED,
     )
 
 
 def _normalize_algorithm(algorithm: str) -> str:
-    return (
-        algorithm.strip()
-        .upper()
-        .replace("_", "-")
-        .replace("/", "-")
-        .replace(" ", "-")
+    return re.sub(
+        r"[-_/\s]+",
+        "-",
+        algorithm.strip().upper(),
     )
 
 
-def _matches_ml_kem(normalized: str) -> bool:
-    return normalized == "ML-KEM" or normalized.startswith("ML-KEM-")
+def requires_parameter_verification(classification: AlgorithmClassification) -> bool:
+    return classification.identifier_resolution == IDENTIFIER_FAMILY_UNVERIFIED
 
 
-def _matches_ml_dsa(normalized: str) -> bool:
-    return normalized == "ML-DSA" or normalized.startswith("ML-DSA-")
+def _recognized_pqc_family(
+    normalized: str,
+) -> tuple[str, str, str] | None:
+    families = (
+        ("ML-KEM", "key_encapsulation", SOURCE_FIPS_203),
+        ("ML-DSA", "digital_signature", SOURCE_FIPS_204),
+        ("SLH-DSA", "digital_signature", SOURCE_FIPS_205),
+    )
+    for family, primitive, source_id in families:
+        if normalized == family or normalized.startswith(f"{family}-"):
+            return family, primitive, source_id
+    return None
 
 
-def _matches_slh_dsa(normalized: str) -> bool:
-    return normalized == "SLH-DSA" or normalized.startswith("SLH-DSA-")
+def _family_unverified_classification(
+    original: str,
+    *,
+    family: str,
+    primitive: str,
+    source_id: str,
+) -> AlgorithmClassification:
+    return AlgorithmClassification(
+        input_algorithm=original,
+        algorithm_family=family,
+        primitive=primitive,
+        quantum_status="unknown",
+        standard_status="unknown",
+        recommended_action="verify_exact_parameter_set_before_classification",
+        rationale=(
+            f"The identifier matches the {family} family boundary, but its exact "
+            "parameter set is missing or is not supported by the current QSTriage "
+            "standards registry. Exact parameter verification is required before "
+            "a quantum or standards classification can be assigned."
+        ),
+        source_ids=(source_id, SOURCE_QSTRIAGE_SAFETY_POLICY),
+        identifier_resolution=IDENTIFIER_FAMILY_UNVERIFIED,
+    )
 
 
 def _matches_classical_public_key_combo(normalized: str) -> bool:
-    key_establishment_markers = ("ECDHE", "ECDH", "X25519", "CURVE25519")
-    signature_or_auth_markers = ("RSA", "ECDSA", "ED25519")
-
-    return any(marker in normalized for marker in key_establishment_markers) and any(
-        marker in normalized for marker in signature_or_auth_markers
+    tokens = set(normalized.split("-"))
+    return bool(tokens & _CLASSICAL_KEY_ESTABLISHMENT_TOKENS) and bool(
+        tokens & _CLASSICAL_AUTHENTICATION_TOKENS
     )
 
 
 def _matches_rsa(normalized: str) -> bool:
-    return "RSA" in normalized
+    return bool(
+        normalized in _RSA_EXACT_IDENTIFIERS
+        or normalized in _TLS_RSA_KEY_TRANSPORT_IDENTIFIERS
+        or re.fullmatch(r"RSA-?\d+", normalized)
+        or re.fullmatch(
+            r"(?:MD(?:2|5)|SHA(?:1|224|256|384|512))"
+            r"WITHRSA(?:ENCRYPTION)?",
+            normalized,
+        )
+    )
 
 
 def _matches_diffie_hellman(normalized: str) -> bool:
     return (
-        normalized == "DH"
-        or "DIFFIE-HELLMAN" in normalized
-        or normalized.startswith("FFDHE")
-        or "FINITE-FIELD-DH" in normalized
+        normalized in {
+            "DH",
+            "DHE",
+            "EDH",
+            "DIFFIE-HELLMAN",
+            "FINITE-FIELD-DH",
+        }
+        or re.fullmatch(r"FFDHE-?\d+", normalized) is not None
     )
 
 
 def _matches_ecc(normalized: str) -> bool:
-    ecc_markers = (
+    ecc_markers = {
         "ECC",
         "ECDH",
         "ECDHE",
@@ -260,25 +370,30 @@ def _matches_ecc(normalized: str) -> bool:
         "CURVE25519",
         "X25519",
         "ED25519",
+    }
+    tokens = set(normalized.split("-"))
+    return bool(
+        normalized in ecc_markers
+        or tokens & ecc_markers
+        or re.fullmatch(r"SHA(?:1|224|256|384|512)WITHECDSA", normalized)
     )
-    return any(marker in normalized for marker in ecc_markers)
 
 
 def _matches_aes(normalized: str) -> bool:
-    return normalized == "AES" or normalized.startswith("AES-")
+    return normalized == "AES" or bool(
+        re.fullmatch(r"AES-?(?:128|192|256)(?:-[A-Z0-9]+)*", normalized)
+    )
 
 
 def _matches_sha3(normalized: str) -> bool:
-    return (
-        normalized == "SHA-3"
-        or normalized.startswith("SHA-3-")
-        or normalized.startswith("SHA3-")
-        or normalized.startswith("SHAKE")
+    return bool(
+        re.fullmatch(r"SHA-?3-(?:224|256|384|512)", normalized)
+        or re.fullmatch(r"SHAKE-?(?:128|256)", normalized)
     )
 
 
 def _matches_sha2_or_sha1(normalized: str) -> bool:
-    sha_markers = (
+    return normalized in {
         "SHA-1",
         "SHA1",
         "SHA-2",
@@ -287,5 +402,4 @@ def _matches_sha2_or_sha1(normalized: str) -> bool:
         "SHA-256",
         "SHA-384",
         "SHA-512",
-    )
-    return any(normalized == marker or normalized.startswith(f"{marker}-") for marker in sha_markers)
+    }
