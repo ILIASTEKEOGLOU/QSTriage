@@ -8,7 +8,7 @@ import sys
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DEMO_SOURCE = REPOSITORY_ROOT / "examples" / "build-week"
+DEMO_SOURCE = REPOSITORY_ROOT / "examples" / "evidence-closure"
 
 
 def _run(arguments: list[str]) -> None:
@@ -54,13 +54,19 @@ def run_demo(output_dir: Path) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the deterministic Build Week demo.")
-    parser.add_argument("--output-dir", type=Path, default=Path("build-week-demo-output"))
+    parser = argparse.ArgumentParser(
+        description="Run the deterministic Evidence Closure demo."
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("evidence-closure-demo-output"),
+    )
     arguments = parser.parse_args()
     try:
         run_demo(arguments.output_dir)
     except (OSError, subprocess.CalledProcessError, ValueError) as error:
-        print(f"Build Week demo failed: {error}", file=sys.stderr)
+        print(f"Evidence Closure demo failed: {error}", file=sys.stderr)
         return 1
     return 0
 
