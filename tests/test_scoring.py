@@ -129,6 +129,40 @@ def test_scoring_keeps_unknown_algorithm_as_conservative_medium_risk() -> None:
     assert "registry action is manual_review_required" in joined
 
 
+def test_scoring_does_not_award_low_risk_to_unverified_pqc_parameters() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="unverified-pqc-kem",
+                name="Unverified PQC KEM",
+                environment="test",
+                asset_type="service",
+                protocol="TLS1.3",
+                algorithm="ML-KEM-9999",
+                key_size_bits=None,
+                data_class="internal",
+                retention_years=1,
+                exposure="internal",
+                criticality=RiskLevel.medium,
+                local_blast_radius=RiskLevel.low,
+                migration_effort=RiskLevel.low,
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    result = score_inventory(inventory)[0]
+    joined = "\n".join(result.explanation)
+
+    assert result.breakdown.cryptographic_risk == 5.0
+    assert "Algorithm registry classifies ML-KEM as unknown" in joined
+    assert (
+        "registry action is verify_exact_parameter_set_before_classification"
+        in joined
+    )
+
+
 def test_score_inventory_enforces_shared_graph_traversal_budget(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -16,7 +16,10 @@ from qstriage.models import (
     RelationshipEvidenceCompleteness,
     RiskLevel,
 )
-from qstriage.standards import classify_algorithm
+from qstriage.standards import (
+    classify_algorithm,
+    requires_parameter_verification,
+)
 
 
 EVIDENCE_REVIEW_VERSION = "0.1"
@@ -447,7 +450,45 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
     findings: list[EvidenceFinding] = []
     classification = classify_algorithm(asset.algorithm)
 
-    if _is_unknown_text(asset.algorithm) or classification.algorithm_family == "unknown":
+    if requires_parameter_verification(classification):
+        findings.append(
+            EvidenceFinding(
+                code="unverified_algorithm_parameters",
+                category=EvidenceCategory.cryptographic_context,
+                severity=EvidenceSeverity.critical,
+                message=(
+                    "The cryptographic family is recognized, but the exact algorithm "
+                    "version or parameter set is missing or unsupported."
+                ),
+                effects=[
+                    EvidenceEffect.confidence_capped,
+                    EvidenceEffect.decision_grade_blocked,
+                    EvidenceEffect.human_review_required,
+                ],
+                asset_id=asset.id,
+                field_path=f"assets[{asset.id}].algorithm",
+                evidence_state=EvidenceState.unknown,
+                provenance=EvidenceProvenance.user_declared,
+                human_action=HumanAction(
+                    description=(
+                        "Verify the exact algorithm version and parameter set for "
+                        "the affected asset."
+                    ),
+                    field_path=f"assets[{asset.id}].algorithm",
+                    expected_value_type=(
+                        "exact supported cryptographic algorithm identifier and "
+                        "parameter set"
+                    ),
+                    effect_if_unresolved=(
+                        "PQC classification cannot be decision-grade."
+                    ),
+                ),
+            )
+        )
+    elif (
+        _is_unknown_text(asset.algorithm)
+        or classification.algorithm_family == "unknown"
+    ):
         findings.append(
             EvidenceFinding(
                 code="unknown_algorithm",

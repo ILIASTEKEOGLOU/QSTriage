@@ -149,6 +149,55 @@ def test_standardized_ml_kem_cbom_asset_is_marked_as_existing_pqc_target() -> No
     assert "retain_ml_kem" in options
 
 
+def test_unverified_ml_kem_parameters_generate_deterministic_manual_review_pdr() -> None:
+    inventory = Inventory(
+        assets=[
+            CryptographicAsset(
+                id="unverified-ml-kem",
+                name="Unverified ML-KEM",
+                environment="production",
+                asset_type="service",
+                protocol="tls",
+                algorithm="ML-KEM-9999",
+                key_size_bits=None,
+                data_class="internal",
+                retention_years=1,
+                exposure="internal",
+                criticality="medium",
+                local_blast_radius="low",
+                migration_effort="low",
+            )
+        ],
+        dependencies=[],
+        scenarios=[],
+    )
+
+    first = generate_pdr_document(inventory)
+    second = generate_pdr_document(inventory)
+    record = first.records[0]
+    options = {
+        suggestion.option for suggestion in record.target_state_suggestion
+    }
+
+    assert record.observed_state.algorithm_family == "ML-KEM"
+    assert record.observed_state.quantum_status == "unknown"
+    assert record.observed_state.standard_status == "unknown"
+    assert "retain_ml_kem" not in options
+    assert options == {"manual_cryptographic_review_required"}
+    assert "parameter set" in record.target_state_suggestion[0].rationale.lower()
+    assert "unverified_algorithm_parameters" in (
+        record.evidence_review.blocking_finding_codes
+    )
+    assert "classification:recognized_family_unverified_parameters" in (
+        record.decision.reason_codes
+    )
+    assert record.policy_context.policy_pack_version == "0.2"
+    assert first.document_hash == second.document_hash
+    assert record.record_integrity.record_hash == (
+        second.records[0].record_integrity.record_hash
+    )
+
+
 def test_unknown_algorithm_pdr_generates_manual_review_record() -> None:
     inventory = Inventory(
         assets=[

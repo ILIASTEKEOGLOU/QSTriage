@@ -225,8 +225,9 @@ def _render_asset_finding(
     lines.append(
         f"- Input algorithm: {markdown_code_span(classification.input_algorithm)}"
     )
+    lines.append(f"- Algorithm family: {classification.algorithm_family}")
     lines.append(
-        f"- Algorithm family: {classification.algorithm_family}"
+        f"- Identifier resolution: {classification.identifier_resolution}"
     )
     lines.append(f"- Primitive: {classification.primitive}")
     lines.append(f"- Quantum status: {classification.quantum_status}")

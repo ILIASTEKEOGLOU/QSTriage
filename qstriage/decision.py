@@ -8,7 +8,10 @@ from qstriage.evidence import DecisionGrade, EvidenceCategory, EvidenceReview
 from qstriage.models import RiskLevel
 from qstriage.policy import PolicyEvaluationResult
 from qstriage.scoring import ScoreResult
-from qstriage.standards import AlgorithmClassification
+from qstriage.standards import (
+    AlgorithmClassification,
+    requires_parameter_verification,
+)
 
 
 class ExecutionState(str, Enum):
@@ -221,7 +224,9 @@ def _verification_requirements(
     requirements = set(context.missing_requirements)
     _add_normalized_context_requirements(requirements, context.normalized_context)
 
-    if classification.standard_status == "unknown":
+    if requires_parameter_verification(classification):
+        requirements.add(VerificationRequirement.cryptographic_parameters)
+    elif classification.standard_status == "unknown":
         requirements.add(VerificationRequirement.cryptographic_identity)
 
     for finding in evidence_review.findings:
@@ -439,6 +444,8 @@ def _reason_codes(
 
 
 def _classification_reason(classification: AlgorithmClassification) -> str:
+    if requires_parameter_verification(classification):
+        return f"classification:{classification.identifier_resolution}"
     if classification.standard_status == "unknown":
         return "classification:unknown"
     if classification.quantum_status == "quantum_vulnerable":

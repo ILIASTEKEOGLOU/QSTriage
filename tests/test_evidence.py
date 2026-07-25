@@ -183,6 +183,35 @@ def test_unknown_algorithm_blocks_decision_grade() -> None:
     assert any(finding.code == "unknown_algorithm" for finding in review.findings)
 
 
+def test_unverified_pqc_parameters_create_distinct_critical_blocking_finding() -> None:
+    asset = _complete_asset().model_copy(
+        update={"algorithm": "ML-KEM-9999", "key_size_bits": None}
+    )
+
+    review = review_asset_evidence(asset)
+    finding = next(
+        finding
+        for finding in review.findings
+        if finding.code == "unverified_algorithm_parameters"
+    )
+
+    assert review.decision_grade == DecisionGrade.not_decision_grade
+    assert review.human_review_required is True
+    assert review.confidence_cap <= 0.4
+    assert finding.category == EvidenceCategory.cryptographic_context
+    assert finding.severity == EvidenceSeverity.critical
+    assert finding.effects == [
+        EvidenceEffect.confidence_capped,
+        EvidenceEffect.decision_grade_blocked,
+        EvidenceEffect.human_review_required,
+    ]
+    assert finding.human_action is not None
+    assert finding.human_action.description == (
+        "Verify the exact algorithm version and parameter set for the affected asset."
+    )
+    assert "unknown_algorithm" not in review.blocking_finding_codes
+
+
 def test_cbom_imported_assets_are_not_decision_grade_without_business_context() -> None:
     inventory = import_cbom_inventory("tests/fixtures/sample_cbom.json")
 

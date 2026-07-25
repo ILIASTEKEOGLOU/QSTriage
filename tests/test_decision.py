@@ -218,6 +218,49 @@ def test_unknown_algorithm_with_incomplete_evidence_is_verification_first() -> N
     )
 
 
+def test_unverified_pqc_parameters_are_verification_first_without_identity_loss() -> None:
+    evidence = build_evidence_review(
+        [
+            _evidence_finding(
+                "unverified_algorithm_parameters",
+                EvidenceCategory.cryptographic_context,
+                EvidenceEffect.confidence_capped,
+                EvidenceEffect.decision_grade_blocked,
+                EvidenceEffect.human_review_required,
+                severity=EvidenceSeverity.critical,
+            )
+        ],
+        asset_id="asset-1",
+    )
+
+    decision = reconcile_decision(
+        classification=classify_algorithm("ML-KEM-9999"),
+        score=_score(
+            value=35.0,
+            band="low",
+            legacy_action="defer; keep inventory evidence current",
+        ),
+        evidence_review=evidence,
+        policy_evaluation=_policy_result(),
+        decision_confidence=0.8,
+        migration_effort=RiskLevel.low,
+    )
+
+    assert decision.execution_state is ExecutionState.verification_first
+    assert decision.action_type is ActionType.manual_crypto_verification
+    assert decision.verification_priority is VerificationPriority.high
+    assert decision.verification_requirements == (
+        VerificationRequirement.cryptographic_parameters,
+    )
+    assert decision.human_review_required is True
+    assert "classification:recognized_family_unverified_parameters" in (
+        decision.reason_codes
+    )
+    assert "evidence:unverified_algorithm_parameters" in decision.reason_codes
+    assert "verification:cryptographic_parameters" in decision.reason_codes
+    assert "verification:cryptographic_identity" not in decision.reason_codes
+
+
 def test_high_risk_with_low_confidence_stays_high_risk_but_is_gated() -> None:
     decision = reconcile_decision(
         classification=classify_algorithm("RSA-2048"),
