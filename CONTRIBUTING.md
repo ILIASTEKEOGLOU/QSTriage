@@ -32,6 +32,11 @@ Create and activate a virtual environment, then run:
     python -m pytest
     git diff --check
 
+A red `compatibility (Python X.Y)` check means fresh dependency resolution or
+the full suite failed on that interpreter; reproduce it with that Python
+version and `python -m pip install -e ".[dev]"` instead of reusing the Python
+3.11 lock or weakening the check.
+
 ## Branches and pull requests
 
 - Branch from the current `main`; do not push normal development directly to

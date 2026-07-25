@@ -22,7 +22,8 @@ from qstriage.evidence import DecisionGrade, review_inventory_evidence
 from qstriage.models import load_inventory
 
 
-DEMO = Path("examples/build-week")
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+DEMO = REPOSITORY_ROOT / "examples" / "evidence-closure"
 EXPECTED = DEMO / "expected"
 REQUIRED_PATHS = [
     DEMO / "sample_cbom.json",
@@ -31,7 +32,7 @@ REQUIRED_PATHS = [
     EXPECTED / "enriched.yaml",
     EXPECTED / "gaps.json",
     EXPECTED / "comparison.json",
-    Path("scripts/build_week_demo.py"),
+    REPOSITORY_ROOT / "scripts" / "evidence_closure_demo.py",
 ]
 GAP_CODES = [
     "missing_data_class",
@@ -139,7 +140,7 @@ def test_demo_verified_outcome_preserves_canonical_migration_gate() -> None:
 
 
 def test_demo_runner_is_cross_platform_safe_and_deterministic(tmp_path: Path) -> None:
-    script = Path("scripts/build_week_demo.py")
+    script = REPOSITORY_ROOT / "scripts" / "evidence_closure_demo.py"
     source = script.read_text(encoding="utf-8")
     assert "shell=True" not in source
     committed_before = {
@@ -152,7 +153,7 @@ def test_demo_runner_is_cross_platform_safe_and_deterministic(tmp_path: Path) ->
         output = tmp_path / name
         result = subprocess.run(
             [sys.executable, str(script), "--output-dir", str(output)],
-            cwd=Path.cwd(),
+            cwd=REPOSITORY_ROOT,
             capture_output=True,
             text=True,
             check=False,
@@ -167,6 +168,7 @@ def test_demo_runner_is_cross_platform_safe_and_deterministic(tmp_path: Path) ->
         outputs.append({path.name: path.read_bytes() for path in output.iterdir()})
         repeated = subprocess.run(
             [sys.executable, str(script), "--output-dir", str(output)],
+            cwd=REPOSITORY_ROOT,
             capture_output=True,
             text=True,
             check=False,

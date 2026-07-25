@@ -12,14 +12,13 @@
 - Added four path-confined read-only MCP tools and the
   `qstriage-evidence-closure` Codex skill. Neither surface can apply patches or
   authorize migration.
-- Added deterministic Build Week fixtures, judge automation, cross-platform
-  dependency validation, and end-to-end workflow tests.
+- Added deterministic evidence-closure fixtures, end-to-end demo automation,
+  cross-platform dependency validation, and full workflow tests.
 
 ### Release status
 
-- Evidence Closure was developed after `v1.2.0`. It is not part of the
-  `v1.2.0` tag or its release artifacts and remains unreleased pending final
-  review.
+- Evidence Closure is not part of the `v1.2.1` tag or its release artifacts.
+  It remains unreleased pending final review.
 
 ## v1.2.1 - 2026-07-22
 
