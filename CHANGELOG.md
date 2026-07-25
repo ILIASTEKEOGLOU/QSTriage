@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added blocking Python 3.12 through 3.14 compatibility jobs while retaining
+  Python 3.11 as the locked CI and release baseline.
 - Added the Evidence Closure workflow for structured evidence-gap inspection,
   provenance-aware enrichment, source-hash-bound patch validation, explicit
   human apply, and deterministic before/after comparison.

@@ -43,9 +43,9 @@ remediation.
 
 ## Quickstart
 
-QSTriage requires Python 3.11 or later. The current CI and release baseline is
-Python 3.11. Use `python3` instead of `python` where that is the installed
-executable name.
+QSTriage requires Python 3.11 or later. The locked CI and release baseline is
+Python 3.11; CI also tests Python 3.12 through 3.14 as compatibility targets.
+Use `python3` instead of `python` where that is the installed executable name.
 
 Install the published CLI in a virtual environment:
 
@@ -275,8 +275,10 @@ python -m pip install -e ".[dev]"
 python -m pytest
 ```
 
-The development extra includes the test dependency. CI installs the exact
-hashed dependency resolution recorded in `requirements/py311.lock`.
+The development extra includes the test dependency. The Python 3.11 baseline
+job installs the exact hashed dependency resolution recorded in
+`requirements/py311.lock`. Separate compatibility jobs resolve `.[dev]` from
+the declared dependency ranges on Python 3.12 through 3.14.
 
 ## Project status
 
