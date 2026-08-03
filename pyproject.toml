@@ -50,11 +50,11 @@ Changelog = "https://github.com/ILIASTEKEOGLOU/QSTriage/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
-    "mcp>=1.27,<2",
+    "mcp>=1.27,<3",
     "pytest>=9.0.3"
 ]
 mcp = [
-    "mcp>=1.27,<2"
+    "mcp>=1.27,<3"
 ]
 
 [project.scripts]
