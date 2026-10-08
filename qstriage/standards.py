@@ -42,6 +42,20 @@ _CLASSICAL_KEY_ESTABLISHMENT_TOKENS = frozenset(
 )
 _CLASSICAL_AUTHENTICATION_TOKENS = frozenset({"RSA", "ECDSA", "ED25519"})
 
+# Fail-closed guard markers. Matched against the separator-free identifier.
+# Substring matching is acceptable here only because a match can never grant a
+# classification: it can only withhold one (result is always unknown).
+_PQC_COMPONENT_MARKERS = (
+    "MLKEM",
+    "MLDSA",
+    "SLHDSA",
+    "FNDSA",
+    "KYBER",
+    "DILITHIUM",
+    "SPHINCS",
+    "FALCON",
+)
+
 _RSA_EXACT_IDENTIFIERS = frozenset(
     {
         "RSA",
@@ -140,6 +154,12 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
             primitive=primitive,
             source_id=source_id,
         )
+
+    if _contains_pqc_component(normalized):
+        # Classical/PQC hybrids have no result in the current data model.
+        # Never let a classical marker classify an identifier that also
+        # carries a PQC component (e.g. X25519-ML-KEM-768).
+        return _unknown_classification(original)
 
     if _matches_classical_public_key_combo(normalized):
         return AlgorithmClassification(
@@ -323,6 +343,11 @@ def _family_unverified_classification(
         source_ids=(source_id, SOURCE_QSTRIAGE_SAFETY_POLICY),
         identifier_resolution=IDENTIFIER_FAMILY_UNVERIFIED,
     )
+
+
+def _contains_pqc_component(normalized: str) -> bool:
+    compact = re.sub(r"[^A-Z0-9]", "", normalized)
+    return any(marker in compact for marker in _PQC_COMPONENT_MARKERS)
 
 
 def _matches_classical_public_key_combo(normalized: str) -> bool:

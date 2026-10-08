@@ -15,6 +15,14 @@
 - Added deterministic evidence-closure fixtures, end-to-end demo automation,
   cross-platform dependency validation, and full workflow tests.
 
+### Changed
+
+- Hybrid classical/PQC identifiers are classified as `unknown` and routed to
+  human review regardless of component order, for example
+  `X25519-ML-KEM-768`, `X25519 + ML-KEM-768`, and `X25519-Kyber768`. Exact
+  PQC parameter sets and pure classical identifiers are classified as before.
+  No change to the PDR 0.2 format, scoring, or policy packs.
+
 ### Release status
 
 - Evidence Closure is not part of the `v1.2.1` tag or its release artifacts.

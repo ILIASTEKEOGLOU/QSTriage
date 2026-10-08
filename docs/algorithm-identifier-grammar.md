@@ -218,6 +218,15 @@ the `ML-KEM` family only as `recognized_family_unverified_parameters`; it does
 not receive `quantum_resistant` or `standardized_pqc` status and must not be
 interpreted as a resolved single-family algorithm.
 
+Component order must not change that outcome. Any other identifier that
+carries a PQC component marker (`MLKEM`, `MLDSA`, `SLHDSA`, `FNDSA`, `KYBER`,
+`DILITHIUM`, `SPHINCS`, or `FALCON`, compared after removing separators) is
+`unrecognized_identifier`, even when it also contains a classical marker such
+as `X25519`, `ECDHE`, or `Ed25519`. This guard uses substring matching
+deliberately: a match can only withhold a classification, never grant one, so
+a false match degrades to conservative human review rather than to an
+unsupported claim.
+
 ## Phase 2 registry-driven maintainer audit
 
 The compatibility corpus bounds the v1.2.1 release, but hand-selected examples

@@ -388,3 +388,55 @@ def test_deferred_identifier_grammars_remain_fail_closed_in_v1_2_1(
     assert classification.identifier_resolution == resolution
     assert classification.quantum_status == "unknown"
     assert classification.standard_status == "unknown"
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    (
+        "X25519-ML-KEM-768",
+        "X25519 + ML-KEM-768",
+        "X25519+ML-KEM-768",
+        "x25519_mlkem768",
+        "X25519MLKEM768-ECDHE",
+        "ECDHE-ML-KEM-768",
+        "ECDHE-RSA-ML-KEM-768",
+        "SecP256r1MLKEM768",
+        "P-256-ML-KEM-768",
+        "Ed25519-ML-DSA-65",
+        "ECDSA-P256-ML-DSA-44",
+        "RSA-SLH-DSA-SHA2-128s",
+        "X25519-Kyber768",
+        "X25519Kyber768Draft00",
+        "Ed25519-Dilithium3",
+    ),
+)
+def test_classical_pqc_hybrids_fail_closed_regardless_of_order(
+    algorithm: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == "unknown"
+    assert classification.identifier_resolution == "unrecognized_identifier"
+    assert classification.quantum_status == "unknown"
+    assert classification.standard_status == "unknown"
+    assert classification.recommended_action == "manual_review_required"
+
+
+@pytest.mark.parametrize(
+    ("algorithm", "family"),
+    (
+        ("X25519", "ECC"),
+        ("ECDHE", "ECC"),
+        ("Ed25519", "ECC"),
+        ("RSA-2048", "RSA"),
+        ("ECDHE-RSA", "classical_public_key_composite"),
+    ),
+)
+def test_hybrid_guard_does_not_change_pure_classical_results(
+    algorithm: str,
+    family: str,
+) -> None:
+    classification = classify_algorithm(algorithm)
+
+    assert classification.algorithm_family == family
+    assert classification.quantum_status == "quantum_vulnerable"
