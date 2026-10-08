@@ -15,16 +15,13 @@
 - Added deterministic evidence-closure fixtures, end-to-end demo automation,
   cross-platform dependency validation, and full workflow tests.
 
-### Fixed
+### Changed
 
-- Classical/PQC hybrid identifiers now fail closed regardless of component
-  order. Previously an identifier such as `X25519-ML-KEM-768`,
-  `X25519 + ML-KEM-768`, or `X25519-Kyber768` matched a classical token and was
-  classified as quantum-vulnerable with a `migrate_to_hybrid_or_pqc_path`
-  action, contradicting the documented deferred-hybrid contract. Any
-  identifier that carries a PQC component marker and is not an exact PQC
-  parameter set or PQC-family-prefixed value is now `unrecognized_identifier`.
-  No schema, policy-pack, scoring, or PDR 0.2 change.
+- Hybrid classical/PQC identifiers are classified as `unknown` and routed to
+  human review regardless of component order, for example
+  `X25519-ML-KEM-768`, `X25519 + ML-KEM-768`, and `X25519-Kyber768`. Exact
+  PQC parameter sets and pure classical identifiers are classified as before.
+  No change to the PDR 0.2 format, scoring, or policy packs.
 
 ### Release status
 
