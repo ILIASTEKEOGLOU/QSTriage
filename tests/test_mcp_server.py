@@ -102,6 +102,11 @@ def test_mcp_paths_are_confined_to_working_directory(tmp_path, monkeypatch) -> N
         mcp_server.inspect_evidence_gaps(link.name)
 
 
+def _is_error(result: object) -> object:
+    # mcp 2.x exposes `is_error`; mcp 1.x exposes `isError`.
+    return getattr(result, "is_error", getattr(result, "isError", None))
+
+
 def test_official_stdio_protocol_exposes_exact_read_only_contract(tmp_path) -> None:
     _write_inventory(tmp_path, "before.yaml")
     _write_inventory(tmp_path, "after.yaml")
@@ -130,8 +135,8 @@ def test_official_stdio_protocol_exposes_exact_read_only_contract(tmp_path) -> N
                     "compare_inventories",
                     {"before_path": "before.yaml", "after_path": "after.yaml"},
                 )
-                assert not inspected.isError
-                assert not compared.isError
+                assert _is_error(inspected) is False
+                assert _is_error(compared) is False
                 assert json.loads(inspected.content[0].text)["version"] == "0.1"
 
     asyncio.run(exercise_protocol())
