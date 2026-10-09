@@ -10,6 +10,10 @@
 
 ### Changed
 
+- The release workflow verifies the committed Linux release lock against
+  `requirements/release.in`, freshly fetched package hashes, and the Linux
+  platform resolution, starting from the committed pins. A new upstream
+  package release no longer invalidates the lock by itself.
 - Updated the pinned build and release toolchain: setuptools 84.0.0, wheel
   0.48.0, build 1.6.1, twine 7.0.0, and cyclonedx-bom 7.5.0. Built package
   metadata remains at core metadata version 2.4.

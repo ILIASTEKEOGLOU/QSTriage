@@ -89,3 +89,16 @@ def test_pypi_publish_uses_pinned_trusted_publisher_without_credentials() -> Non
     assert "skip-existing:" not in publish
     assert "password:" not in publish
     assert "username:" not in publish
+
+
+def test_linux_release_lock_check_is_seeded_and_refetches_hashes() -> None:
+    text = _workflow_text()
+
+    seed = (
+        "cp requirements/release-linux-py311.lock "
+        "generated/release-linux-py311.lock"
+    )
+    assert seed in text
+    assert "--no-reuse-hashes" in text
+    assert text.index(seed) < text.index("python -m piptools compile \\")
+    assert "cmp -s \\" in text

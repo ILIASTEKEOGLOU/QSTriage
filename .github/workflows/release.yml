@@ -116,12 +116,18 @@ jobs:
             "pip==26.1.2" \
             "pip-tools==7.5.3"
           mkdir generated
+          # Seed the candidate with the committed lock. pip-tools keeps
+          # existing pins that still satisfy requirements/release.in, so a
+          # new upstream release does not change the candidate. Hashes are
+          # always fetched again, so altered hashes are still detected.
+          cp requirements/release-linux-py311.lock generated/release-linux-py311.lock
           CUSTOM_COMPILE_COMMAND="python -m piptools compile requirements/release.in --index-url https://pypi.org/simple --generate-hashes --allow-unsafe --output-file requirements/release-linux-py311.lock" \
           python -m piptools compile \
             requirements/release.in \
             --index-url https://pypi.org/simple \
             --generate-hashes \
             --allow-unsafe \
+            --no-reuse-hashes \
             --output-file generated/release-linux-py311.lock \
             --quiet
           if grep -En \
@@ -163,7 +169,7 @@ jobs:
           diff -u \
             requirements/release-linux-py311.lock \
             generated/release-linux-py311.lock || true
-          echo "ERROR: committed Linux release lock is stale or was generated on another platform"
+          echo "ERROR: committed Linux release lock does not match requirements/release.in, its package hashes, or the Linux platform resolution"
           exit 1
 
   build:

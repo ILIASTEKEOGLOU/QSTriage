@@ -55,6 +55,8 @@ CUSTOM_COMPILE_COMMAND="python -m piptools compile requirements/release.in --ind
     --output-file requirements/release-linux-py311.lock
 ```
 
-Inspect generated headers before committing. No private index URL, username, password, token, or trusted-host entry may appear in either lock. The release workflow independently recompiles the Linux lock and requires byte-for-byte equality before any artifact build begins.
+Inspect generated headers before committing. No private index URL, username, password, token, or trusted-host entry may appear in either lock. The release workflow independently recompiles the Linux lock on Ubuntu 24.04 and requires byte-for-byte equality before any artifact build begins. The recompilation starts from the committed lock, keeps every pin that still satisfies `release.in`, and fetches all hashes again. It therefore detects a changed `release.in`, an altered hash, and a lock resolved for another platform, but a new upstream release alone does not invalidate the committed lock. The weekly Security workflow audits the committed release lock for known vulnerabilities.
+
+To move the release lock to current upstream versions, delete it, recompile it on Ubuntu 24.04 with Python 3.11 using the command above, and commit the result in its own pull request.
 
 The release workflow builds from two independent `git archive` source trees, normalizes source-distribution metadata to the commit timestamp, installs each wheel from the runtime lock, requires byte-identical wheel, sdist, CycloneDX SBOM, and checksum outputs, and validates package metadata.
