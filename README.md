@@ -202,7 +202,9 @@ parses and hashes the same captured bytes.
 
 The CI and security workflows use read-only repository permissions, immutable
 action references, hashed dependency locks, vulnerability and static-analysis
-checks, and full-history secret scanning.
+checks, and full-history secret scanning. A separate alert workflow runs only
+after a scheduled Security run fails on `main`; it holds only `issues: write`,
+runs no repository code, and opens or updates one tracking issue.
 
 The release workflow resolves an exact tag to an immutable commit, checks that
 the tag and package version agree, and builds only that source. Its two clean

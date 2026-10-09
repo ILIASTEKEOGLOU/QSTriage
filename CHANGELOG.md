@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- Added a security alert workflow that opens or updates a tracking issue when
+  the scheduled Security run fails on `main`. It holds only `issues: write`
+  and runs no repository code.
+
 ### Changed
 
 - Updated the pinned build and release toolchain: setuptools 84.0.0, wheel
