@@ -3,7 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable, TypeVar
 
-from mcp.server.fastmcp import FastMCP
+try:
+    # mcp 2.x renamed FastMCP to MCPServer.
+    from mcp.server.mcpserver import MCPServer as _MCPServer
+except ImportError:
+    # mcp 1.x
+    from mcp.server.fastmcp import FastMCP as _MCPServer
 
 from qstriage.closure import (
     build_gap_manifest,
@@ -24,7 +29,7 @@ SERVER_INSTRUCTIONS = (
     "gaps, draft empty templates, validate proposed patches, and compare results."
 )
 
-mcp = FastMCP(
+mcp = _MCPServer(
     "QSTriage Evidence Closure",
     instructions=SERVER_INSTRUCTIONS,
     log_level="ERROR",

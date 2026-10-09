@@ -4,6 +4,10 @@
 
 ### Added
 
+- The Evidence Closure MCP server supports mcp 2.x in addition to mcp 1.x. The
+  `mcp` and `dev` extras accept `mcp>=1.27,<3`. In mcp 2.x, `FastMCP` was
+  renamed to `MCPServer`; the server selects the available class at import.
+
 - Added a security alert workflow that opens or updates a tracking issue when
   the scheduled Security run fails on `main`. It holds only `issues: write`
   and runs no repository code.
