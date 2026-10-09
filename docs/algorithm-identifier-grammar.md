@@ -1,7 +1,7 @@
 # Algorithm Identifier Grammar
 
 This document defines the bounded algorithm-identifier grammar targeted by
-QSTriage v1.2.1. It is a deterministic classification contract, not a general
+QSTriage v1.3.0. It is a deterministic classification contract, not a general
 parser, fuzzy matcher, vendor ontology, or proof of the runtime cryptographic
 implementation.
 
@@ -73,7 +73,7 @@ Composite matching precedes leaf-family matching so that
 ## Exact standardized PQC allowlists
 
 Only the following complete normalized identifiers receive
-`quantum_resistant` and `standardized_pqc` in v1.2.1.
+`quantum_resistant` and `standardized_pqc` in v1.3.0.
 
 ### ML-KEM
 
@@ -105,7 +105,7 @@ parameter verification.
 
 This allowlist does not include limited-signature SLH-DSA parameter sets from
 later draft publications. A future registry may represent them with distinct
-provenance and lifecycle status; v1.2.1 must not label them as FIPS 205
+provenance and lifecycle status; v1.3.0 must not label them as FIPS 205
 standardized identifiers.
 
 ## Classical public-key grammar
@@ -189,9 +189,9 @@ This is a regression corpus, not an exhaustive denylist. The matcher succeeds
 only through the positive grammar above; it does not classify by checking that
 an input is absent from this list.
 
-## Deliberate non-goals for v1.2.1
+## Deliberate non-goals
 
-The hotfix does not:
+The grammar does not:
 
 - use fuzzy matching, edit distance, NLP, or vendor-name inference;
 - rewrite Kyber to ML-KEM or Dilithium to ML-DSA;
@@ -203,7 +203,7 @@ The hotfix does not:
   and [OpenSSL cipher documentation](https://docs.openssl.org/3.0/man1/openssl-ciphers/);
 - accept compact non-canonical PSS spellings such as `rsassaPss` or `RSAPSS`;
 - decompose or classify classical/PQC hybrids such as `X25519MLKEM768` or
-  `ML-KEM-768+X25519`; the v1.2.1 data model has no hybrid-family result;
+  `ML-KEM-768+X25519`; the current data model has no hybrid-family result;
 - infer runtime implementation, key validity, protocol role, or policy
   approval from an identifier string;
 - change the policy-pack version, scoring formula, or PDR 0.2 schema.
@@ -229,8 +229,8 @@ unsupported claim.
 
 ## Phase 2 registry-driven maintainer audit
 
-The compatibility corpus bounds the v1.2.1 release, but hand-selected examples
-are not an exhaustive registry audit. Phase 2 should add an offline,
+The compatibility corpus, reviewed in v1.2.1, bounds the classifier, but
+hand-selected examples are not an exhaustive registry audit. Phase 2 should add an offline,
 deterministic maintainer command that compares classifier output against
 reviewed snapshots from:
 

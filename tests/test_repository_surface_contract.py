@@ -75,14 +75,8 @@ def test_readme_release_references_match_the_package_version() -> None:
     assert relative_docs == []
 
     blob_targets = _repository_blob_targets(readme)
-    assert {
-        path for path, ref in blob_targets if ref == "main"
-    } == {"docs/evidence-closure.md"}
-    assert {
-        ref
-        for path, ref in blob_targets
-        if path != "docs/evidence-closure.md"
-    } == {f"v{__version__}"}
+    assert blob_targets
+    assert {ref for _, ref in blob_targets} == {f"v{__version__}"}
 
 
 def test_documentation_index_is_complete_and_pypi_safe() -> None:
@@ -105,13 +99,7 @@ def test_documentation_index_is_complete_and_pypi_safe() -> None:
     assert len(links) == len(tracked_docs)
     assert {path for path, _ in links} == tracked_docs
 
-    main_docs = {path for path, ref in links if ref == "main"}
-    assert main_docs == {"docs/evidence-closure.md"}
-    assert {
-        ref
-        for path, ref in links
-        if path != "docs/evidence-closure.md"
-    } == {f"v{__version__}"}
+    assert {ref for _, ref in links} == {f"v{__version__}"}
 
 
 def test_retired_event_framing_is_absent_from_the_current_tree() -> None:

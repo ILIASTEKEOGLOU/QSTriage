@@ -1,7 +1,7 @@
 # QSTriage Evidence Closure
 
-Evidence Closure is available on `main` and remains unreleased. It is not part
-of the `v1.2.1` tag or its release artifacts.
+Evidence Closure is available from `v1.3.0` as a preview. Its patch format,
+commands, and MCP tool interfaces may change in a minor release.
 
 ## Problem
 
@@ -84,6 +84,11 @@ The optional MCP server exposes exactly four read-only tools:
 existing regular files that resolve inside the working directory. The MCP
 surface exposes no apply, write, subprocess, network, discovery, or production
 operation.
+
+The working directory is the directory from which the MCP server is started.
+Every file inside it, including files in subdirectories, is readable through
+the tools. Start the server from the project directory that holds the
+inventories and patches, not from a home or system directory.
 
 ## Codex skill workflow
 
