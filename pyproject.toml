@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qstriage"
-version = "1.2.1"
+version = "1.3.0"
 description = "Cryptographic Policy & Justification Engine"
 readme = "README.md"
 authors = [

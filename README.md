@@ -81,7 +81,7 @@ qstriage pdr generate examples/sample_inventory.yaml --output reports/pdr.json
 
 Generated files are no-clobber by default. Use `--overwrite` only when replacing
 an existing output is intentional. See the
-[Usage Guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/usage.md)
+[Usage Guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/usage.md)
 for the complete CLI workflow.
 
 ## Example decision backlog
@@ -113,7 +113,7 @@ status. The v1.2.1 compatibility corpus locks 26 reviewed identifiers to eight
 named public sources.
 
 See the
-[Algorithm Identifier Grammar](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/algorithm-identifier-grammar.md).
+[Algorithm Identifier Grammar](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/algorithm-identifier-grammar.md).
 
 ## Verifiable release provenance
 
@@ -125,8 +125,8 @@ token. Verification commands appear in the [Trust model](#trust-model).
 
 ## Evidence Closure
 
-Evidence Closure is available on `main` and is not part of the `v1.2.1`
-release.
+Evidence Closure is available from `v1.3.0` as a preview. Its patch format,
+commands, and MCP tool interfaces may change in a minor release.
 
 It converts QSTriage-reported evidence gaps into structured questions and
 provenance-aware assertions. Patches are bound to the exact source inventory,
@@ -142,7 +142,7 @@ from `0.00` to `1.00`; the `migration_planning` action and `gated` state remain
 unchanged.
 
 See the
-[Evidence Closure guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/main/docs/evidence-closure.md).
+[Evidence Closure guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/evidence-closure.md).
 
 ## Scope
 
@@ -152,7 +152,7 @@ native inventories and supported CycloneDX CBOM shapes.
 Its scores are deterministic prioritization indices. They do not estimate
 compromise probability, the arrival date of a cryptographically relevant
 quantum computer, or expected financial loss. See
-[Scoring Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/scoring-rationale.md).
+[Scoring Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/scoring-rationale.md).
 
 Canonical actions are review and planning categories, not deployment
 instructions. QSTriage does not rotate certificates, deploy cryptographic
@@ -176,23 +176,23 @@ them or continue with a partial decision result.
 
 Additional limits cover field length, YAML structure, graph traversal,
 rendered output, and critical-path enumeration. See
-[Input Contracts](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/input-contracts.md)
+[Input Contracts](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/input-contracts.md)
 for the complete enforced contract.
 
 ## Documentation
 
-- [Usage Guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/usage.md) — commands, workflows, examples, and configuration
-- [Input Contracts](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/input-contracts.md) — supported inputs, limits, and parsing boundaries
-- [Standards and Classification](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/standards-and-classification.md) — registry and normalization behavior
-- [Algorithm Identifier Grammar](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/algorithm-identifier-grammar.md) — bounded matching rules and fail-closed behavior
-- [Scoring Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/scoring-rationale.md) — prioritization index and interpretation limits
-- [Simulation Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/simulation-rationale.md) — model, warnings, assumptions, and non-claims
-- [Evidence and Context](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/evidence-and-context.md) — normalization, completeness, evidence, and confidence
-- [Evidence Closure](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/main/docs/evidence-closure.md) — provenance-aware enrichment with human approval
-- [Canonical Decision Model](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/decision-model.md) — action gating, verification, and reason codes
-- [PDR 0.2 Contract](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/pdr-contract.md) — structure, provenance, determinism, and versioning
-- [CBOM Compatibility](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/docs/cbom-compatibility.md) — tested artifact shapes and scanner boundaries
-- [Security Policy](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/SECURITY.md) — reporting and enforced trust boundaries
+- [Usage Guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/usage.md) — commands, workflows, examples, and configuration
+- [Input Contracts](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/input-contracts.md) — supported inputs, limits, and parsing boundaries
+- [Standards and Classification](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/standards-and-classification.md) — registry and normalization behavior
+- [Algorithm Identifier Grammar](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/algorithm-identifier-grammar.md) — bounded matching rules and fail-closed behavior
+- [Scoring Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/scoring-rationale.md) — prioritization index and interpretation limits
+- [Simulation Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/simulation-rationale.md) — model, warnings, assumptions, and non-claims
+- [Evidence and Context](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/evidence-and-context.md) — normalization, completeness, evidence, and confidence
+- [Evidence Closure](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/evidence-closure.md) — provenance-aware enrichment with human approval
+- [Canonical Decision Model](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/decision-model.md) — action gating, verification, and reason codes
+- [PDR 0.2 Contract](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/pdr-contract.md) — structure, provenance, determinism, and versioning
+- [CBOM Compatibility](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/docs/cbom-compatibility.md) — tested artifact shapes and scanner boundaries
+- [Security Policy](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/SECURITY.md) — reporting and enforced trust boundaries
 
 ## Trust model
 
@@ -223,8 +223,8 @@ gh attestation verify qstriage-*.whl --repo ILIASTEKEOGLOU/QSTriage
 gh attestation verify qstriage-*.tar.gz --repo ILIASTEKEOGLOU/QSTriage
 ```
 
-Release tags must match the package version exactly, for example `v1.2.1` for
-package version `1.2.1`. PyPI publication uses an exact existing tag, a guarded
+Release tags must match the package version exactly, for example `v1.3.0` for
+package version `1.3.0`. PyPI publication uses an exact existing tag, a guarded
 GitHub environment, and OIDC Trusted Publishing rather than a stored PyPI API
 token.
 
@@ -232,7 +232,7 @@ Manual release-artifact runs require an existing exact release tag. Run the
 workflow definition from `main` and supply the tag to rebuild:
 
 ```bash
-gh workflow run release.yml --ref main -f release_tag=v1.2.1
+gh workflow run release.yml --ref main -f release_tag=v1.3.0
 ```
 
 ## Development
@@ -264,4 +264,4 @@ guaranteed response time.
 Copyright 2026 Ilias Tekeoglou.
 
 QSTriage is licensed under the Apache License, Version 2.0. See
-[LICENSE](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.2.1/LICENSE).
+[LICENSE](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.3.0/LICENSE).

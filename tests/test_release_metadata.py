@@ -17,7 +17,7 @@ def _project_metadata() -> dict[str, object]:
 def test_release_version_is_centralized() -> None:
     project = _project_metadata()
 
-    assert project["version"] == "1.2.1"
+    assert project["version"] == "1.3.0"
     assert __version__ == project["version"]
 
 
@@ -36,7 +36,7 @@ def test_public_package_metadata_is_present() -> None:
 def test_changelog_contains_current_release() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
-    assert "## v1.2.1 - 2026-07-22" in changelog
+    assert "## v1.3.0 - 2026-10-09" in changelog
 
 
 def test_source_distribution_manifest_keeps_public_evidence() -> None:

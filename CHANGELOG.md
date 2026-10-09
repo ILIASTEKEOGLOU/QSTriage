@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.3.0 - 2026-10-09
 
 ### Added
 
@@ -22,11 +22,20 @@
   `X25519-ML-KEM-768`, `X25519 + ML-KEM-768`, and `X25519-Kyber768`. Exact
   PQC parameter sets and pure classical identifiers are classified as before.
   No change to the PDR 0.2 format, scoring, or policy packs.
+- Refreshed the hashed dependency locks. The development lock moves
+  `cryptography` to 50.0.2 and `pyjwt` to 2.15.1; the Linux release lock is
+  recompiled by the release workflow. QSTriage runtime dependencies are
+  unchanged.
 
-### Release status
+### Release
 
-- Evidence Closure is not part of the `v1.2.1` tag or its release artifacts.
-  It remains unreleased pending final review.
+- Evidence Closure, the four read-only MCP tools, and the
+  `qstriage-evidence-closure` Codex skill are part of this release as a
+  preview. Their patch format, commands, and MCP tool interfaces may change in
+  a minor release.
+- Kept PDR at `0.2` and the built-in `nist-pqc-basic` policy pack at `0.2`.
+  PDR documents record the engine version, so serialized PDR output and hashes
+  differ from `v1.2.1` for the same input.
 
 ## v1.2.1 - 2026-07-22
 
