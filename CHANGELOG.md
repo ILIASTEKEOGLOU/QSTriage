@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Updated the pinned build and release toolchain: setuptools 84.0.0, wheel
+  0.48.0, build 1.6.1, twine 7.0.0, and cyclonedx-bom 7.5.0. Built package
+  metadata remains at core metadata version 2.4.
+- Updated the release workflow actions `actions/attest` to v4.2.2 and
+  `pypa/gh-action-pypi-publish` to v1.14.2.
+
 ## v1.3.0 - 2026-10-09
 
 ### Added
