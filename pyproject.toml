@@ -67,6 +67,9 @@ pythonpath = ["."]
 [tool.setuptools]
 packages = ["qstriage"]
 
+[tool.setuptools.package-data]
+qstriage = ["algorithm_registry.json"]
+
 [tool.pip-tools]
 generate-hashes = true
 strip-extras = true

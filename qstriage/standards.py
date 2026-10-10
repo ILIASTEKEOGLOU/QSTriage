@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from qstriage.algorithm_registry import load_registry
+
 
 SOURCE_NIST_IR_8547 = "NIST-IR-8547-IPD"
 SOURCE_FIPS_203 = "NIST-FIPS-203"
@@ -27,15 +29,10 @@ SLH_DSA_PARAMETER_SETS = frozenset(
     for variant in ("S", "F")
 )
 
-_ML_KEM_IDENTIFIERS = frozenset(
-    f"ML-KEM-{parameter_set}" for parameter_set in ML_KEM_PARAMETER_SETS
-)
-_ML_DSA_IDENTIFIERS = frozenset(
-    f"ML-DSA-{parameter_set}" for parameter_set in ML_DSA_PARAMETER_SETS
-)
-_SLH_DSA_IDENTIFIERS = frozenset(
-    f"SLH-DSA-{parameter_set}" for parameter_set in SLH_DSA_PARAMETER_SETS
-)
+# Exact standardized PQC identifiers come from the bundled algorithm registry.
+_ML_KEM_IDENTIFIERS = frozenset(load_registry().entry("ml-kem").identifiers)
+_ML_DSA_IDENTIFIERS = frozenset(load_registry().entry("ml-dsa").identifiers)
+_SLH_DSA_IDENTIFIERS = frozenset(load_registry().entry("slh-dsa").identifiers)
 
 _CLASSICAL_KEY_ESTABLISHMENT_TOKENS = frozenset(
     {"DH", "DHE", "EDH", "ECDH", "ECDHE", "X25519", "CURVE25519"}
@@ -97,63 +94,17 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
         return _unknown_classification(original)
 
     if normalized in _ML_KEM_IDENTIFIERS:
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="ML-KEM",
-            primitive="key_encapsulation",
-            quantum_status="quantum_resistant",
-            standard_status="standardized_pqc",
-            recommended_action="acceptable_pqc_kem",
-            rationale=(
-                "ML-KEM is classified as a standardized post-quantum key "
-                "encapsulation mechanism."
-            ),
-            source_ids=(SOURCE_FIPS_203,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("ml-kem", original)
 
     if normalized in _ML_DSA_IDENTIFIERS:
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="ML-DSA",
-            primitive="digital_signature",
-            quantum_status="quantum_resistant",
-            standard_status="standardized_pqc",
-            recommended_action="acceptable_pqc_signature",
-            rationale=(
-                "ML-DSA is classified as a standardized post-quantum digital "
-                "signature algorithm."
-            ),
-            source_ids=(SOURCE_FIPS_204,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("ml-dsa", original)
 
     if normalized in _SLH_DSA_IDENTIFIERS:
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="SLH-DSA",
-            primitive="digital_signature",
-            quantum_status="quantum_resistant",
-            standard_status="standardized_pqc",
-            recommended_action="acceptable_pqc_signature_with_operational_review",
-            rationale=(
-                "SLH-DSA is classified as a standardized stateless hash-based "
-                "post-quantum digital signature algorithm. Later report layers "
-                "should preserve operational caution for size and performance impact."
-            ),
-            source_ids=(SOURCE_FIPS_205,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("slh-dsa", original)
 
-    pqc_family = _recognized_pqc_family(normalized)
-    if pqc_family is not None:
-        family, primitive, source_id = pqc_family
-        return _family_unverified_classification(
-            original,
-            family=family,
-            primitive=primitive,
-            source_id=source_id,
-        )
+    pqc_family_entry = _recognized_pqc_family_entry(normalized)
+    if pqc_family_entry is not None:
+        return _classification_from_entry(pqc_family_entry, original)
 
     if _contains_pqc_component(normalized):
         # Classical/PQC hybrids have no result in the current data model.
@@ -162,136 +113,46 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
         return _unknown_classification(original)
 
     if _matches_classical_public_key_combo(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="classical_public_key_composite",
-            primitive="key_establishment_and_signature",
-            quantum_status="quantum_vulnerable",
-            standard_status="classical_public_key",
-            recommended_action="migrate_to_hybrid_or_pqc_path",
-            rationale=(
-                "The algorithm string combines classical public-key key establishment "
-                "and/or signature components and is classified as quantum-vulnerable "
-                "for PQC migration planning."
-            ),
-            source_ids=(SOURCE_NIST_IR_8547,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("classical-public-key-composite", original)
 
     if _matches_rsa(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="RSA",
-            primitive="public_key_encryption_or_signature",
-            quantum_status="quantum_vulnerable",
-            standard_status="classical_public_key",
-            recommended_action="migrate_to_hybrid_or_pqc_path",
-            rationale=(
-                "RSA is classified as quantum-vulnerable public-key cryptography "
-                "for PQC migration planning."
-            ),
-            source_ids=(SOURCE_NIST_IR_8547,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("rsa", original)
 
     if _matches_diffie_hellman(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="DH",
-            primitive="key_establishment",
-            quantum_status="quantum_vulnerable",
-            standard_status="classical_public_key",
-            recommended_action="migrate_to_hybrid_or_pqc_key_establishment",
-            rationale=(
-                "Finite-field Diffie-Hellman is classified as quantum-vulnerable "
-                "key establishment for PQC migration planning."
-            ),
-            source_ids=(SOURCE_NIST_IR_8547,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("dh", original)
 
     if _matches_ecc(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="ECC",
-            primitive="key_establishment_or_signature",
-            quantum_status="quantum_vulnerable",
-            standard_status="classical_public_key",
-            recommended_action="migrate_to_hybrid_or_pqc_path",
-            rationale=(
-                "Elliptic-curve public-key cryptography is classified as "
-                "quantum-vulnerable for PQC migration planning."
-            ),
-            source_ids=(SOURCE_NIST_IR_8547,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("ecc", original)
 
     if _matches_aes(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="AES",
-            primitive="symmetric_encryption",
-            quantum_status="symmetric_grover_affected",
-            standard_status="standardized_symmetric",
-            recommended_action="review_key_strength_not_public_key_migration",
-            rationale=(
-                "AES is classified as symmetric encryption and is not treated as "
-                "a Shor-broken public-key migration target."
-            ),
-            source_ids=(SOURCE_FIPS_197, SOURCE_SP_800_57),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("aes", original)
 
     if _matches_sha3(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="SHA-3",
-            primitive="hash_or_xof",
-            quantum_status="not_public_key",
-            standard_status="standardized_hash",
-            recommended_action="classify_separately_from_pqc_key_migration",
-            rationale=(
-                "SHA-3 and SHAKE are classified as hash/XOF algorithms rather "
-                "than public-key establishment or signature algorithms."
-            ),
-            source_ids=(SOURCE_FIPS_202,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("sha3", original)
 
     if _matches_sha2_or_sha1(normalized):
-        return AlgorithmClassification(
-            input_algorithm=original,
-            algorithm_family="SHA-1/SHA-2",
-            primitive="hash",
-            quantum_status="not_public_key",
-            standard_status="standardized_hash",
-            recommended_action="classify_separately_from_pqc_key_migration",
-            rationale=(
-                "SHA-1 and SHA-2 family algorithms are classified as hash "
-                "algorithms rather than public-key establishment or signature algorithms."
-            ),
-            source_ids=(SOURCE_FIPS_180_4,),
-            identifier_resolution=IDENTIFIER_EXACT,
-        )
+        return _classification_from_entry("sha1-sha2", original)
 
     return _unknown_classification(original)
 
 
-def _unknown_classification(original: str) -> AlgorithmClassification:
+def _classification_from_entry(entry_id: str, original: str) -> AlgorithmClassification:
+    entry = load_registry().entry(entry_id)
     return AlgorithmClassification(
         input_algorithm=original,
-        algorithm_family="unknown",
-        primitive="unknown",
-        quantum_status="unknown",
-        standard_status="unknown",
-        recommended_action="manual_review_required",
-        rationale=(
-            "The algorithm string is not recognized by the current QSTriage "
-            "standards registry. Conservative human review is required."
-        ),
-        source_ids=(SOURCE_QSTRIAGE_SAFETY_POLICY,),
-        identifier_resolution=IDENTIFIER_UNRECOGNIZED,
+        algorithm_family=entry.algorithm_family,
+        primitive=entry.primitive,
+        quantum_status=entry.quantum_status,
+        standard_status=entry.standard_status,
+        recommended_action=entry.recommended_action,
+        rationale=entry.rationale,
+        source_ids=entry.source_ids,
+        identifier_resolution=entry.identifier_resolution,
     )
+
+
+def _unknown_classification(original: str) -> AlgorithmClassification:
+    return _classification_from_entry("unknown", original)
 
 
 def _normalize_algorithm(algorithm: str) -> str:
@@ -306,43 +167,16 @@ def requires_parameter_verification(classification: AlgorithmClassification) -> 
     return classification.identifier_resolution == IDENTIFIER_FAMILY_UNVERIFIED
 
 
-def _recognized_pqc_family(
-    normalized: str,
-) -> tuple[str, str, str] | None:
+def _recognized_pqc_family_entry(normalized: str) -> str | None:
     families = (
-        ("ML-KEM", "key_encapsulation", SOURCE_FIPS_203),
-        ("ML-DSA", "digital_signature", SOURCE_FIPS_204),
-        ("SLH-DSA", "digital_signature", SOURCE_FIPS_205),
+        ("ML-KEM", "ml-kem-family-unverified"),
+        ("ML-DSA", "ml-dsa-family-unverified"),
+        ("SLH-DSA", "slh-dsa-family-unverified"),
     )
-    for family, primitive, source_id in families:
+    for family, entry_id in families:
         if normalized == family or normalized.startswith(f"{family}-"):
-            return family, primitive, source_id
+            return entry_id
     return None
-
-
-def _family_unverified_classification(
-    original: str,
-    *,
-    family: str,
-    primitive: str,
-    source_id: str,
-) -> AlgorithmClassification:
-    return AlgorithmClassification(
-        input_algorithm=original,
-        algorithm_family=family,
-        primitive=primitive,
-        quantum_status="unknown",
-        standard_status="unknown",
-        recommended_action="verify_exact_parameter_set_before_classification",
-        rationale=(
-            f"The identifier matches the {family} family boundary, but its exact "
-            "parameter set is missing or is not supported by the current QSTriage "
-            "standards registry. Exact parameter verification is required before "
-            "a quantum or standards classification can be assigned."
-        ),
-        source_ids=(source_id, SOURCE_QSTRIAGE_SAFETY_POLICY),
-        identifier_resolution=IDENTIFIER_FAMILY_UNVERIFIED,
-    )
 
 
 def _contains_pqc_component(normalized: str) -> bool:
