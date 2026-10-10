@@ -191,7 +191,7 @@ def test_unverified_ml_kem_parameters_generate_deterministic_manual_review_pdr()
     assert "classification:recognized_family_unverified_parameters" in (
         record.decision.reason_codes
     )
-    assert record.policy_context.policy_pack_version == "0.2"
+    assert record.policy_context.policy_pack_version == "0.3"
     assert first.document_hash == second.document_hash
     assert record.record_integrity.record_hash == (
         second.records[0].record_integrity.record_hash

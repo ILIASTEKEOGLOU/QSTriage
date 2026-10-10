@@ -427,6 +427,36 @@ D6. v1.4.0 includes `qstriage pdr verify FILE`. It checks `document_hash` and
 every `record_hash` and reports the result per record. `pdr diff` uses the
 same verification.
 
+### Amendment, 2026-10-10 (approved by the maintainer)
+
+Made while implementing section 5.2, after reading the primary text of
+RFC 10024 and NIST SP 800-227 Section 4.6. Sections 5.1 to 5.3 and D3 above
+are kept as approved; where they differ, this amendment applies.
+
+A1. RFC 10024 Section 5 uses "certified", not "validated": "This means that
+for SecP256r1MLKEM768 and SecP384r1MLKEM1024, the ECDHE implementation must
+be certified, whereas the ML-KEM implementation does not require
+certification. In contrast, for X25519MLKEM768, the ML-KEM implementation
+must be certified." The field `validation_component` is named
+`certification_component`, and D3 reads "until the implementation of the
+`certification_component` is evidenced as certified".
+
+A2. RFC 10024 Section 5 describes itself as informal notes: "This section
+provides informal notes on how the hybrid key agreement mechanisms defined in
+this document relate to existing NIST guidance on key derivation and hybrid
+key establishment." Generated text attributes the certification statement to
+that section and says so.
+
+A3. Registry sources carry `excerpt`, verbatim text from the cited section
+(registry schema version 2). QSTriage wording stays in `rationale` and is
+never presented as source text.
+
+A4. `components` holds component algorithm names spelled as in RFC 10024
+(`ML-KEM-768`, `X25519`, `secp256r1`, `secp384r1`, `ML-KEM-1024`), in the
+shared-secret order of RFC 10024 Section 4.3, not registry entry IDs. The
+identifiers keep the RFC spelling, for example `SecP256r1MLKEM768`; matching
+normalizes both sides.
+
 ## 11. Items to verify before implementation
 
 - The text of the EU Coordinated Implementation Roadmap (section 1). It must

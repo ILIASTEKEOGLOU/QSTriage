@@ -40,6 +40,7 @@ from qstriage.policy import (
 )
 from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.standards import (
+    STANDARDIZED_PQ_T_HYBRID,
     AlgorithmClassification,
     requires_parameter_verification,
 )
@@ -57,6 +58,11 @@ STANDARD_FIPS_204 = "NIST-FIPS-204"
 STANDARD_FIPS_205 = "NIST-FIPS-205"
 STANDARD_NIST_IR_8547 = "NIST-IR-8547-IPD"
 STANDARD_QSTRIAGE_POLICY = "QSTRIAGE-SAFETY-POLICY"
+
+# Registry source sections quoted in PQ/T hybrid target-state rationale.
+HYBRID_SOURCE_ID = "RFC-10024"
+HYBRID_ORDER_SECTION = "Section 4.3"
+HYBRID_CERTIFICATION_SECTION = "Section 5, FIPS-compliance"
 
 
 class PDREngine(BaseModel):
@@ -108,7 +114,7 @@ class ObservedState(BaseModel):
     standard_status: str
     scheme_type: str
     components: list[str]
-    validation_component: str | None
+    certification_component: str | None
 
 
 class MissionContext(BaseModel):
@@ -489,7 +495,7 @@ def _observed_state(
         standard_status=classification.standard_status,
         scheme_type=classification.scheme_type,
         components=list(classification.components),
-        validation_component=classification.validation_component,
+        certification_component=classification.certification_component,
     )
 
 
@@ -547,6 +553,9 @@ def _target_state_suggestions(
 ) -> list[TargetStateSuggestion]:
     protocol = asset.protocol.lower()
     primitive = classification.primitive.lower()
+
+    if classification.standard_status == STANDARDIZED_PQ_T_HYBRID:
+        return [_pq_t_hybrid_suggestion(classification)]
 
     if classification.quantum_status == "quantum_resistant":
         return [
@@ -642,6 +651,43 @@ def _target_state_suggestions(
             requires_human_review=True,
         )
     ]
+
+
+def _pq_t_hybrid_suggestion(
+    classification: AlgorithmClassification,
+) -> TargetStateSuggestion:
+    entry = load_registry().entry(classification.registry_entry_id)
+    certification = _source_excerpt(entry, HYBRID_CERTIFICATION_SECTION)
+    _source_excerpt(entry, HYBRID_ORDER_SECTION)
+    group = entry.identifiers[0]
+    rationale = (
+        f"{group} is a PQ/T hybrid key agreement group defined in RFC 10024. "
+        f"Components, in shared-secret order (RFC 10024, {HYBRID_ORDER_SECTION}): "
+        f"{', '.join(entry.components)}. "
+        "RFC 10024, Section 5 (informal notes on NIST guidance): "
+        f'"{certification}" '
+        "The identifier does not show whether the "
+        f"{entry.certification_component} implementation is certified. "
+        "Human review of certification evidence is required."
+    )
+    return TargetStateSuggestion(
+        option=f"retain_{entry.algorithm_family}",
+        standards=list(entry.source_ids),
+        rationale=rationale,
+        operational_risk="medium",
+        requires_human_review=True,
+    )
+
+
+def _source_excerpt(entry: Any, section: str) -> str:
+    for source in entry.sources:
+        if source.source_id == HYBRID_SOURCE_ID and source.section == section:
+            if source.excerpt:
+                return source.excerpt
+    raise ValueError(
+        f"Registry entry '{entry.entry_id}' has no {HYBRID_SOURCE_ID} excerpt "
+        f"for {section}."
+    )
 
 
 def _assumptions(

@@ -14,15 +14,39 @@
   - `run_id` is derived from `source_hash`, `policy_pack_hash`,
     `registry_hash`, and `pdr_version`.
   - `observed_state` adds `scheme_type`, `components`, and
-    `validation_component`.
+    `certification_component`.
   - Values that RFC 8785 cannot represent, such as integers above 2^53,
     stop PDR generation.
 - `qstriage pdr verify` verifies PDR 0.2 and 0.3 documents, each under its
   own rules.
 - The algorithm registry file is rejected if it contains duplicate JSON keys.
+- `X25519MLKEM768`, `SecP256r1MLKEM768`, and `SecP384r1MLKEM1024` are
+  classified as `pq_t_hybrid_kem`, `quantum_resistant`,
+  `standardized_pq_t_hybrid` instead of `unknown`. Their canonical action is
+  `retain_monitor`, human review is always required, and the reason code is
+  `classification:standardized_pq_t_hybrid`. Every other hybrid spelling,
+  and the pre-standard names obsoleted by RFC 10024 Section 7.4, remain
+  `unknown`.
+- Built-in policy pack `nist-pqc-basic` is version 0.3. It adds the rule
+  `standardized_pq_t_hybrid_requires_certification_evidence_review` and the
+  reference `RFC-10024`. `policy_pack_hash`, and therefore PDR `run_id` and
+  hashes, change. Decisions for assets that are not RFC 10024 groups are
+  unchanged.
+- Algorithm registry schema version 2 and content version 2. Registry sources
+  may carry an `excerpt`, verbatim text from the cited section. Hybrid entries
+  must name one of their components as `certification_component`.
+  Identifiers are unique after normalization.
 
 ### Added
 
+- Added registry entries for the three RFC 10024 PQ/T hybrid groups, with
+  components in shared-secret order (RFC 10024 Section 4.3), the
+  certification component (RFC 10024 Section 5), and verbatim excerpts from
+  RFC 10024 and NIST SP 800-227 Section 4.6.2.
+- PDR target-state suggestions for these groups name the components, quote
+  RFC 10024 Section 5, and state which component implementation must be shown
+  to be certified. Markdown reports list the components and the certification
+  component.
 - Added `qstriage pdr verify`, which recomputes the hashes and `run_id` of a
   PDR document, checks record consistency, and reports each check as text or
   JSON. It reads at most 64 MiB, rejects duplicate keys and non-finite

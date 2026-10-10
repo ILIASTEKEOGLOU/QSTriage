@@ -202,8 +202,8 @@ The grammar does not:
   [IANA TLS registry](https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-4)
   and [OpenSSL cipher documentation](https://docs.openssl.org/3.0/man1/openssl-ciphers/);
 - accept compact non-canonical PSS spellings such as `rsassaPss` or `RSAPSS`;
-- decompose or classify classical/PQC hybrids such as `X25519MLKEM768` or
-  `ML-KEM-768+X25519`; the current data model has no hybrid-family result;
+- decompose classical/PQC hybrids, or classify any hybrid other than the
+  three RFC 10024 group names listed below;
 - infer runtime implementation, key validity, protocol role, or policy
   approval from an identifier string;
 - change the policy-pack version, scoring formula, or PDR schema.
@@ -212,8 +212,32 @@ The deferred curve identifiers remain `unrecognized_identifier` until a
 versioned, provenance-aware registry adds them. Conservative unknown handling
 is preferable to an unsupported positive claim.
 
-Deferred TLS and hybrid forms also remain fail-closed. `X25519MLKEM768` is
-unrecognized. A family-prefixed value such as `ML-KEM-768+X25519` may preserve
+## PQ/T hybrid key agreement groups
+
+Registry version 2 classifies exactly three identifiers, the TLS 1.3 group
+names defined in RFC 10024, after the normalization above:
+
+| Identifier | Components, in shared-secret order | `certification_component` |
+|---|---|---|
+| `X25519MLKEM768` | `ML-KEM-768`, `X25519` | `ML-KEM-768` |
+| `SecP256r1MLKEM768` | `secp256r1`, `ML-KEM-768` | `secp256r1` |
+| `SecP384r1MLKEM1024` | `secp384r1`, `ML-KEM-1024` | `secp384r1` |
+
+They are classified as `pq_t_hybrid_kem`, `quantum_resistant`, and
+`standardized_pq_t_hybrid`. Component names are spelled as in RFC 10024.
+`secp256r1` and `secp384r1` appear only as component names; as stand-alone
+identifiers they remain unrecognized (see the non-goals above). The registry
+stores the cited RFC 10024 and NIST SP 800-227 text verbatim; see
+[Standards and Classification](standards-and-classification.md).
+
+The pre-standard names `X25519Kyber768Draft00` and `SecP256r1Kyber768Draft00`,
+which RFC 10024 Section 7.4 obsoletes, stay unrecognized.
+
+## Other hybrid spellings
+
+Every other hybrid spelling remains fail-closed. `X25519-ML-KEM-768`,
+`x25519_mlkem768`, and `X25519MLKEM768-ECDHE` are unrecognized. A
+family-prefixed value such as `ML-KEM-768+X25519` may preserve
 the `ML-KEM` family only as `recognized_family_unverified_parameters`; it does
 not receive `quantum_resistant` or `standardized_pqc` status and must not be
 interpreted as a resolved single-family algorithm.

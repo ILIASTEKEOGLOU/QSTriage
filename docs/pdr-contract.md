@@ -9,7 +9,7 @@ This document describes PDR contract version `0.3` as implemented by `qstriage/p
 - PDR contract version: `0.3`
 - Engine name: `QSTriage`
 - Engine version: the installed QSTriage package version
-- Default policy pack: `nist-pqc-basic` version `0.2`
+- Default policy pack: `nist-pqc-basic` version `0.3`
 - Algorithm registry: the registry bundled with the installed package
 
 PDR versioning is separate from the QSTriage package version. Removing, renaming, or changing the documented meaning of public PDR fields requires a PDR contract-version change. Additive fields can be introduced in a compatible minor evolution when their meaning does not alter existing fields.
@@ -119,11 +119,15 @@ Each `PQCDecisionRecord` contains:
 | Field | Meaning |
 |---|---|
 | `scheme_type` | `single`, `pq_t_hybrid`, or `pq_pq_hybrid` (RFC 9794 terms) |
-| `components` | For hybrids, the component registry entry IDs in the order defined by the source; otherwise an empty list |
-| `validation_component` | For hybrids, the component whose implementation must be validated, as stated by the source; otherwise null |
+| `components` | For hybrids, the component algorithm names, spelled and ordered as in the source; otherwise an empty list |
+| `certification_component` | For hybrids, the component whose implementation must be certified, as stated by the source; otherwise null |
 
-The current registry contains no hybrid entries, so every record reports
-`single`, an empty list, and null. A name that lists separate key-establishment
+For the RFC 10024 groups, components follow the shared-secret order of
+RFC 10024 Section 4.3, and `certification_component` follows RFC 10024
+Section 5. For example, `X25519MLKEM768` reports `["ML-KEM-768", "X25519"]`
+and `ML-KEM-768`. Single schemes report `single`, an empty list, and null.
+
+A name that lists separate key-establishment
 and authentication algorithms, such as `ECDHE_RSA`, is a cipher-suite
 combination, not a hybrid scheme, and is reported as `single`.
 
@@ -148,6 +152,10 @@ Its semantics are defined in [Decision Model](decision-model.md). Legacy score f
 Target-state suggestions are bounded planning options derived from current classification and context. Current categories include:
 
 - retaining a standardized PQC family,
+- retaining an RFC 10024 PQ/T hybrid group after human review of
+  certification evidence; the rationale names the components, quotes
+  RFC 10024 Section 5 verbatim, and names the component whose certification
+  must be evidenced,
 - hybrid key establishment using ML-KEM-768 where key-establishment context is present,
 - migration toward an ML-DSA profile where signature context is present,
 - key-strength or primitive review for symmetric/hash primitives,

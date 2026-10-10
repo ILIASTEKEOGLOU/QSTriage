@@ -445,7 +445,7 @@ def _ensure_unique(values: list[str], label: str) -> None:
 
 
 BUILTIN_POLICY_PACK_ID = "nist-pqc-basic"
-BUILTIN_POLICY_PACK_VERSION = "0.2"
+BUILTIN_POLICY_PACK_VERSION = "0.3"
 
 
 def get_policy_pack(policy_pack_id: str = BUILTIN_POLICY_PACK_ID) -> PolicyPack:
@@ -521,6 +521,15 @@ def _nist_pqc_basic_references() -> list[PolicyReference]:
             title="NIST SP 800-227 — Recommendations for Key-Encapsulation Mechanisms",
             version="final",
             notes="KEM guidance for key establishment context.",
+        ),
+        PolicyReference(
+            reference_id="RFC-10024",
+            title=(
+                "RFC 10024 — Post-Quantum Traditional (PQ/T) Hybrid Key Agreement "
+                "Mechanisms for TLS 1.3"
+            ),
+            version="final",
+            notes="Standards source for the X25519MLKEM768, SecP256r1MLKEM768, and SecP384r1MLKEM1024 groups.",
         ),
         PolicyReference(
             reference_id="NIST-CSWP-39-UPDATE-1",
@@ -656,6 +665,40 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
                 "NIST-FIPS-204",
                 "NIST-FIPS-205",
                 "QSTRIAGE-SAFETY-POLICY",
+            ],
+        ),
+        PolicyRule(
+            rule_id="standardized_pq_t_hybrid_requires_certification_evidence_review",
+            title="Standardized PQ/T hybrid requires certification evidence review",
+            description=(
+                "Records a PQ/T hybrid key agreement group defined in RFC 10024 "
+                "and requires human review of implementation certification "
+                "evidence."
+            ),
+            applicability=PolicyApplicability(
+                target=PolicyApplicabilityTarget.asset,
+                conditions={"standard_status": "standardized_pq_t_hybrid"},
+            ),
+            severity=PolicySeverity.medium,
+            effects=[
+                PolicyRuleEffect.requires_human_review,
+                PolicyRuleEffect.adds_policy_context,
+                PolicyRuleEffect.recommends_target_state,
+            ],
+            rationale=(
+                "RFC 10024, Section 5 names the component whose implementation "
+                "must be certified. An algorithm identifier does not show "
+                "whether that implementation is certified."
+            ),
+            recommendation=(
+                "Obtain evidence that the implementation of the component named "
+                "in certification_component is certified, and record the review "
+                "outcome."
+            ),
+            references=[
+                "RFC-10024",
+                "NIST-SP-800-227",
+                "NIST-FIPS-203",
             ],
         ),
         PolicyRule(
