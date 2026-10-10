@@ -133,6 +133,40 @@ Verification reads the file once within the 64 MiB limit, rejects duplicate
 JSON keys and non-finite numbers, and does not write. The exit code is 0 when
 every check passes and 1 otherwise.
 
+## Compare two PQC Decision Records
+
+```bash
+qstriage pdr diff reports/pdr-2026-09.json reports/pdr-2026-10.json
+qstriage pdr diff reports/pdr-2026-09.json reports/pdr-2026-10.json --format json
+qstriage pdr diff before.json after.json --output reports/pdr-diff.md
+```
+
+Both files are verified first. If either fails verification, the command
+prints which one and produces no comparison. Records are matched by
+`record_id`.
+
+The Markdown report, the default, starts with the result in plain sentences:
+
+- how many decisions changed, and how many records were added or removed;
+- what differs between the two runs: input file, policy pack, algorithm
+  registry, QSTriage version, and PDR format. If more than one differs, the
+  report says that a decision change cannot be attributed to one of them;
+- for each changed record, the action, the algorithm status, whether human
+  review is required, and the reason codes of the later record;
+- fields that exist in only one PDR format version, listed separately so
+  they are not read as decision changes;
+- a table of every changed `decision` and `observed_state` field.
+
+The report shows what the two records contain. It does not recommend
+actions. `--format json` adds the document, policy-pack, and registry hashes.
+
+Exit code 0 means the comparison was produced, whether or not anything
+changed; the JSON field `changed` states which. Exit code 1 means a file could
+not be read or failed verification, or the output could not be written. Exit
+code 2 means an invalid option. The command reads each file once within the
+64 MiB limit and never modifies the inputs. `--output` does not replace an
+existing file unless `--overwrite` is given, and never writes over an input.
+
 ## Inspect algorithm classification
 
 Classification is included in reports, PDR records, and score explanations.

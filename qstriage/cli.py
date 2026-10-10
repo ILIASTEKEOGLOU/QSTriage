@@ -34,6 +34,7 @@ from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.limits import ResourceLimitError
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document, load_pdr_input
+from qstriage.pdr_diff import PDRDiffError, diff_pdr_files, render_json, render_markdown
 from qstriage.pdr_verify import PDRVerificationInputError, verify_pdr_file
 from qstriage.presentation import sanitize_terminal_text
 from qstriage.policy import get_policy_pack, list_policy_packs
@@ -691,6 +692,71 @@ def verify_pdr_command(
 
     if not result.passed:
         raise typer.Exit(code=1)
+
+
+@pdr_app.command("diff")
+def diff_pdr_command(
+    before_path: Path = typer.Argument(
+        ...,
+        help="Path to the earlier PDR JSON document.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    after_path: Path = typer.Argument(
+        ...,
+        help="Path to the later PDR JSON document.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    output_format: str = typer.Option(
+        "markdown",
+        "--format",
+        help="Output format: markdown or json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write the comparison to this file instead of standard output.",
+    ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="Explicitly replace an existing regular output file.",
+    ),
+) -> None:
+    """Compare two verified PDR documents."""
+    if output_format not in {"markdown", "json"}:
+        _safe_print("PDR comparison failed: --format must be markdown or json.", style="red")
+        raise typer.Exit(code=2)
+
+    try:
+        diff = diff_pdr_files(before_path, after_path)
+    except (PDRVerificationInputError, PDRDiffError) as error:
+        _safe_print(f"PDR comparison failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+
+    text = render_json(diff) if output_format == "json" else render_markdown(diff)
+
+    if output is None:
+        typer.echo(text, nl=False)
+        return
+
+    try:
+        written = write_private_text(
+            output,
+            text,
+            overwrite=overwrite,
+            protected_paths=(before_path, after_path),
+        )
+    except (OSError, ValueError) as error:
+        _safe_print(f"PDR comparison failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+    _safe_print(f"PDR comparison written: {written}", style="green")
 
 
 @export_app.command("scores")

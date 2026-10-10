@@ -205,6 +205,25 @@ Verification shows that a document is internally consistent. It does not
 show which registry or policy content produced it; `registry_hash` and
 `policy_pack_hash` identify that content.
 
+## Comparison
+
+`qstriage pdr diff BEFORE AFTER` verifies both documents under the rules of
+their own `pdr_version` and stops if either fails. It matches records by
+`record_id` and compares the fields of `decision` and `observed_state`.
+
+Provenance is compared item by item: `input_snapshot.source_hash`,
+`policy_context.policy_pack_hash`, `registry_context.registry_hash`, the
+records' `engine.version`, and `pdr_version`. The comparison reports every
+item that differs. It does not infer which item caused a decision change; when
+more than one differs, it states that the cause cannot be attributed to one of
+them.
+
+When the two documents have different `pdr_version` values, a field that
+exists in only one of them is reported as a format difference, not as a
+change. Between 0.2 and 0.3 these are `registry_context` and the
+`observed_state` fields `scheme_type`, `components`, and
+`certification_component`.
+
 ## Evidence and confidence behavior
 
 A PDR can be generated for incomplete evidence when at least one supported asset exists, but incompleteness remains explicit through:
