@@ -1,0 +1,3477 @@
+{
+  "description": "Classification output pinned before the algorithm registry refactor. Every case must stay identical.",
+  "pinned_at_commit": "f4e7ae46f49b681ec8deafed11298df9e6e9028f",
+  "cases": [
+    {
+      "input": "",
+      "classification": {
+        "input_algorithm": "",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": " ",
+      "classification": {
+        "input_algorithm": "",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "  ml__kem / 768  ",
+      "classification": {
+        "input_algorithm": "ml__kem / 768",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_kem",
+        "rationale": "ML-KEM is classified as a standardized post-quantum key encapsulation mechanism.",
+        "source_ids": [
+          "NIST-FIPS-203"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "1.0",
+      "classification": {
+        "input_algorithm": "1.0",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "3DES",
+      "classification": {
+        "input_algorithm": "3DES",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "AECDH-NULL-SHA",
+      "classification": {
+        "input_algorithm": "AECDH-NULL-SHA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "AES",
+      "classification": {
+        "input_algorithm": "AES",
+        "algorithm_family": "AES",
+        "primitive": "symmetric_encryption",
+        "quantum_status": "symmetric_grover_affected",
+        "standard_status": "standardized_symmetric",
+        "recommended_action": "review_key_strength_not_public_key_migration",
+        "rationale": "AES is classified as symmetric encryption and is not treated as a Shor-broken public-key migration target.",
+        "source_ids": [
+          "NIST-FIPS-197",
+          "NIST-SP-800-57-PART-1-REV-5"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "AES-128",
+      "classification": {
+        "input_algorithm": "AES-128",
+        "algorithm_family": "AES",
+        "primitive": "symmetric_encryption",
+        "quantum_status": "symmetric_grover_affected",
+        "standard_status": "standardized_symmetric",
+        "recommended_action": "review_key_strength_not_public_key_migration",
+        "rationale": "AES is classified as symmetric encryption and is not treated as a Shor-broken public-key migration target.",
+        "source_ids": [
+          "NIST-FIPS-197",
+          "NIST-SP-800-57-PART-1-REV-5"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "AES-256",
+      "classification": {
+        "input_algorithm": "AES-256",
+        "algorithm_family": "AES",
+        "primitive": "symmetric_encryption",
+        "quantum_status": "symmetric_grover_affected",
+        "standard_status": "standardized_symmetric",
+        "recommended_action": "review_key_strength_not_public_key_migration",
+        "rationale": "AES is classified as symmetric encryption and is not treated as a Shor-broken public-key migration target.",
+        "source_ids": [
+          "NIST-FIPS-197",
+          "NIST-SP-800-57-PART-1-REV-5"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "AES256-GCM",
+      "classification": {
+        "input_algorithm": "AES256-GCM",
+        "algorithm_family": "AES",
+        "primitive": "symmetric_encryption",
+        "quantum_status": "symmetric_grover_affected",
+        "standard_status": "standardized_symmetric",
+        "recommended_action": "review_key_strength_not_public_key_migration",
+        "rationale": "AES is classified as symmetric encryption and is not treated as a Shor-broken public-key migration target.",
+        "source_ids": [
+          "NIST-FIPS-197",
+          "NIST-SP-800-57-PART-1-REV-5"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "APP-256",
+      "classification": {
+        "input_algorithm": "APP-256",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ChaCha20-Poly1305",
+      "classification": {
+        "input_algorithm": "ChaCha20-Poly1305",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Curve25519",
+      "classification": {
+        "input_algorithm": "Curve25519",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "Customer API RSA Signing Key",
+      "classification": {
+        "input_algorithm": "Customer API RSA Signing Key",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "DH",
+      "classification": {
+        "input_algorithm": "DH",
+        "algorithm_family": "DH",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_key_establishment",
+        "rationale": "Finite-field Diffie-Hellman is classified as quantum-vulnerable key establishment for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "DH-RSA-AES128-GCM-SHA256",
+      "classification": {
+        "input_algorithm": "DH-RSA-AES128-GCM-SHA256",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "DHE",
+      "classification": {
+        "input_algorithm": "DHE",
+        "algorithm_family": "DH",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_key_establishment",
+        "rationale": "Finite-field Diffie-Hellman is classified as quantum-vulnerable key establishment for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "DHE-RSA",
+      "classification": {
+        "input_algorithm": "DHE-RSA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "DHE-RSA-AES128-GCM-SHA256",
+      "classification": {
+        "input_algorithm": "DHE-RSA-AES128-GCM-SHA256",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "DHELIUM",
+      "classification": {
+        "input_algorithm": "DHELIUM",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "DHE_RSA",
+      "classification": {
+        "input_algorithm": "DHE_RSA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "DH_RSA",
+      "classification": {
+        "input_algorithm": "DH_RSA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "Dilithium3",
+      "classification": {
+        "input_algorithm": "Dilithium3",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ECC",
+      "classification": {
+        "input_algorithm": "ECC",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECCENTRIC-V2",
+      "classification": {
+        "input_algorithm": "ECCENTRIC-V2",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ECDH",
+      "classification": {
+        "input_algorithm": "ECDH",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDHE",
+      "classification": {
+        "input_algorithm": "ECDHE",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDHE-ECDSA",
+      "classification": {
+        "input_algorithm": "ECDHE-ECDSA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDHE-ML-KEM-768",
+      "classification": {
+        "input_algorithm": "ECDHE-ML-KEM-768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ECDHE-RSA",
+      "classification": {
+        "input_algorithm": "ECDHE-RSA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDHE-RSA-AES128-GCM-SHA256",
+      "classification": {
+        "input_algorithm": "ECDHE-RSA-AES128-GCM-SHA256",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDHE-RSA-ML-KEM-768",
+      "classification": {
+        "input_algorithm": "ECDHE-RSA-ML-KEM-768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ECDHE_RSA",
+      "classification": {
+        "input_algorithm": "ECDHE_RSA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDSA",
+      "classification": {
+        "input_algorithm": "ECDSA",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDSA P-256",
+      "classification": {
+        "input_algorithm": "ECDSA P-256",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ECDSA-P256-ML-DSA-44",
+      "classification": {
+        "input_algorithm": "ECDSA-P256-ML-DSA-44",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ECDSA_P256",
+      "classification": {
+        "input_algorithm": "ECDSA_P256",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "EDH",
+      "classification": {
+        "input_algorithm": "EDH",
+        "algorithm_family": "DH",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_key_establishment",
+        "rationale": "Finite-field Diffie-Hellman is classified as quantum-vulnerable key establishment for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "EDH-RSA-DES-CBC3-SHA",
+      "classification": {
+        "input_algorithm": "EDH-RSA-DES-CBC3-SHA",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "EDHELP",
+      "classification": {
+        "input_algorithm": "EDHELP",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Ed25519",
+      "classification": {
+        "input_algorithm": "Ed25519",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "Ed25519-Dilithium3",
+      "classification": {
+        "input_algorithm": "Ed25519-Dilithium3",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Ed25519-ML-DSA-65",
+      "classification": {
+        "input_algorithm": "Ed25519-ML-DSA-65",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Ed448",
+      "classification": {
+        "input_algorithm": "Ed448",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "FFDHE2048",
+      "classification": {
+        "input_algorithm": "FFDHE2048",
+        "algorithm_family": "DH",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_key_establishment",
+        "rationale": "Finite-field Diffie-Hellman is classified as quantum-vulnerable key establishment for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "FFDHELIUM",
+      "classification": {
+        "input_algorithm": "FFDHELIUM",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Falcon-512",
+      "classification": {
+        "input_algorithm": "Falcon-512",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Hybrid KEM Profile",
+      "classification": {
+        "input_algorithm": "Hybrid KEM Profile",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Kyber768",
+      "classification": {
+        "input_algorithm": "Kyber768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "MARSALA",
+      "classification": {
+        "input_algorithm": "MARSALA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "MD2withRSA",
+      "classification": {
+        "input_algorithm": "MD2withRSA",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "MD5withRSA",
+      "classification": {
+        "input_algorithm": "MD5withRSA",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "MD5withRSAX",
+      "classification": {
+        "input_algorithm": "MD5withRSAX",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ML-DSA",
+      "classification": {
+        "input_algorithm": "ML-DSA",
+        "algorithm_family": "ML-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-204",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "ML-DSA-17",
+      "classification": {
+        "input_algorithm": "ML-DSA-17",
+        "algorithm_family": "ML-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-204",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "ML-DSA-44",
+      "classification": {
+        "input_algorithm": "ML-DSA-44",
+        "algorithm_family": "ML-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature",
+        "rationale": "ML-DSA is classified as a standardized post-quantum digital signature algorithm.",
+        "source_ids": [
+          "NIST-FIPS-204"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ML-DSA-65",
+      "classification": {
+        "input_algorithm": "ML-DSA-65",
+        "algorithm_family": "ML-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature",
+        "rationale": "ML-DSA is classified as a standardized post-quantum digital signature algorithm.",
+        "source_ids": [
+          "NIST-FIPS-204"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ML-DSA-87",
+      "classification": {
+        "input_algorithm": "ML-DSA-87",
+        "algorithm_family": "ML-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature",
+        "rationale": "ML-DSA is classified as a standardized post-quantum digital signature algorithm.",
+        "source_ids": [
+          "NIST-FIPS-204"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ML-DSA-99",
+      "classification": {
+        "input_algorithm": "ML-DSA-99",
+        "algorithm_family": "ML-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-204",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "ML-KEM",
+      "classification": {
+        "input_algorithm": "ML-KEM",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-KEM family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-203",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "ML-KEM-1024",
+      "classification": {
+        "input_algorithm": "ML-KEM-1024",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_kem",
+        "rationale": "ML-KEM is classified as a standardized post-quantum key encapsulation mechanism.",
+        "source_ids": [
+          "NIST-FIPS-203"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ML-KEM-2048",
+      "classification": {
+        "input_algorithm": "ML-KEM-2048",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-KEM family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-203",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "ML-KEM-512",
+      "classification": {
+        "input_algorithm": "ML-KEM-512",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_kem",
+        "rationale": "ML-KEM is classified as a standardized post-quantum key encapsulation mechanism.",
+        "source_ids": [
+          "NIST-FIPS-203"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ML-KEM-768",
+      "classification": {
+        "input_algorithm": "ML-KEM-768",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_kem",
+        "rationale": "ML-KEM is classified as a standardized post-quantum key encapsulation mechanism.",
+        "source_ids": [
+          "NIST-FIPS-203"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "ML-KEM-768+X25519",
+      "classification": {
+        "input_algorithm": "ML-KEM-768+X25519",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-KEM family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-203",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "ML-KEM-9999",
+      "classification": {
+        "input_algorithm": "ML-KEM-9999",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the ML-KEM family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-203",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "MysteryCrypto-1",
+      "classification": {
+        "input_algorithm": "MysteryCrypto-1",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "NOT-DIFFIE-HELLMANISH",
+      "classification": {
+        "input_algorithm": "NOT-DIFFIE-HELLMANISH",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "Non-cryptographic component",
+      "classification": {
+        "input_algorithm": "Non-cryptographic component",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "P-256",
+      "classification": {
+        "input_algorithm": "P-256",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "P-256-ML-KEM-768",
+      "classification": {
+        "input_algorithm": "P-256-ML-KEM-768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "RSA",
+      "classification": {
+        "input_algorithm": "RSA",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSA-1024",
+      "classification": {
+        "input_algorithm": "RSA-1024",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSA-2048",
+      "classification": {
+        "input_algorithm": "RSA-2048",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSA-OAEP",
+      "classification": {
+        "input_algorithm": "RSA-OAEP",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSA-PSK-AES128-GCM-SHA256",
+      "classification": {
+        "input_algorithm": "RSA-PSK-AES128-GCM-SHA256",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "RSA-PSS",
+      "classification": {
+        "input_algorithm": "RSA-PSS",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSA-PSSX",
+      "classification": {
+        "input_algorithm": "RSA-PSSX",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "RSA-SLH-DSA-SHA2-128s",
+      "classification": {
+        "input_algorithm": "RSA-SLH-DSA-SHA2-128s",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "RSA2048",
+      "classification": {
+        "input_algorithm": "RSA2048",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSA3072",
+      "classification": {
+        "input_algorithm": "RSA3072",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSAES-OAEP",
+      "classification": {
+        "input_algorithm": "RSAES-OAEP",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "RSAES-OAEP-EXTRA",
+      "classification": {
+        "input_algorithm": "RSAES-OAEP-EXTRA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "RSAPSS",
+      "classification": {
+        "input_algorithm": "RSAPSS",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "RSASSA-PSS",
+      "classification": {
+        "input_algorithm": "RSASSA-PSS",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA-1",
+      "classification": {
+        "input_algorithm": "SHA-1",
+        "algorithm_family": "SHA-1/SHA-2",
+        "primitive": "hash",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-1 and SHA-2 family algorithms are classified as hash algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-180-4"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA-1/SHA-2",
+      "classification": {
+        "input_algorithm": "SHA-1/SHA-2",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SHA-256",
+      "classification": {
+        "input_algorithm": "SHA-256",
+        "algorithm_family": "SHA-1/SHA-2",
+        "primitive": "hash",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-1 and SHA-2 family algorithms are classified as hash algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-180-4"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA-3",
+      "classification": {
+        "input_algorithm": "SHA-3",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SHA-3-512",
+      "classification": {
+        "input_algorithm": "SHA-3-512",
+        "algorithm_family": "SHA-3",
+        "primitive": "hash_or_xof",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-3 and SHAKE are classified as hash/XOF algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-202"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA-512",
+      "classification": {
+        "input_algorithm": "SHA-512",
+        "algorithm_family": "SHA-1/SHA-2",
+        "primitive": "hash",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-1 and SHA-2 family algorithms are classified as hash algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-180-4"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA1",
+      "classification": {
+        "input_algorithm": "SHA1",
+        "algorithm_family": "SHA-1/SHA-2",
+        "primitive": "hash",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-1 and SHA-2 family algorithms are classified as hash algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-180-4"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA1withECDSA",
+      "classification": {
+        "input_algorithm": "SHA1withECDSA",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA224withECDSA",
+      "classification": {
+        "input_algorithm": "SHA224withECDSA",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA256WITHRSA",
+      "classification": {
+        "input_algorithm": "SHA256WITHRSA",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA256withECDSA",
+      "classification": {
+        "input_algorithm": "SHA256withECDSA",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA256withECDSAExtra",
+      "classification": {
+        "input_algorithm": "SHA256withECDSAExtra",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SHA256withECDSAX",
+      "classification": {
+        "input_algorithm": "SHA256withECDSAX",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SHA256withRSA",
+      "classification": {
+        "input_algorithm": "SHA256withRSA",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA256withRSAEncryption",
+      "classification": {
+        "input_algorithm": "SHA256withRSAEncryption",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA256withRSAEncryptionExtra",
+      "classification": {
+        "input_algorithm": "SHA256withRSAEncryptionExtra",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SHA3-256",
+      "classification": {
+        "input_algorithm": "SHA3-256",
+        "algorithm_family": "SHA-3",
+        "primitive": "hash_or_xof",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-3 and SHAKE are classified as hash/XOF algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-202"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA384withECDSA",
+      "classification": {
+        "input_algorithm": "SHA384withECDSA",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHA512withECDSA",
+      "classification": {
+        "input_algorithm": "SHA512withECDSA",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHAKE-256",
+      "classification": {
+        "input_algorithm": "SHAKE-256",
+        "algorithm_family": "SHA-3",
+        "primitive": "hash_or_xof",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-3 and SHAKE are classified as hash/XOF algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-202"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHAKE128",
+      "classification": {
+        "input_algorithm": "SHAKE128",
+        "algorithm_family": "SHA-3",
+        "primitive": "hash_or_xof",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-3 and SHAKE are classified as hash/XOF algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-202"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHAKE256",
+      "classification": {
+        "input_algorithm": "SHAKE256",
+        "algorithm_family": "SHA-3",
+        "primitive": "hash_or_xof",
+        "quantum_status": "not_public_key",
+        "standard_status": "standardized_hash",
+        "recommended_action": "classify_separately_from_pqc_key_migration",
+        "rationale": "SHA-3 and SHAKE are classified as hash/XOF algorithms rather than public-key establishment or signature algorithms.",
+        "source_ids": [
+          "NIST-FIPS-202"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SHAKEWEIGHT",
+      "classification": {
+        "input_algorithm": "SHAKEWEIGHT",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA",
+      "classification": {
+        "input_algorithm": "SLH-DSA",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the SLH-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-205",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "SLH-DSA-BANANA",
+      "classification": {
+        "input_algorithm": "SLH-DSA-BANANA",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the SLH-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-205",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-128F",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-128F",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-128S",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-128S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-128s",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-128s",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-192F",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-192F",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-192S",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-192S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-256F",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-256F",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-256S",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-256S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHA2-999s",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHA2-999s",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "verify_exact_parameter_set_before_classification",
+        "rationale": "The identifier matches the SLH-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+        "source_ids": [
+          "NIST-FIPS-205",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "recognized_family_unverified_parameters"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHAKE-128F",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHAKE-128F",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHAKE-128S",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHAKE-128S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHAKE-192F",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHAKE-192F",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHAKE-192S",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHAKE-192S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHAKE-256F",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHAKE-256F",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH-DSA-SHAKE-256S",
+      "classification": {
+        "input_algorithm": "SLH-DSA-SHAKE-256S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SLH_DSA_SHA2_128S",
+      "classification": {
+        "input_algorithm": "SLH_DSA_SHA2_128S",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "SRP-RSA-AES-256-CBC-SHA",
+      "classification": {
+        "input_algorithm": "SRP-RSA-AES-256-CBC-SHA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SecP256r1MLKEM768",
+      "classification": {
+        "input_algorithm": "SecP256r1MLKEM768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "SecP384r1MLKEM1024",
+      "classification": {
+        "input_algorithm": "SecP384r1MLKEM1024",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+      "classification": {
+        "input_algorithm": "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "TLS_DH_RSA_WITH_AES_256_GCM_SHA384",
+      "classification": {
+        "input_algorithm": "TLS_DH_RSA_WITH_AES_256_GCM_SHA384",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+      "classification": {
+        "input_algorithm": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "TLS_RSAX_WITH_AES_128_GCM_SHA256",
+      "classification": {
+        "input_algorithm": "TLS_RSAX_WITH_AES_128_GCM_SHA256",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+      "classification": {
+        "input_algorithm": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "TLS_RSA_WITH_AES_128_GCM_SHA256_EXTRA",
+      "classification": {
+        "input_algorithm": "TLS_RSA_WITH_AES_128_GCM_SHA256_EXTRA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+      "classification": {
+        "input_algorithm": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "TORSA-HASH",
+      "classification": {
+        "input_algorithm": "TORSA-HASH",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519",
+      "classification": {
+        "input_algorithm": "X25519",
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "X25519 + ML-KEM-768",
+      "classification": {
+        "input_algorithm": "X25519 + ML-KEM-768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519+ML-KEM-768",
+      "classification": {
+        "input_algorithm": "X25519+ML-KEM-768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519-Kyber768",
+      "classification": {
+        "input_algorithm": "X25519-Kyber768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519-ML-KEM-768",
+      "classification": {
+        "input_algorithm": "X25519-ML-KEM-768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519Kyber768Draft00",
+      "classification": {
+        "input_algorithm": "X25519Kyber768Draft00",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519MLKEM768",
+      "classification": {
+        "input_algorithm": "X25519MLKEM768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X25519MLKEM768-ECDHE",
+      "classification": {
+        "input_algorithm": "X25519MLKEM768-ECDHE",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "X448",
+      "classification": {
+        "input_algorithm": "X448",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "XSHA256withECDSA",
+      "classification": {
+        "input_algorithm": "XSHA256withECDSA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "acceptable_pqc_signature_with_operational_review",
+      "classification": {
+        "input_algorithm": "acceptable_pqc_signature_with_operational_review",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "aes_192_cbc",
+      "classification": {
+        "input_algorithm": "aes_192_cbc",
+        "algorithm_family": "AES",
+        "primitive": "symmetric_encryption",
+        "quantum_status": "symmetric_grover_affected",
+        "standard_status": "standardized_symmetric",
+        "recommended_action": "review_key_strength_not_public_key_migration",
+        "rationale": "AES is classified as symmetric encryption and is not treated as a Shor-broken public-key migration target.",
+        "source_ids": [
+          "NIST-FIPS-197",
+          "NIST-SP-800-57-PART-1-REV-5"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "algorithm",
+      "classification": {
+        "input_algorithm": "algorithm",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "algorithm_identifier_compatibility.json",
+      "classification": {
+        "input_algorithm": "algorithm_identifier_compatibility.json",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "brainpoolP256r1",
+      "classification": {
+        "input_algorithm": "brainpoolP256r1",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "case",
+      "classification": {
+        "input_algorithm": "case",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "change_kind",
+      "classification": {
+        "input_algorithm": "change_kind",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "classical_public_key",
+      "classification": {
+        "input_algorithm": "classical_public_key",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "classical_public_key_composite",
+      "classification": {
+        "input_algorithm": "classical_public_key_composite",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "compatibility_restoration",
+      "classification": {
+        "input_algorithm": "compatibility_restoration",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "digital_signature",
+      "classification": {
+        "input_algorithm": "digital_signature",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "entries",
+      "classification": {
+        "input_algorithm": "entries",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "exact_identifier",
+      "classification": {
+        "input_algorithm": "exact_identifier",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "expected_family",
+      "classification": {
+        "input_algorithm": "expected_family",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "expected_resolution",
+      "classification": {
+        "input_algorithm": "expected_resolution",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "family",
+      "classification": {
+        "input_algorithm": "family",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "family_source",
+      "classification": {
+        "input_algorithm": "family_source",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "finite-field DH",
+      "classification": {
+        "input_algorithm": "finite-field DH",
+        "algorithm_family": "DH",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_key_establishment",
+        "rationale": "Finite-field Diffie-Hellman is classified as quantum-vulnerable key establishment for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "fixtures",
+      "classification": {
+        "input_algorithm": "fixtures",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "hash",
+      "classification": {
+        "input_algorithm": "hash",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "hash_or_xof",
+      "classification": {
+        "input_algorithm": "hash_or_xof",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "https://",
+      "classification": {
+        "input_algorithm": "https://",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "id-RSAES-OAEP",
+      "classification": {
+        "input_algorithm": "id-RSAES-OAEP",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "id-RSAES-OAEP-EXTRA",
+      "classification": {
+        "input_algorithm": "id-RSAES-OAEP-EXTRA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "id-RSASSA-PSS",
+      "classification": {
+        "input_algorithm": "id-RSASSA-PSS",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "id-RSASSA-PSS-EXTRA",
+      "classification": {
+        "input_algorithm": "id-RSASSA-PSS-EXTRA",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "identifier",
+      "classification": {
+        "input_algorithm": "identifier",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "key_encapsulation",
+      "classification": {
+        "input_algorithm": "key_encapsulation",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "key_establishment",
+      "classification": {
+        "input_algorithm": "key_establishment",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "key_establishment_and_signature",
+      "classification": {
+        "input_algorithm": "key_establishment_and_signature",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "manual_review_required",
+      "classification": {
+        "input_algorithm": "manual_review_required",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "md2WithRSAEncryption",
+      "classification": {
+        "input_algorithm": "md2WithRSAEncryption",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "md5WithRSAEncryption",
+      "classification": {
+        "input_algorithm": "md5WithRSAEncryption",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "md5WithRSAEncryptionExtra",
+      "classification": {
+        "input_algorithm": "md5WithRSAEncryptionExtra",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "migrate_to_hybrid_or_pqc_path",
+      "classification": {
+        "input_algorithm": "migrate_to_hybrid_or_pqc_path",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "ml_kem 768",
+      "classification": {
+        "input_algorithm": "ml_kem 768",
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_kem",
+        "rationale": "ML-KEM is classified as a standardized post-quantum key encapsulation mechanism.",
+        "source_ids": [
+          "NIST-FIPS-203"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "new_bounded_alias",
+      "classification": {
+        "input_algorithm": "new_bounded_alias",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "nginx",
+      "classification": {
+        "input_algorithm": "nginx",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "not_public_key",
+      "classification": {
+        "input_algorithm": "not_public_key",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "openssl",
+      "classification": {
+        "input_algorithm": "openssl",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "p384",
+      "classification": {
+        "input_algorithm": "p384",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "prime256v1",
+      "classification": {
+        "input_algorithm": "prime256v1",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "quantum_resistant",
+      "classification": {
+        "input_algorithm": "quantum_resistant",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "quantum_vulnerable",
+      "classification": {
+        "input_algorithm": "quantum_vulnerable",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "recognized_family_unverified_parameters",
+      "classification": {
+        "input_algorithm": "recognized_family_unverified_parameters",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "resolution",
+      "classification": {
+        "input_algorithm": "resolution",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "review_key_strength_not_public_key_migration",
+      "classification": {
+        "input_algorithm": "review_key_strength_not_public_key_migration",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "reviewed_in",
+      "classification": {
+        "input_algorithm": "reviewed_in",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "rsaEncryption",
+      "classification": {
+        "input_algorithm": "rsaEncryption",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "rsaEncryptionExtra",
+      "classification": {
+        "input_algorithm": "rsaEncryptionExtra",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "rsa_4096",
+      "classification": {
+        "input_algorithm": "rsa_4096",
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "recommended_action": "migrate_to_hybrid_or_pqc_path",
+        "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+        "source_ids": [
+          "NIST-IR-8547-IPD"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "rsassaPss",
+      "classification": {
+        "input_algorithm": "rsassaPss",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "schema_version",
+      "classification": {
+        "input_algorithm": "schema_version",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "secp256r1",
+      "classification": {
+        "input_algorithm": "secp256r1",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "slh-dsa-shake-256f",
+      "classification": {
+        "input_algorithm": "slh-dsa-shake-256f",
+        "algorithm_family": "SLH-DSA",
+        "primitive": "digital_signature",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "recommended_action": "acceptable_pqc_signature_with_operational_review",
+        "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+        "source_ids": [
+          "NIST-FIPS-205"
+        ],
+        "identifier_resolution": "exact_identifier"
+      }
+    },
+    {
+      "input": "source_id",
+      "classification": {
+        "input_algorithm": "source_id",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "source_ids",
+      "classification": {
+        "input_algorithm": "source_ids",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "sources",
+      "classification": {
+        "input_algorithm": "sources",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "standardized_pqc",
+      "classification": {
+        "input_algorithm": "standardized_pqc",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "symmetric_encryption",
+      "classification": {
+        "input_algorithm": "symmetric_encryption",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "symmetric_grover_affected",
+      "classification": {
+        "input_algorithm": "symmetric_grover_affected",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "tlsv12",
+      "classification": {
+        "input_algorithm": "tlsv12",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "universal-cipher",
+      "classification": {
+        "input_algorithm": "universal-cipher",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "unknown",
+      "classification": {
+        "input_algorithm": "unknown",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "unknown-thing",
+      "classification": {
+        "input_algorithm": "unknown-thing",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "unrecognized_identifier",
+      "classification": {
+        "input_algorithm": "unrecognized_identifier",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "utf-8",
+      "classification": {
+        "input_algorithm": "utf-8",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "v1.2.1",
+      "classification": {
+        "input_algorithm": "v1.2.1",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "verify_exact_parameter_set_before_classification",
+      "classification": {
+        "input_algorithm": "verify_exact_parameter_set_before_classification",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    },
+    {
+      "input": "x25519_mlkem768",
+      "classification": {
+        "input_algorithm": "x25519_mlkem768",
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "recommended_action": "manual_review_required",
+        "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+        "source_ids": [
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "identifier_resolution": "unrecognized_identifier"
+      }
+    }
+  ]
+}
