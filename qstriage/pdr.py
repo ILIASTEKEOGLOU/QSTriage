@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -9,6 +8,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from qstriage import __version__
+from qstriage.algorithm_registry import load_registry, registry_hash
 from qstriage.assessment import (
     AssetAssessment,
     DecisionConfidence,
@@ -21,6 +21,7 @@ from qstriage.decision import (
     VerificationPriority,
     VerificationRequirement,
 )
+from qstriage.canonical_json import canonical_sha256
 from qstriage.cbom import inventory_from_cbom, parse_cbom_json
 from qstriage.evidence import EvidenceReview
 from qstriage.limits import (
@@ -44,7 +45,7 @@ from qstriage.standards import (
 )
 
 
-PDR_VERSION = "0.2"
+PDR_VERSION = "0.3"
 ENGINE_NAME = "QSTriage"
 ENGINE_VERSION = __version__
 
@@ -83,6 +84,14 @@ class PolicyContext(BaseModel):
     standards_applied: list[str]
 
 
+class RegistryContext(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    registry_id: str = Field(min_length=1)
+    registry_version: str = Field(min_length=1)
+    registry_hash: str = Field(min_length=1)
+
+
 class ObservedState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -97,6 +106,9 @@ class ObservedState(BaseModel):
     primitive: str
     quantum_status: str
     standard_status: str
+    scheme_type: str
+    components: list[str]
+    validation_component: str | None
 
 
 class MissionContext(BaseModel):
@@ -159,6 +171,7 @@ class PQCDecisionRecord(BaseModel):
     engine: PDREngine
     input_snapshot: InputSnapshot
     policy_context: PolicyContext
+    registry_context: RegistryContext
     policy_evaluation: PolicyEvaluationResult
     observed_state: ObservedState
     evidence_quality: EvidenceQuality
@@ -179,6 +192,7 @@ class PDRDocument(BaseModel):
     run_id: str
     input_snapshot: InputSnapshot
     policy_context: PolicyContext
+    registry_context: RegistryContext
     records: list[PQCDecisionRecord]
     document_hash: str
 
@@ -290,7 +304,8 @@ def generate_pdr_document(
         )
     policy_pack = _load_policy_pack(policy_pack_id, policy_pack_version)
     policy_context = _build_policy_context(policy_pack)
-    run_id = _run_id(snapshot, policy_context)
+    registry_context = _build_registry_context()
+    run_id = _run_id(snapshot, policy_context, registry_context)
     lineage_id = _lineage_id(snapshot)
     score_by_asset = {result.asset_id: result for result in score_inventory(inventory)}
 
@@ -303,6 +318,7 @@ def generate_pdr_document(
             lineage_id=lineage_id,
             input_snapshot=snapshot,
             policy_context=policy_context,
+            registry_context=registry_context,
             policy_pack=policy_pack,
             previous_record_hash=(
                 previous_record_hashes or {}
@@ -315,6 +331,7 @@ def generate_pdr_document(
         run_id=run_id,
         input_snapshot=snapshot,
         policy_context=policy_context,
+        registry_context=registry_context,
         records=records,
         document_hash="pending",
     )
@@ -331,6 +348,7 @@ def _build_record(
     lineage_id: str,
     input_snapshot: InputSnapshot,
     policy_context: PolicyContext,
+    registry_context: RegistryContext,
     policy_pack: PolicyPack,
     previous_record_hash: str | None,
 ) -> PQCDecisionRecord:
@@ -349,6 +367,7 @@ def _build_record(
         engine=PDREngine(),
         input_snapshot=input_snapshot,
         policy_context=policy_context,
+        registry_context=registry_context,
         policy_evaluation=assessment.policy_evaluation,
         observed_state=_observed_state(asset, assessment.classification),
         evidence_quality=assessment.evidence_quality,
@@ -443,6 +462,15 @@ def _build_policy_context(policy_pack: PolicyPack) -> PolicyContext:
     )
 
 
+def _build_registry_context() -> RegistryContext:
+    registry = load_registry()
+    return RegistryContext(
+        registry_id=registry.registry_id,
+        registry_version=registry.registry_version,
+        registry_hash=registry_hash(),
+    )
+
+
 def _observed_state(
     asset: CryptographicAsset,
     classification: AlgorithmClassification,
@@ -459,6 +487,9 @@ def _observed_state(
         primitive=classification.primitive,
         quantum_status=classification.quantum_status,
         standard_status=classification.standard_status,
+        scheme_type=classification.scheme_type,
+        components=list(classification.components),
+        validation_component=classification.validation_component,
     )
 
 
@@ -638,11 +669,16 @@ def _assumptions(
     return assumptions
 
 
-def _run_id(input_snapshot: InputSnapshot, policy_context: PolicyContext) -> str:
+def _run_id(
+    input_snapshot: InputSnapshot,
+    policy_context: PolicyContext,
+    registry_context: RegistryContext,
+) -> str:
     return "run:" + _hash_object(
         {
             "source_hash": input_snapshot.source_hash,
             "policy_pack_hash": policy_context.policy_pack_hash,
+            "registry_hash": registry_context.registry_hash,
             "pdr_version": PDR_VERSION,
         }
     ).split(":", 1)[1][:16]
@@ -669,10 +705,6 @@ def _hash_bytes(value: bytes) -> str:
 
 
 def _hash_object(value: Any) -> str:
-    canonical = json.dumps(
-        value,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    )
-    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    """Hash JSON data under RFC 8785, the PDR 0.3 canonical form."""
+
+    return canonical_sha256(value)

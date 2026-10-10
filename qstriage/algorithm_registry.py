@@ -14,6 +14,8 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from qstriage.canonical_json import canonical_sha256
+
 
 REGISTRY_RESOURCE = "algorithm_registry.json"
 REGISTRY_SCHEMA_VERSION = "1"
@@ -155,11 +157,47 @@ class AlgorithmRegistry(BaseModel):
         raise KeyError(entry_id)
 
 
+class RegistryLoadError(ValueError):
+    """Raised when the bundled registry file is not well-formed JSON data."""
+
+
 @lru_cache(maxsize=1)
 def load_registry() -> AlgorithmRegistry:
+    return AlgorithmRegistry.model_validate(_read_registry_data())
+
+
+@lru_cache(maxsize=1)
+def registry_hash() -> str:
+    """Return the RFC 8785 SHA-256 hash of the bundled registry data.
+
+    The hash covers the parsed JSON data, not the file bytes, so formatting
+    changes do not change it. Any RFC 8785 implementation can recompute it
+    from ``qstriage/algorithm_registry.json``.
+    """
+
+    return canonical_sha256(_read_registry_data())
+
+
+def _read_registry_data() -> dict[str, object]:
     text = (
         resources.files("qstriage")
         .joinpath(REGISTRY_RESOURCE)
         .read_text(encoding="utf-8")
     )
-    return AlgorithmRegistry.model_validate(json.loads(text))
+    data = json.loads(text, object_pairs_hook=_object_without_duplicate_keys)
+    if not isinstance(data, dict):
+        raise RegistryLoadError("Algorithm registry must be a JSON object.")
+    return data
+
+
+def _object_without_duplicate_keys(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise RegistryLoadError(
+                f"Algorithm registry contains duplicate key {key!r}."
+            )
+        result[key] = value
+    return result

@@ -142,11 +142,15 @@ A registry change must:
   must remain unknown,
 - preserve conservative manual review outside the supported match boundary,
 - update source IDs and this document when public behavior or provenance
-  changes.
+  changes,
+- increase `registry_version` in `qstriage/algorithm_registry.json` when entry
+  content changes.
 
-The registry does not currently have an independent public version or hash.
-The PDR records the QSTriage engine version and the policy-pack version and
-hash; those policy fields are not an algorithm-registry version.
+The registry has its own identity. Each PDR 0.3 records `registry_id`,
+`registry_version`, and `registry_hash`, the RFC 8785 SHA-256 hash of the
+parsed registry file, in its `registry_context`. A change to any entry changes
+`registry_hash` and therefore the PDR `run_id`. See
+[PDR Contract](pdr-contract.md).
 
 ## Bounded interpretation
 

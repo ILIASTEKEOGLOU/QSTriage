@@ -6,10 +6,18 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+import qstriage.pdr as pdr_module
+from qstriage.algorithm_registry import (
+    RegistryLoadError,
+    _object_without_duplicate_keys,
+    load_registry,
+    registry_hash,
+)
+from qstriage.canonical_json import CanonicalizationError, canonical_sha256
 from qstriage.cli import app
 from qstriage.limits import MAX_PDR_FILE_BYTES
 from qstriage.models import load_inventory
-from qstriage.pdr import _hash_object, generate_pdr_document
+from qstriage.pdr import InputSnapshot, _hash_object, generate_pdr_document
 from qstriage.pdr_verify import (
     PDRVerificationInputError,
     pdr_v0_2_hash,
@@ -19,7 +27,12 @@ from qstriage.pdr_verify import (
 )
 
 
-SAMPLE = Path(__file__).resolve().parents[1] / "examples" / "sample_inventory.yaml"
+ROOT = Path(__file__).resolve().parents[1]
+SAMPLE = ROOT / "examples" / "sample_inventory.yaml"
+REGISTRY_FILE = ROOT / "qstriage" / "algorithm_registry.json"
+# Generated from examples/sample_inventory.yaml by QSTriage 1.3.0 plus the
+# pdr verify change, before the PDR 0.3 contract. It must keep verifying.
+V0_2_FIXTURE = ROOT / "tests" / "fixtures" / "pdr_v0_2_sample.json"
 
 
 def _document() -> dict[str, object]:
@@ -35,15 +48,113 @@ def test_generated_document_passes_every_check() -> None:
     result = verify_pdr_document(document)
 
     assert result.passed
-    assert result.pdr_version == "0.2"
+    assert result.pdr_version == "0.3"
     record_checks = [check for check in result.checks if check.check == "record_hash"]
     assert len(record_checks) == len(document["records"])
+    registry_checks = [
+        check
+        for check in result.checks
+        if check.check == "record_registry_context_matches_document"
+    ]
+    assert len(registry_checks) == len(document["records"])
 
 
-def test_frozen_v0_2_hash_matches_the_generator() -> None:
+def test_v0_2_document_from_the_previous_generator_still_verifies() -> None:
+    document = json.loads(V0_2_FIXTURE.read_text(encoding="utf-8"))
+    result = verify_pdr_document(document)
+
+    assert document["pdr_version"] == "0.2"
+    assert "registry_context" not in document
+    assert result.passed
+    assert len(result.checks) == 2 + 5 * len(document["records"])
+
+
+def test_v0_2_document_tampering_is_still_detected() -> None:
+    document = json.loads(V0_2_FIXTURE.read_text(encoding="utf-8"))
+    record = document["records"][0]
+    record["decision"]["action_type"] = "retain_monitor"
+
+    failed = _failed(verify_pdr_document(document))
+
+    assert ("record_hash", record["record_id"]) in failed
+    assert ("document_hash", "document") in failed
+
+
+def test_generator_hashes_under_rfc8785_not_the_v0_2_rule() -> None:
     document = _document()
 
-    assert pdr_v0_2_hash(document) == _hash_object(document)
+    assert _hash_object(document) == canonical_sha256(document)
+    # The document contains floats such as 81.0, which the two rules
+    # serialize differently, so the hashes must differ.
+    assert _hash_object(document) != pdr_v0_2_hash(document)
+
+
+def test_registry_context_records_the_bundled_registry() -> None:
+    document = _document()
+    registry = load_registry()
+
+    assert document["registry_context"] == {
+        "registry_id": registry.registry_id,
+        "registry_version": registry.registry_version,
+        "registry_hash": registry_hash(),
+    }
+    assert all(
+        record["registry_context"] == document["registry_context"]
+        for record in document["records"]
+    )
+
+
+def test_registry_hash_is_rfc8785_hash_of_the_registry_file_data() -> None:
+    data = json.loads(REGISTRY_FILE.read_text(encoding="utf-8"))
+
+    assert registry_hash() == canonical_sha256(data)
+
+
+def test_different_registry_hash_gives_different_run_id(monkeypatch) -> None:
+    original = _document()
+    monkeypatch.setattr(pdr_module, "registry_hash", lambda: "sha256:" + "1" * 64)
+    changed = _document()
+
+    assert changed["registry_context"]["registry_hash"] == "sha256:" + "1" * 64
+    assert changed["run_id"] != original["run_id"]
+    assert verify_pdr_document(changed).passed
+
+
+def test_altered_registry_context_fails_hash_run_id_and_record_consistency() -> None:
+    document = _document()
+    document["registry_context"]["registry_hash"] = "sha256:" + "0" * 64
+
+    failed = _failed(verify_pdr_document(document))
+
+    assert ("document_hash", "document") in failed
+    assert ("run_id", "document") in failed
+    first = document["records"][0]["record_id"]
+    assert ("record_registry_context_matches_document", first) in failed
+
+
+def test_v0_3_document_without_registry_context_is_rejected() -> None:
+    document = _document()
+    del document["registry_context"]
+
+    with pytest.raises(PDRVerificationInputError, match="registry_context"):
+        verify_pdr_document(document)
+
+
+def test_observed_state_reports_scheme_fields() -> None:
+    observed = _document()["records"][0]["observed_state"]
+
+    assert observed["scheme_type"] == "single"
+    assert observed["components"] == []
+    assert observed["validation_component"] is None
+
+
+def test_value_outside_rfc8785_range_stops_generation() -> None:
+    inventory = load_inventory(SAMPLE)
+    asset = inventory.assets[0].model_copy(update={"key_size_bits": 2**60})
+    inventory = inventory.model_copy(update={"assets": [asset, *inventory.assets[1:]]})
+
+    with pytest.raises(CanonicalizationError):
+        generate_pdr_document(inventory)
 
 
 def test_altered_record_field_fails_record_and_document_hash() -> None:
@@ -143,7 +254,7 @@ def test_cli_verify_json_output(tmp_path: Path) -> None:
     assert result.exit_code == 0
     payload = json.loads(result.output)
     assert payload["passed"] is True
-    assert payload["pdr_version"] == "0.2"
+    assert payload["pdr_version"] == "0.3"
 
 
 def test_cli_verify_rejects_unknown_format(tmp_path: Path) -> None:
@@ -163,3 +274,55 @@ def test_cli_verify_does_not_modify_the_input(tmp_path: Path) -> None:
     CliRunner().invoke(app, ["pdr", "verify", str(path)])
 
     assert path.read_bytes() == before
+
+
+def test_cli_generate_stops_on_value_outside_rfc8785_range(tmp_path: Path) -> None:
+    text = SAMPLE.read_text(encoding="utf-8")
+    source = tmp_path / "inventory.yaml"
+    source.write_text(
+        text.replace("key_size_bits: 2048", f"key_size_bits: {2**60}", 1),
+        encoding="utf-8",
+    )
+    assert str(2**60) in source.read_text(encoding="utf-8")
+    output = tmp_path / "pdr.json"
+
+    result = CliRunner().invoke(
+        app, ["pdr", "generate", str(source), "--output", str(output)]
+    )
+
+    assert result.exit_code == 1
+    assert "PDR generation failed" in result.output
+    assert not output.exists()
+
+
+def test_registry_reader_rejects_duplicate_keys() -> None:
+    with pytest.raises(RegistryLoadError, match="duplicate key"):
+        json.loads(
+            '{"registry_id":"a","registry_id":"b"}',
+            object_pairs_hook=_object_without_duplicate_keys,
+        )
+
+
+def test_v0_3_changes_only_contract_fields_relative_to_v0_2() -> None:
+    before = json.loads(V0_2_FIXTURE.read_text(encoding="utf-8"))
+    # Reuse the snapshot recorded in the fixture. A file-backed snapshot
+    # hashes the bytes on disk, which differ when a checkout uses CRLF line
+    # endings; the parsed inventory does not.
+    after = generate_pdr_document(
+        load_inventory(SAMPLE),
+        input_snapshot=InputSnapshot(**before["input_snapshot"]),
+    ).model_dump(mode="json")
+    contract_fields = {"pdr_version", "run_id", "registry_context", "engine"}
+    scheme_fields = {"scheme_type", "components", "validation_component"}
+
+    assert after["input_snapshot"] == before["input_snapshot"]
+    assert after["policy_context"] == before["policy_context"]
+    assert len(after["records"]) == len(before["records"])
+    for old, new in zip(before["records"], after["records"]):
+        old_rest = {k: v for k, v in old.items() if k not in contract_fields}
+        new_rest = {k: v for k, v in new.items() if k not in contract_fields}
+        del old_rest["record_integrity"], new_rest["record_integrity"]
+        new_rest["observed_state"] = {
+            k: v for k, v in new_rest["observed_state"].items() if k not in scheme_fields
+        }
+        assert new_rest == old_rest

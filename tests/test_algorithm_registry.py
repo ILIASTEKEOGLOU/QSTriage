@@ -6,7 +6,7 @@ from importlib import resources
 import pytest
 from pydantic import ValidationError
 
-from qstriage.algorithm_registry import AlgorithmRegistry, load_registry
+from qstriage.algorithm_registry import AlgorithmRegistry, load_registry, registry_hash
 from qstriage.standards import (
     ML_DSA_PARAMETER_SETS,
     ML_KEM_PARAMETER_SETS,
@@ -135,3 +135,22 @@ def test_unsupported_schema_version_is_rejected() -> None:
 
     with pytest.raises(ValidationError, match="schema version"):
         AlgorithmRegistry.model_validate(raw)
+
+
+# Each released registry_version identifies exactly one registry content.
+# When entry content changes, increase registry_version in
+# qstriage/algorithm_registry.json and add the new pair here.
+REGISTRY_HASH_BY_VERSION = {
+    "1": "sha256:44a93da463b6a9a0888a67bc23c0e915aa671508fba5c86d6af9c8590a629546",
+}
+
+
+def test_registry_content_change_requires_a_new_registry_version() -> None:
+    version = load_registry().registry_version
+
+    assert version in REGISTRY_HASH_BY_VERSION, (
+        f"registry_version {version!r} has no recorded hash"
+    )
+    assert registry_hash() == REGISTRY_HASH_BY_VERSION[version], (
+        "Registry content changed without a new registry_version"
+    )

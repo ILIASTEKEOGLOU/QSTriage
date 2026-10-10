@@ -84,6 +84,9 @@ class AlgorithmClassification:
     rationale: str
     source_ids: tuple[str, ...]
     identifier_resolution: str = IDENTIFIER_UNRECOGNIZED
+    scheme_type: str = "single"
+    components: tuple[str, ...] = ()
+    validation_component: str | None = None
 
 
 def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
@@ -148,6 +151,9 @@ def _classification_from_entry(entry_id: str, original: str) -> AlgorithmClassif
         rationale=entry.rationale,
         source_ids=entry.source_ids,
         identifier_resolution=entry.identifier_resolution,
+        scheme_type=entry.scheme_type.value,
+        components=entry.components,
+        validation_component=entry.validation_component,
     )
 
 

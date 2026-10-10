@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Changed
+
+- PDR contract version is now 0.3, and `qstriage pdr generate` writes only
+  0.3. Document hashes, record hashes, and `run_id` values differ from 0.2
+  for the same input:
+  - Hashes use the RFC 8785 canonical form instead of Python `json.dumps`
+    output, so any RFC 8785 implementation can recompute them.
+  - A `registry_context` (`registry_id`, `registry_version`,
+    `registry_hash`) is recorded in the document and in each record.
+  - `run_id` is derived from `source_hash`, `policy_pack_hash`,
+    `registry_hash`, and `pdr_version`.
+  - `observed_state` adds `scheme_type`, `components`, and
+    `validation_component`.
+  - Values that RFC 8785 cannot represent, such as integers above 2^53,
+    stop PDR generation.
+- `qstriage pdr verify` verifies PDR 0.2 and 0.3 documents, each under its
+  own rules.
+- The algorithm registry file is rejected if it contains duplicate JSON keys.
+
 ### Added
 
 - Added `qstriage pdr verify`, which recomputes the hashes and `run_id` of a
