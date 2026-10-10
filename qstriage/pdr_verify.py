@@ -71,6 +71,12 @@ class VerificationResult:
 
 
 def verify_pdr_file(path: str | Path) -> VerificationResult:
+    return verify_pdr_document(load_pdr_file(path))
+
+
+def load_pdr_file(path: str | Path) -> Any:
+    """Read and parse a PDR file once, within the size limit, without verifying it."""
+
     try:
         text = read_text_limited(
             path,
@@ -79,12 +85,16 @@ def verify_pdr_file(path: str | Path) -> VerificationResult:
         )
     except (OSError, ResourceLimitError, ValueError) as error:
         raise PDRVerificationInputError(str(error)) from error
-    return verify_pdr_text(text)
+    return parse_pdr_text(text)
 
 
 def verify_pdr_text(text: str) -> VerificationResult:
+    return verify_pdr_document(parse_pdr_text(text))
+
+
+def parse_pdr_text(text: str) -> Any:
     try:
-        document = json.loads(
+        return json.loads(
             text,
             object_pairs_hook=_object_without_duplicate_keys,
             parse_constant=_reject_constant,
@@ -95,7 +105,6 @@ def verify_pdr_text(text: str) -> VerificationResult:
         ) from error
     except json.JSONDecodeError as error:
         raise PDRVerificationInputError(f"PDR file is not valid JSON: {error}") from error
-    return verify_pdr_document(document)
 
 
 def verify_pdr_document(document: Any) -> VerificationResult:

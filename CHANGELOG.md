@@ -39,6 +39,15 @@
 
 ### Added
 
+- Added `qstriage pdr diff BEFORE AFTER`, which verifies two PDR documents
+  and compares them record by record. The Markdown report states how many
+  decisions changed, what differs between the two runs (input file, policy
+  pack, algorithm registry, QSTriage version, PDR format), and, for each
+  changed record, the action, algorithm status, human-review requirement,
+  and reason codes. Fields present in only one PDR format version are listed
+  separately as format differences. `--format json` gives the same content
+  with hashes. A document that fails verification stops the command with exit
+  code 1 and no comparison.
 - Added registry entries for the three RFC 10024 PQ/T hybrid groups, with
   components in shared-secret order (RFC 10024 Section 4.3), the
   certification component (RFC 10024 Section 5), and verbatim excerpts from
