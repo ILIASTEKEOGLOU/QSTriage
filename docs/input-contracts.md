@@ -25,6 +25,7 @@ Unknown fields are rejected in the native inventory and configuration models.
 | Inventory YAML file | 10 MiB |
 | CycloneDX CBOM JSON file | 32 MiB |
 | Configuration YAML file | 1 MiB |
+| PDR JSON file read by `pdr verify` | 64 MiB |
 | Assets per inventory | 1–1,000 |
 | Dependencies per inventory | 0–10,000 |
 | Migration scenarios per inventory | 0–100 |

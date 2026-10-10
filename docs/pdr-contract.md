@@ -136,6 +136,16 @@ An optional `previous_record_hash` can link a record to an externally supplied p
 
 For the same QSTriage version, captured input snapshot, policy pack, and generated content, PDR output and hashes are deterministic. Exact hashes are not promised to remain unchanged across QSTriage or PDR contract versions because documented content or serialization inputs can evolve.
 
+## Verification
+
+`qstriage pdr verify` checks a PDR 0.2 document under the rules above: it
+recomputes `document_hash` with that field set to null, recomputes each
+`record_hash` with that field set to null, recomputes `run_id`, and checks
+that every record repeats the document's `pdr_version`, `run_id`,
+`input_snapshot`, and `policy_context`. The 0.2 hashing rule is frozen in
+`qstriage/pdr_verify.py`, so 0.2 documents remain verifiable after later
+contract versions change the serialization.
+
 ## Evidence and confidence behavior
 
 A PDR can be generated for incomplete evidence when at least one supported asset exists, but incompleteness remains explicit through:

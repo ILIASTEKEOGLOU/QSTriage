@@ -118,6 +118,19 @@ generation parses and hashes one captured byte snapshot.
 The serialized compatibility boundary is defined in
 [PDR 0.2 Contract](pdr-contract.md).
 
+## Verify a PQC Decision Record
+
+```bash
+qstriage pdr verify reports/pdr.json
+qstriage pdr verify reports/pdr.json --format json
+```
+
+Verification recomputes `document_hash`, every `record_hash`, and `run_id`,
+and checks that each record carries the document's `pdr_version`, `run_id`,
+`input_snapshot`, and `policy_context`. It reads the file once within the
+64 MiB limit, rejects duplicate JSON keys and non-finite numbers, and does not
+write. The exit code is 0 when every check passes and 1 otherwise.
+
 ## Inspect algorithm classification
 
 Classification is included in reports, PDR records, and score explanations.

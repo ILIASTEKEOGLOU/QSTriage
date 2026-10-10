@@ -34,6 +34,7 @@ from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.limits import ResourceLimitError
 from qstriage.models import load_inventory
 from qstriage.pdr import generate_pdr_document, load_pdr_input
+from qstriage.pdr_verify import PDRVerificationInputError, verify_pdr_file
 from qstriage.presentation import sanitize_terminal_text
 from qstriage.policy import get_policy_pack, list_policy_packs
 from qstriage.report import generate_markdown_report
@@ -645,6 +646,51 @@ def generate_pdr_command(
     )
 
     _safe_print(f"PDR written: {written_path}", style="green")
+
+
+@pdr_app.command("verify")
+def verify_pdr_command(
+    pdr_path: Path = typer.Argument(
+        ...,
+        help="Path to a PDR JSON document.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format: text or json.",
+    ),
+) -> None:
+    """Verify the hashes and derived identifiers of a PDR document."""
+    if output_format not in {"text", "json"}:
+        _safe_print("PDR verification failed: --format must be text or json.", style="red")
+        raise typer.Exit(code=2)
+
+    try:
+        result = verify_pdr_file(pdr_path)
+    except PDRVerificationInputError as error:
+        _safe_print(f"PDR verification failed: {error}", style="red")
+        raise typer.Exit(code=1) from error
+
+    if output_format == "json":
+        typer.echo(json.dumps(result.to_dict(), indent=2, ensure_ascii=True))
+    else:
+        failed = [check for check in result.checks if not check.passed]
+        status = "PASS" if result.passed else "FAIL"
+        _safe_print(
+            f"PDR verification: {status} "
+            f"(pdr_version {result.pdr_version}, "
+            f"{len(result.checks) - len(failed)} of {len(result.checks)} checks passed)",
+            style="green" if result.passed else "red",
+        )
+        for check in failed:
+            _safe_print(f"- {check.check} [{check.subject}]: {check.detail}", style="red")
+
+    if not result.passed:
+        raise typer.Exit(code=1)
 
 
 @export_app.command("scores")

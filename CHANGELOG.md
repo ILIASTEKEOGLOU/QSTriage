@@ -4,6 +4,14 @@
 
 ### Added
 
+- Added `qstriage pdr verify`, which recomputes the hashes and `run_id` of a
+  PDR document, checks record consistency, and reports each check as text or
+  JSON. It reads at most 64 MiB, rejects duplicate keys and non-finite
+  numbers, and never writes.
+- Added an RFC 8785 (JSON Canonicalization Scheme) serializer in
+  `qstriage/canonical_json.py`, tested against the RFC examples and against
+  output from the independent `rfc8785` package. PDR 0.2 hashing is
+  unchanged.
 - Added a bundled, versioned algorithm registry
   (`qstriage/algorithm_registry.json`) that holds classification data and
   source metadata. Identifier matching stays in `qstriage/standards.py`.
