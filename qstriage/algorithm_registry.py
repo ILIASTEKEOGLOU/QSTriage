@@ -11,6 +11,7 @@ from enum import Enum
 from functools import lru_cache
 from importlib import resources
 import json
+import re
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -18,10 +19,20 @@ from qstriage.canonical_json import canonical_sha256
 
 
 REGISTRY_RESOURCE = "algorithm_registry.json"
-REGISTRY_SCHEMA_VERSION = "1"
+REGISTRY_SCHEMA_VERSION = "2"
 
 POSITIVE_QUANTUM_STATUSES = frozenset({"quantum_resistant"})
 POSITIVE_STANDARD_STATUSES = frozenset({"standardized_pqc"})
+
+
+def normalize_identifier(identifier: str) -> str:
+    """Normalize an algorithm identifier for exact matching.
+
+    Upper-cases the value and replaces each run of ``-``, ``_``, ``/``, or
+    whitespace with a single ``-``.
+    """
+
+    return re.sub(r"[-_/\s]+", "-", identifier.strip().upper())
 
 
 class SourceStatus(str, Enum):
@@ -51,6 +62,8 @@ class RegistrySource(BaseModel):
     section: str | None = None
     status: SourceStatus
     date: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}$")
+    # Verbatim text from ``section`` of the source. Never paraphrased.
+    excerpt: str | None = Field(default=None, min_length=1)
 
 
 class RegistryEntry(BaseModel):
@@ -69,12 +82,16 @@ class RegistryEntry(BaseModel):
     sources: tuple[RegistrySource, ...] = Field(min_length=1)
     lifecycle: Lifecycle
     components: tuple[str, ...] = ()
-    validation_component: str | None = None
+    certification_component: str | None = None
     deadlines: tuple[dict[str, str], ...] = ()
 
     @property
     def source_ids(self) -> tuple[str, ...]:
-        return tuple(source.source_id for source in self.sources)
+        """Source IDs in first-seen order, without repeats.
+
+        One source can be cited for several sections.
+        """
+        return tuple(dict.fromkeys(source.source_id for source in self.sources))
 
     @property
     def is_positive(self) -> bool:
@@ -99,16 +116,26 @@ class RegistryEntry(BaseModel):
                     "classification without a final published source."
                 )
         if self.scheme_type == SchemeType.single:
-            if self.components or self.validation_component is not None:
+            if self.components or self.certification_component is not None:
                 raise ValueError(
                     f"Registry entry '{self.entry_id}' is a single scheme but "
                     "declares hybrid components."
                 )
-        elif len(self.components) < 2:
-            raise ValueError(
-                f"Hybrid registry entry '{self.entry_id}' needs at least two "
-                "components."
-            )
+        else:
+            if len(self.components) < 2:
+                raise ValueError(
+                    f"Hybrid registry entry '{self.entry_id}' needs at least two "
+                    "components."
+                )
+            if len(set(self.components)) != len(self.components):
+                raise ValueError(
+                    f"Hybrid registry entry '{self.entry_id}' repeats a component."
+                )
+            if self.certification_component not in self.components:
+                raise ValueError(
+                    f"Hybrid registry entry '{self.entry_id}' must name one of its "
+                    "components as certification_component."
+                )
         return self
 
 
@@ -134,20 +161,13 @@ class AlgorithmRegistry(BaseModel):
         seen: dict[str, str] = {}
         for entry in self.entries:
             for identifier in entry.identifiers:
-                if identifier in seen:
+                normalized = normalize_identifier(identifier)
+                if normalized in seen:
                     raise ValueError(
                         f"Identifier '{identifier}' appears in registry entries "
-                        f"'{seen[identifier]}' and '{entry.entry_id}'."
+                        f"'{seen[normalized]}' and '{entry.entry_id}'."
                     )
-                seen[identifier] = entry.entry_id
-        known = set(entry_ids)
-        for entry in self.entries:
-            for component in entry.components:
-                if component not in known:
-                    raise ValueError(
-                        f"Registry entry '{entry.entry_id}' references unknown "
-                        f"component '{component}'."
-                    )
+                seen[normalized] = entry.entry_id
         return self
 
     def entry(self, entry_id: str) -> RegistryEntry:

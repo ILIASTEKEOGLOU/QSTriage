@@ -369,7 +369,6 @@ def test_compatibility_alias_lookalikes_remain_unrecognized(
         ("AECDH-NULL-SHA", "unknown", "unrecognized_identifier"),
         ("rsassaPss", "unknown", "unrecognized_identifier"),
         ("RSAPSS", "unknown", "unrecognized_identifier"),
-        ("X25519MLKEM768", "unknown", "unrecognized_identifier"),
         (
             "ML-KEM-768+X25519",
             "ML-KEM",
@@ -400,7 +399,8 @@ def test_deferred_identifier_grammars_remain_fail_closed_in_v1_2_1(
         "X25519MLKEM768-ECDHE",
         "ECDHE-ML-KEM-768",
         "ECDHE-RSA-ML-KEM-768",
-        "SecP256r1MLKEM768",
+        "SecP256r1-MLKEM768",
+        "SecP256r1Kyber768Draft00",
         "P-256-ML-KEM-768",
         "Ed25519-ML-DSA-65",
         "ECDSA-P256-ML-DSA-44",

@@ -268,7 +268,7 @@ def test_builtin_policy_registry_lists_nist_pqc_basic() -> None:
     packs = list_policy_packs()
 
     assert [pack.policy_pack_id for pack in packs] == ["nist-pqc-basic"]
-    assert packs[0].version == "0.2"
+    assert packs[0].version == "0.3"
     assert packs[0].title == "NIST PQC Basic"
 
 
@@ -465,14 +465,16 @@ def test_unverified_pqc_parameters_do_not_apply_standardized_pqc_rule() -> None:
     )
 
 
-def test_classifier_hotfix_does_not_move_builtin_policy_pack_identity() -> None:
+def test_builtin_policy_pack_identity_is_pinned() -> None:
     from qstriage.policy import get_policy_pack
 
     pack = get_policy_pack("nist-pqc-basic")
 
-    assert pack.version == "0.2"
+    # Version 0.3 adds the PQ/T hybrid certification review rule and the
+    # RFC-10024 reference. Any other content change needs a new version.
+    assert pack.version == "0.3"
     assert pack.policy_pack_hash() == (
-        "sha256:2d3dae46043cf68c63c05ab1ebd4b7d2dd5838323c09cb4211a797ed2a296b91"
+        "sha256:98302c357ddae03f7327a3dac9a823fbaec9071486bd5fc92b914c9e14759b29"
     )
 
 

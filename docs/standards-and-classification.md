@@ -16,7 +16,11 @@ Each call produces an `AlgorithmClassification` with:
 - registry recommendation,
 - rationale,
 - source identifiers,
-- identifier resolution.
+- identifier resolution,
+- scheme type (`single`, `pq_t_hybrid`, or `pq_pq_hybrid`),
+- for hybrids, the components in source order and the
+  `certification_component`,
+- the registry entry ID.
 
 Identifier resolution separates an exact supported form from a recognized PQC
 family whose parameter set is missing or unsupported, and from a wholly
@@ -50,6 +54,7 @@ This boundary is deterministic and deliberately narrow. QSTriage does not use fu
 | ML-KEM | `ML-KEM` | `key_encapsulation` | `quantum_resistant` | `standardized_pqc` | `acceptable_pqc_kem` | NIST FIPS 203 |
 | ML-DSA | `ML-DSA` | `digital_signature` | `quantum_resistant` | `standardized_pqc` | `acceptable_pqc_signature` | NIST FIPS 204 |
 | SLH-DSA | `SLH-DSA` | `digital_signature` | `quantum_resistant` | `standardized_pqc` | `acceptable_pqc_signature_with_operational_review` | NIST FIPS 205 |
+| RFC 10024 PQ/T hybrid groups (`X25519MLKEM768`, `SecP256r1MLKEM768`, `SecP384r1MLKEM1024`) | `pq_t_hybrid_kem` | `key_establishment` | `quantum_resistant` | `standardized_pq_t_hybrid` | `retain_with_certification_review` | RFC 10024; NIST SP 800-227; NIST FIPS 203 |
 | Classical key/signature composite | `classical_public_key_composite` | `key_establishment_and_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 IPD |
 | RSA | `RSA` | `public_key_encryption_or_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 IPD |
 | Finite-field Diffie-Hellman | `DH` | `key_establishment` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_key_establishment` | NIST IR 8547 IPD |
@@ -68,6 +73,9 @@ Matching is deterministic and order-sensitive.
 - ML-KEM, ML-DSA, and SLH-DSA receive standardized-PQC status only for exact
   parameter sets in the bundled allowlists. A bare family or unsupported
   parameter set preserves the family but requires parameter verification.
+- The three RFC 10024 group names are matched exactly, after normalization,
+  before the PQC component guard. Any other identifier that carries a PQC
+  component marker receives no positive classification.
 - Classical composites are detected before leaf families. Composite means an
   exact key-establishment role token such as `DH`, `DHE`, `EDH`, `ECDH`, or
   `ECDHE` plus a separate exact authentication/signature token such as `RSA`.
@@ -123,9 +131,38 @@ The current registry emits these stable source IDs:
 - `NIST-FIPS-197`
 - `NIST-FIPS-180-4`
 - `NIST-FIPS-202`
+- `RFC-10024`
+- `NIST-SP-800-227`
 - `QSTRIAGE-SAFETY-POLICY`
 
 Source IDs establish classification provenance. They do not imply that the cited standards publish QSTriage scores, policy rules, or migration approvals.
+
+## PQ/T hybrid classification and source text
+
+`quantum_resistant` for an RFC 10024 group rests on the RFC 10024 definition
+of a hybrid key exchange. `standardized_pq_t_hybrid` states that the group is
+defined in RFC 10024. Neither value states that the group, or a deployment of
+it, is approved or FIPS-approved. NIST SP 800-227 Section 4.6.2 approves key
+combiners, not hybrid schemes as such.
+
+RFC 10024 Section 5 states which component implementation must be certified.
+That section describes itself as informal notes on NIST guidance. An
+identifier cannot show whether an implementation is certified, so every
+hybrid record requires human review, and policy pack `nist-pqc-basic` 0.3 adds
+the rule `standardized_pq_t_hybrid_requires_certification_evidence_review`.
+
+### Verbatim source text
+
+Each registry source may carry an `excerpt`: text copied verbatim from the
+`section` it cites. Excerpts are never paraphrased; QSTriage's own wording is
+kept in `rationale` and in generated target-state text, which quotes the
+excerpt in double quotation marks. One notation change applies: a subscript
+that the source typesets below the line is written with an underscore
+(`S_j`). Tests pin every excerpt, so a change to source text in the registry
+fails the suite and must be reviewed.
+
+The RFC 10024 entries cite Sections 3, 4.3, 5 (introduction and
+FIPS-compliance), and 7, NIST SP 800-227 Section 4.6.2, and NIST FIPS 203.
 
 ## Registry maintenance boundary
 

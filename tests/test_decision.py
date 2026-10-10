@@ -481,3 +481,34 @@ def test_cbom_defaulted_context_adds_typed_verification_requirements() -> None:
         VerificationRequirement.dependency_context,
         VerificationRequirement.operational_context,
     )
+
+
+def test_pq_t_hybrid_is_retained_with_human_review_under_any_policy_pack() -> None:
+    # No policy finding: review must still be required, because the
+    # identifier cannot show that the certification component is certified.
+    decision = reconcile_decision(
+        classification=classify_algorithm("X25519MLKEM768"),
+        score=_score(value=10.0, band="low", legacy_action="monitor"),
+        evidence_review=build_evidence_review([], asset_id="asset-1"),
+        policy_evaluation=_policy_result(),
+        decision_confidence=0.95,
+        migration_effort=RiskLevel.low,
+    )
+
+    assert decision.action_type is ActionType.retain_monitor
+    assert decision.human_review_required is True
+    assert decision.reason_codes[0] == "classification:standardized_pq_t_hybrid"
+
+
+def test_standardized_pqc_without_findings_does_not_require_review() -> None:
+    decision = reconcile_decision(
+        classification=classify_algorithm("ML-KEM-768"),
+        score=_score(value=10.0, band="low", legacy_action="monitor"),
+        evidence_review=build_evidence_review([], asset_id="asset-1"),
+        policy_evaluation=_policy_result(),
+        decision_confidence=0.95,
+        migration_effort=RiskLevel.low,
+    )
+
+    assert decision.action_type is ActionType.retain_monitor
+    assert decision.human_review_required is False

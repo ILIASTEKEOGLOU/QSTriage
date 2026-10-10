@@ -9,6 +9,7 @@ from qstriage.models import RiskLevel
 from qstriage.policy import PolicyEvaluationResult
 from qstriage.scoring import ScoreResult
 from qstriage.standards import (
+    STANDARDIZED_PQ_T_HYBRID,
     AlgorithmClassification,
     requires_parameter_verification,
 )
@@ -155,6 +156,7 @@ def reconcile_decision(
         thresholds=thresholds,
     )
     human_review_required = _human_review_required(
+        classification=classification,
         action_type=action_type,
         score=score,
         evidence_review=evidence_review,
@@ -201,6 +203,9 @@ def _action_type(
         return ActionType.migration_planning
 
     if classification.standard_status == "standardized_pqc":
+        return ActionType.retain_monitor
+
+    if classification.standard_status == STANDARDIZED_PQ_T_HYBRID:
         return ActionType.retain_monitor
 
     if classification.standard_status == "standardized_symmetric":
@@ -377,6 +382,7 @@ def _confidence_priority(risk_attention_band: str) -> VerificationPriority:
 
 def _human_review_required(
     *,
+    classification: AlgorithmClassification,
     action_type: ActionType,
     score: ScoreResult,
     evidence_review: EvidenceReview,
@@ -397,6 +403,9 @@ def _human_review_required(
             and score.priority_band in {"critical", "high"}
         )
         or action_type in _REVIEW_ACTIONS
+        # The certification of a PQ/T hybrid component cannot be shown by the
+        # identifier, so review is required under every policy pack.
+        or classification.standard_status == STANDARDIZED_PQ_T_HYBRID
     )
 
 
@@ -452,6 +461,8 @@ def _classification_reason(classification: AlgorithmClassification) -> str:
         return "classification:quantum_vulnerable"
     if classification.standard_status == "standardized_pqc":
         return "classification:standardized_pqc"
+    if classification.standard_status == STANDARDIZED_PQ_T_HYBRID:
+        return "classification:standardized_pq_t_hybrid"
     if classification.standard_status == "standardized_symmetric":
         return "classification:standardized_symmetric"
     if classification.standard_status == "standardized_hash":

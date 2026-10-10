@@ -145,7 +145,7 @@ def test_observed_state_reports_scheme_fields() -> None:
 
     assert observed["scheme_type"] == "single"
     assert observed["components"] == []
-    assert observed["validation_component"] is None
+    assert observed["certification_component"] is None
 
 
 def test_value_outside_rfc8785_range_stops_generation() -> None:
@@ -303,7 +303,7 @@ def test_registry_reader_rejects_duplicate_keys() -> None:
         )
 
 
-def test_v0_3_changes_only_contract_fields_relative_to_v0_2() -> None:
+def test_decisions_for_sample_inventory_are_unchanged_since_v0_2() -> None:
     before = json.loads(V0_2_FIXTURE.read_text(encoding="utf-8"))
     # Reuse the snapshot recorded in the fixture. A file-backed snapshot
     # hashes the bytes on disk, which differ when a checkout uses CRLF line
@@ -312,17 +312,32 @@ def test_v0_3_changes_only_contract_fields_relative_to_v0_2() -> None:
         load_inventory(SAMPLE),
         input_snapshot=InputSnapshot(**before["input_snapshot"]),
     ).model_dump(mode="json")
-    contract_fields = {"pdr_version", "run_id", "registry_context", "engine"}
-    scheme_fields = {"scheme_type", "components", "validation_component"}
+    # Fields that identify the contract, engine, registry, or policy pack.
+    # The sample inventory has no PQ/T hybrid asset, so the policy pack 0.3
+    # rule does not apply and every decision field must be unchanged.
+    provenance_fields = {
+        "pdr_version",
+        "run_id",
+        "registry_context",
+        "engine",
+        "policy_context",
+        "record_integrity",
+    }
+    scheme_fields = {"scheme_type", "components", "certification_component"}
+    policy_identity = {"policy_pack_version", "policy_pack_hash", "standards_applied"}
 
     assert after["input_snapshot"] == before["input_snapshot"]
-    assert after["policy_context"] == before["policy_context"]
     assert len(after["records"]) == len(before["records"])
     for old, new in zip(before["records"], after["records"]):
-        old_rest = {k: v for k, v in old.items() if k not in contract_fields}
-        new_rest = {k: v for k, v in new.items() if k not in contract_fields}
-        del old_rest["record_integrity"], new_rest["record_integrity"]
+        old_rest = {k: v for k, v in old.items() if k not in provenance_fields}
+        new_rest = {k: v for k, v in new.items() if k not in provenance_fields}
         new_rest["observed_state"] = {
             k: v for k, v in new_rest["observed_state"].items() if k not in scheme_fields
         }
+        for rest in (old_rest, new_rest):
+            rest["policy_evaluation"] = {
+                k: v
+                for k, v in rest["policy_evaluation"].items()
+                if k not in policy_identity
+            }
         assert new_rest == old_rest

@@ -232,6 +232,15 @@ def _render_asset_finding(
     lines.append(f"- Primitive: {classification.primitive}")
     lines.append(f"- Quantum status: {classification.quantum_status}")
     lines.append(f"- Standard status: {classification.standard_status}")
+    if classification.scheme_type != "single":
+        lines.append(f"- Scheme type: {classification.scheme_type}")
+        lines.append(
+            "- Components (shared-secret order): "
+            f"{', '.join(classification.components)}"
+        )
+        lines.append(
+            f"- Certification component: {classification.certification_component}"
+        )
     lines.append(
         f"- Registry action: {classification.recommended_action}"
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from qstriage.algorithm_registry import load_registry
+from qstriage.algorithm_registry import SchemeType, load_registry, normalize_identifier
 
 
 SOURCE_NIST_IR_8547 = "NIST-IR-8547-IPD"
@@ -15,6 +15,8 @@ SOURCE_FIPS_197 = "NIST-FIPS-197"
 SOURCE_FIPS_180_4 = "NIST-FIPS-180-4"
 SOURCE_FIPS_202 = "NIST-FIPS-202"
 SOURCE_QSTRIAGE_SAFETY_POLICY = "QSTRIAGE-SAFETY-POLICY"
+
+STANDARDIZED_PQ_T_HYBRID = "standardized_pq_t_hybrid"
 
 IDENTIFIER_EXACT = "exact_identifier"
 IDENTIFIER_FAMILY_UNVERIFIED = "recognized_family_unverified_parameters"
@@ -33,6 +35,15 @@ SLH_DSA_PARAMETER_SETS = frozenset(
 _ML_KEM_IDENTIFIERS = frozenset(load_registry().entry("ml-kem").identifiers)
 _ML_DSA_IDENTIFIERS = frozenset(load_registry().entry("ml-dsa").identifiers)
 _SLH_DSA_IDENTIFIERS = frozenset(load_registry().entry("slh-dsa").identifiers)
+
+# Hybrid entries match only their exact identifiers, as spelled in the source
+# and normalized. Any other spelling stays under the PQC component guard.
+_HYBRID_ENTRY_BY_IDENTIFIER = {
+    normalize_identifier(identifier): entry.entry_id
+    for entry in load_registry().entries
+    if entry.scheme_type != SchemeType.single
+    for identifier in entry.identifiers
+}
 
 _CLASSICAL_KEY_ESTABLISHMENT_TOKENS = frozenset(
     {"DH", "DHE", "EDH", "ECDH", "ECDHE", "X25519", "CURVE25519"}
@@ -86,7 +97,8 @@ class AlgorithmClassification:
     identifier_resolution: str = IDENTIFIER_UNRECOGNIZED
     scheme_type: str = "single"
     components: tuple[str, ...] = ()
-    validation_component: str | None = None
+    certification_component: str | None = None
+    registry_entry_id: str = "unknown"
 
 
 def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
@@ -104,6 +116,10 @@ def classify_algorithm(algorithm: str | None) -> AlgorithmClassification:
 
     if normalized in _SLH_DSA_IDENTIFIERS:
         return _classification_from_entry("slh-dsa", original)
+
+    hybrid_entry = _HYBRID_ENTRY_BY_IDENTIFIER.get(normalized)
+    if hybrid_entry is not None:
+        return _classification_from_entry(hybrid_entry, original)
 
     pqc_family_entry = _recognized_pqc_family_entry(normalized)
     if pqc_family_entry is not None:
@@ -153,7 +169,8 @@ def _classification_from_entry(entry_id: str, original: str) -> AlgorithmClassif
         identifier_resolution=entry.identifier_resolution,
         scheme_type=entry.scheme_type.value,
         components=entry.components,
-        validation_component=entry.validation_component,
+        certification_component=entry.certification_component,
+        registry_entry_id=entry.entry_id,
     )
 
 
@@ -162,11 +179,7 @@ def _unknown_classification(original: str) -> AlgorithmClassification:
 
 
 def _normalize_algorithm(algorithm: str) -> str:
-    return re.sub(
-        r"[-_/\s]+",
-        "-",
-        algorithm.strip().upper(),
-    )
+    return normalize_identifier(algorithm)
 
 
 def requires_parameter_verification(classification: AlgorithmClassification) -> bool:

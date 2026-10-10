@@ -42,6 +42,7 @@ Risk attention is not execution authorization. A high score can coexist with a j
 | `classical_public_key` | Migration effort `high` or `critical` | `simulate_before_migration` |
 | `classical_public_key` | Other migration effort | `migration_planning` |
 | `standardized_pqc` | Any | `retain_monitor` |
+| `standardized_pq_t_hybrid` | Any | `retain_monitor`, with human review always required |
 | `standardized_symmetric` | Any | `key_strength_review` |
 | `standardized_hash` | Any | `primitive_review` |
 | Other unmapped status | Any | `manual_crypto_verification` |
@@ -121,7 +122,10 @@ Human review is required when any of these conditions is true:
 - policy evaluation requires human review,
 - confidence is below 0.75,
 - the risk-attention band is `critical` or `high` under the default threshold settings,
-- the action is `key_strength_review`, `primitive_review`, or `manual_crypto_verification`.
+- the action is `key_strength_review`, `primitive_review`, or `manual_crypto_verification`,
+- the classification is `standardized_pq_t_hybrid`. RFC 10024 Section 5 states
+  which component implementation must be certified, and an identifier cannot
+  show that it is. This condition applies under every policy pack.
 
 ## Reason codes
 
@@ -129,7 +133,7 @@ Reason codes are deterministic and grouped by namespace:
 
 | Namespace | Examples |
 |---|---|
-| `classification:` | `classification:unknown`, `classification:quantum_vulnerable`, `classification:standardized_pqc` |
+| `classification:` | `classification:unknown`, `classification:quantum_vulnerable`, `classification:standardized_pqc`, `classification:standardized_pq_t_hybrid` |
 | `evidence:` | `evidence:missing_data_class`, or another relevant evidence finding code |
 | `policy:` | `policy:<rule_id>` for each applied finding |
 | `confidence:` | `confidence:below_decision_grade_threshold` |

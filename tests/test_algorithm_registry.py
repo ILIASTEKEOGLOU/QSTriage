@@ -22,6 +22,9 @@ EXPECTED_ENTRY_IDS = {
     "ml-kem-family-unverified",
     "ml-dsa-family-unverified",
     "slh-dsa-family-unverified",
+    "tls-group-x25519mlkem768",
+    "tls-group-secp256r1mlkem768",
+    "tls-group-secp384r1mlkem1024",
     "classical-public-key-composite",
     "rsa",
     "dh",
@@ -45,9 +48,9 @@ def _raw_registry() -> dict[str, object]:
 def test_bundled_registry_loads_with_expected_identity() -> None:
     registry = load_registry()
 
-    assert registry.registry_schema_version == "1"
+    assert registry.registry_schema_version == "2"
     assert registry.registry_id == "qstriage-algorithms"
-    assert registry.registry_version == "1"
+    assert registry.registry_version == "2"
     assert registry.signatures == ()
     assert {entry.entry_id for entry in registry.entries} == EXPECTED_ENTRY_IDS
 
@@ -131,7 +134,7 @@ def test_unknown_registry_field_is_rejected() -> None:
 
 def test_unsupported_schema_version_is_rejected() -> None:
     raw = _raw_registry()
-    raw["registry_schema_version"] = "2"
+    raw["registry_schema_version"] = "1"
 
     with pytest.raises(ValidationError, match="schema version"):
         AlgorithmRegistry.model_validate(raw)
@@ -142,6 +145,7 @@ def test_unsupported_schema_version_is_rejected() -> None:
 # qstriage/algorithm_registry.json and add the new pair here.
 REGISTRY_HASH_BY_VERSION = {
     "1": "sha256:44a93da463b6a9a0888a67bc23c0e915aa671508fba5c86d6af9c8590a629546",
+    "2": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c",
 }
 
 
@@ -154,3 +158,42 @@ def test_registry_content_change_requires_a_new_registry_version() -> None:
     assert registry_hash() == REGISTRY_HASH_BY_VERSION[version], (
         "Registry content changed without a new registry_version"
     )
+
+
+def _hybrid_raw(**changes: object) -> dict[str, object]:
+    return _with_entry_change("tls-group-x25519mlkem768", **changes)
+
+
+def test_hybrid_certification_component_must_be_a_component() -> None:
+    raw = _hybrid_raw(certification_component="X448")
+
+    with pytest.raises(ValidationError, match="certification_component"):
+        AlgorithmRegistry.model_validate(raw)
+
+
+def test_hybrid_components_must_not_repeat() -> None:
+    raw = _hybrid_raw(components=["ML-KEM-768", "ML-KEM-768"])
+
+    with pytest.raises(ValidationError, match="repeats a component"):
+        AlgorithmRegistry.model_validate(raw)
+
+
+def test_identifiers_are_unique_after_normalization() -> None:
+    raw = _with_entry_change("unknown", identifiers=["x25519mlkem768"])
+
+    with pytest.raises(ValidationError, match="appears in registry entries"):
+        AlgorithmRegistry.model_validate(raw)
+
+
+def test_empty_excerpt_is_rejected() -> None:
+    raw = _raw_registry()
+    raw["entries"][0]["sources"][0]["excerpt"] = ""
+
+    with pytest.raises(ValidationError):
+        AlgorithmRegistry.model_validate(raw)
+
+
+def test_source_ids_are_listed_once_in_first_seen_order() -> None:
+    entry = load_registry().entry("tls-group-x25519mlkem768")
+
+    assert entry.source_ids == ("RFC-10024", "NIST-SP-800-227", "NIST-FIPS-203")

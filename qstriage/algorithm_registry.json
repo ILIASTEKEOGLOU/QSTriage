@@ -1,7 +1,7 @@
 {
-  "registry_schema_version": "1",
+  "registry_schema_version": "2",
   "registry_id": "qstriage-algorithms",
-  "registry_version": "1",
+  "registry_version": "2",
   "entries": [
     {
       "entry_id": "ml-kem",
@@ -24,12 +24,13 @@
           "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
           "section": null,
           "status": "final",
-          "date": "2024-08"
+          "date": "2024-08",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -53,12 +54,13 @@
           "title": "Module-Lattice-Based Digital Signature Standard",
           "section": null,
           "status": "final",
-          "date": "2024-08"
+          "date": "2024-08",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -91,12 +93,13 @@
           "title": "Stateless Hash-Based Digital Signature Standard",
           "section": null,
           "status": "final",
-          "date": "2024-08"
+          "date": "2024-08",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -116,19 +119,21 @@
           "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
           "section": null,
           "status": "final",
-          "date": "2024-08"
+          "date": "2024-08",
+          "excerpt": null
         },
         {
           "source_id": "QSTRIAGE-SAFETY-POLICY",
           "title": "QSTriage fail-closed classification policy",
           "section": null,
           "status": "project_policy",
-          "date": null
+          "date": null,
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -148,19 +153,21 @@
           "title": "Module-Lattice-Based Digital Signature Standard",
           "section": null,
           "status": "final",
-          "date": "2024-08"
+          "date": "2024-08",
+          "excerpt": null
         },
         {
           "source_id": "QSTRIAGE-SAFETY-POLICY",
           "title": "QSTriage fail-closed classification policy",
           "section": null,
           "status": "project_policy",
-          "date": null
+          "date": null,
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -180,19 +187,258 @@
           "title": "Stateless Hash-Based Digital Signature Standard",
           "section": null,
           "status": "final",
-          "date": "2024-08"
+          "date": "2024-08",
+          "excerpt": null
         },
         {
           "source_id": "QSTRIAGE-SAFETY-POLICY",
           "title": "QSTriage fail-closed classification policy",
           "section": null,
           "status": "project_policy",
-          "date": null
+          "date": null,
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "tls-group-x25519mlkem768",
+      "identifiers": [
+        "X25519MLKEM768"
+      ],
+      "scheme_type": "pq_t_hybrid",
+      "algorithm_family": "pq_t_hybrid_kem",
+      "primitive": "key_establishment",
+      "quantum_status": "quantum_resistant",
+      "standard_status": "standardized_pq_t_hybrid",
+      "recommended_action": "retain_with_certification_review",
+      "rationale": "X25519MLKEM768 is a PQ/T hybrid key agreement group defined in RFC 10024 that combines ML-KEM-768 with X25519 ECDHE.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 3",
+          "excerpt": "[RFC9954] also defines a \"hybrid\" key exchange as the simultaneous use of multiple key exchange algorithms, with their outputs combined to provide security as long as at least one of the component algorithms remains secure, even if the others are compromised."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 4.3",
+          "excerpt": "For X25519MLKEM768, the shared secret is the concatenation of the ML-KEM shared secret and the X25519 shared secret."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 5, introduction",
+          "excerpt": "This section provides informal notes on how the hybrid key agreement mechanisms defined in this document relate to existing NIST guidance on key derivation and hybrid key establishment."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 5, FIPS-compliance",
+          "excerpt": "In contrast, for X25519MLKEM768, the ML-KEM implementation must be certified."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 7",
+          "excerpt": "These identifiers are to be used with the final version of ML-KEM ratified by NIST, which is specified in [NIST-FIPS-203]."
+        },
+        {
+          "source_id": "NIST-SP-800-227",
+          "title": "Recommendations for Key-Encapsulation Mechanisms",
+          "section": "Section 4.6.2",
+          "status": "final",
+          "date": "2025-09",
+          "excerpt": "This publication approves the use of the key combiner (14) for any t > 1 if at least one shared secret (i.e., S_j for some j) is generated from the key-establishment methods in SP 800-56A [1] or SP 800-56B [2] or an approved KEM."
+        },
+        {
+          "source_id": "NIST-FIPS-203",
+          "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08",
+          "excerpt": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [
+        "ML-KEM-768",
+        "X25519"
+      ],
+      "certification_component": "ML-KEM-768",
+      "deadlines": []
+    },
+    {
+      "entry_id": "tls-group-secp256r1mlkem768",
+      "identifiers": [
+        "SecP256r1MLKEM768"
+      ],
+      "scheme_type": "pq_t_hybrid",
+      "algorithm_family": "pq_t_hybrid_kem",
+      "primitive": "key_establishment",
+      "quantum_status": "quantum_resistant",
+      "standard_status": "standardized_pq_t_hybrid",
+      "recommended_action": "retain_with_certification_review",
+      "rationale": "SecP256r1MLKEM768 is a PQ/T hybrid key agreement group defined in RFC 10024 that combines secp256r1 ECDHE with ML-KEM-768.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 3",
+          "excerpt": "[RFC9954] also defines a \"hybrid\" key exchange as the simultaneous use of multiple key exchange algorithms, with their outputs combined to provide security as long as at least one of the component algorithms remains secure, even if the others are compromised."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 4.3",
+          "excerpt": "For SecP256r1MLKEM768, the shared secret is the concatenation of the ECDHE and ML-KEM shared secrets."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 5, introduction",
+          "excerpt": "This section provides informal notes on how the hybrid key agreement mechanisms defined in this document relate to existing NIST guidance on key derivation and hybrid key establishment."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 5, FIPS-compliance",
+          "excerpt": "This means that for SecP256r1MLKEM768 and SecP384r1MLKEM1024, the ECDHE implementation must be certified, whereas the ML-KEM implementation does not require certification."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 7",
+          "excerpt": "These identifiers are to be used with the final version of ML-KEM ratified by NIST, which is specified in [NIST-FIPS-203]."
+        },
+        {
+          "source_id": "NIST-SP-800-227",
+          "title": "Recommendations for Key-Encapsulation Mechanisms",
+          "section": "Section 4.6.2",
+          "status": "final",
+          "date": "2025-09",
+          "excerpt": "This publication approves the use of the key combiner (14) for any t > 1 if at least one shared secret (i.e., S_j for some j) is generated from the key-establishment methods in SP 800-56A [1] or SP 800-56B [2] or an approved KEM."
+        },
+        {
+          "source_id": "NIST-FIPS-203",
+          "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08",
+          "excerpt": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [
+        "secp256r1",
+        "ML-KEM-768"
+      ],
+      "certification_component": "secp256r1",
+      "deadlines": []
+    },
+    {
+      "entry_id": "tls-group-secp384r1mlkem1024",
+      "identifiers": [
+        "SecP384r1MLKEM1024"
+      ],
+      "scheme_type": "pq_t_hybrid",
+      "algorithm_family": "pq_t_hybrid_kem",
+      "primitive": "key_establishment",
+      "quantum_status": "quantum_resistant",
+      "standard_status": "standardized_pq_t_hybrid",
+      "recommended_action": "retain_with_certification_review",
+      "rationale": "SecP384r1MLKEM1024 is a PQ/T hybrid key agreement group defined in RFC 10024 that combines secp384r1 ECDHE with ML-KEM-1024.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 3",
+          "excerpt": "[RFC9954] also defines a \"hybrid\" key exchange as the simultaneous use of multiple key exchange algorithms, with their outputs combined to provide security as long as at least one of the component algorithms remains secure, even if the others are compromised."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 4.3",
+          "excerpt": "For SecP384r1MLKEM1024, the shared secret is the concatenation of the ECDHE and ML-KEM shared secrets."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 5, introduction",
+          "excerpt": "This section provides informal notes on how the hybrid key agreement mechanisms defined in this document relate to existing NIST guidance on key derivation and hybrid key establishment."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 5, FIPS-compliance",
+          "excerpt": "This means that for SecP256r1MLKEM768 and SecP384r1MLKEM1024, the ECDHE implementation must be certified, whereas the ML-KEM implementation does not require certification."
+        },
+        {
+          "source_id": "RFC-10024",
+          "title": "Post-Quantum Traditional (PQ/T) Hybrid Key Agreement Mechanisms for TLS 1.3",
+          "status": "final",
+          "date": "2026-08",
+          "section": "Section 7",
+          "excerpt": "These identifiers are to be used with the final version of ML-KEM ratified by NIST, which is specified in [NIST-FIPS-203]."
+        },
+        {
+          "source_id": "NIST-SP-800-227",
+          "title": "Recommendations for Key-Encapsulation Mechanisms",
+          "section": "Section 4.6.2",
+          "status": "final",
+          "date": "2025-09",
+          "excerpt": "This publication approves the use of the key combiner (14) for any t > 1 if at least one shared secret (i.e., S_j for some j) is generated from the key-establishment methods in SP 800-56A [1] or SP 800-56B [2] or an approved KEM."
+        },
+        {
+          "source_id": "NIST-FIPS-203",
+          "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08",
+          "excerpt": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [
+        "secp384r1",
+        "ML-KEM-1024"
+      ],
+      "certification_component": "secp384r1",
       "deadlines": []
     },
     {
@@ -212,12 +458,13 @@
           "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
           "section": null,
           "status": "draft",
-          "date": "2024-11"
+          "date": "2024-11",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -237,12 +484,13 @@
           "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
           "section": null,
           "status": "draft",
-          "date": "2024-11"
+          "date": "2024-11",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -262,12 +510,13 @@
           "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
           "section": null,
           "status": "draft",
-          "date": "2024-11"
+          "date": "2024-11",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -287,12 +536,13 @@
           "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
           "section": null,
           "status": "draft",
-          "date": "2024-11"
+          "date": "2024-11",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -312,19 +562,21 @@
           "title": "Advanced Encryption Standard (AES)",
           "section": null,
           "status": "final",
-          "date": "2001-11"
+          "date": "2001-11",
+          "excerpt": null
         },
         {
           "source_id": "NIST-SP-800-57-PART-1-REV-5",
           "title": "Recommendation for Key Management: Part 1 - General",
           "section": null,
           "status": "final",
-          "date": "2020-05"
+          "date": "2020-05",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -344,12 +596,13 @@
           "title": "SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions",
           "section": null,
           "status": "final",
-          "date": "2015-08"
+          "date": "2015-08",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -369,12 +622,13 @@
           "title": "Secure Hash Standard (SHS)",
           "section": null,
           "status": "final",
-          "date": "2015-08"
+          "date": "2015-08",
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     },
     {
@@ -394,12 +648,13 @@
           "title": "QSTriage fail-closed classification policy",
           "section": null,
           "status": "project_policy",
-          "date": null
+          "date": null,
+          "excerpt": null
         }
       ],
       "lifecycle": "published",
       "components": [],
-      "validation_component": null,
+      "certification_component": null,
       "deadlines": []
     }
   ],
