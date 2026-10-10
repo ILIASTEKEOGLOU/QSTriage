@@ -169,6 +169,7 @@ them or continue with a partial decision result.
 | CycloneDX CBOM JSON | 32 MiB |
 | CBOM components | 10,000 |
 | Configuration YAML | 1 MiB |
+| PDR JSON read by `pdr verify` | 64 MiB |
 | Assets per inventory | 1 to 1,000 |
 | Dependencies per inventory | 10,000 |
 | Migration scenarios | 100 |
