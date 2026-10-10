@@ -4,11 +4,17 @@
 document and reports each check. It reads the file once within a size limit,
 rejects duplicate JSON keys and non-finite numbers, and never writes.
 
-Each PDR contract version is verified under its own rules. PDR 0.2 hashes the
-output of Python ``json.dumps(sort_keys=True, separators=(",", ":"),
-ensure_ascii=False)`` encoded as UTF-8. That rule is frozen here so that 0.2
-documents stay verifiable after later contract versions change the
-serialization.
+Each PDR contract version is verified under its own rules:
+
+- PDR 0.2 hashes the output of Python ``json.dumps(sort_keys=True,
+  separators=(",", ":"), ensure_ascii=False)`` encoded as UTF-8. That rule is
+  frozen here so that 0.2 documents stay verifiable.
+- PDR 0.3 hashes the RFC 8785 canonical form, adds ``registry_context``, and
+  derives ``run_id`` from the source, policy pack, and registry hashes.
+
+Verification proves that a document is internally consistent. It does not
+prove which registry or policy content produced it; the recorded hashes
+identify that content.
 """
 
 from __future__ import annotations
@@ -18,12 +24,13 @@ from dataclasses import dataclass, field
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
+from qstriage.canonical_json import CanonicalizationError, canonical_sha256
 from qstriage.limits import MAX_PDR_FILE_BYTES, ResourceLimitError, read_text_limited
 
 
-SUPPORTED_PDR_VERSIONS = frozenset({"0.2"})
+SUPPORTED_PDR_VERSIONS = frozenset({"0.2", "0.3"})
 
 
 class PDRVerificationInputError(ValueError):
@@ -98,7 +105,9 @@ def verify_pdr_document(document: Any) -> VerificationResult:
         raise PDRVerificationInputError(
             f"Unsupported PDR version for verification: {version!r}"
         )
-    return _verify_v0_2(document)
+    if version == "0.2":
+        return _verify_v0_2(document)
+    return _verify_v0_3(document)
 
 
 def pdr_v0_2_hash(value: Any) -> str:
@@ -111,22 +120,71 @@ def pdr_v0_2_hash(value: Any) -> str:
     return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def pdr_v0_3_hash(value: Any) -> str:
+    try:
+        return canonical_sha256(value)
+    except CanonicalizationError as error:
+        raise PDRVerificationInputError(
+            f"PDR content cannot be canonicalized under RFC 8785: {error}"
+        ) from error
+
+
 def _verify_v0_2(document: dict[str, Any]) -> VerificationResult:
+    run_id_input = {
+        "source_hash": document["input_snapshot"].get("source_hash"),
+        "policy_pack_hash": document["policy_context"].get("policy_pack_hash"),
+        "pdr_version": document["pdr_version"],
+    }
+    return _verify_document(
+        document,
+        hash_value=pdr_v0_2_hash,
+        run_id_input=run_id_input,
+        shared_keys=("pdr_version", "run_id", "input_snapshot", "policy_context"),
+    )
+
+
+def _verify_v0_3(document: dict[str, Any]) -> VerificationResult:
+    registry_context = document.get("registry_context")
+    if not isinstance(registry_context, dict):
+        raise PDRVerificationInputError(
+            "PDR document field 'registry_context' is missing or has the wrong type."
+        )
+    run_id_input = {
+        "source_hash": document["input_snapshot"].get("source_hash"),
+        "policy_pack_hash": document["policy_context"].get("policy_pack_hash"),
+        "registry_hash": registry_context.get("registry_hash"),
+        "pdr_version": document["pdr_version"],
+    }
+    return _verify_document(
+        document,
+        hash_value=pdr_v0_3_hash,
+        run_id_input=run_id_input,
+        shared_keys=(
+            "pdr_version",
+            "run_id",
+            "input_snapshot",
+            "policy_context",
+            "registry_context",
+        ),
+    )
+
+
+def _verify_document(
+    document: dict[str, Any],
+    *,
+    hash_value: Callable[[Any], str],
+    run_id_input: dict[str, Any],
+    shared_keys: tuple[str, ...],
+) -> VerificationResult:
     checks: list[VerificationCheck] = []
 
     neutral = copy.deepcopy(document)
     neutral["document_hash"] = None
     checks.append(
-        _compare("document_hash", "document", document["document_hash"], pdr_v0_2_hash(neutral))
+        _compare("document_hash", "document", document["document_hash"], hash_value(neutral))
     )
 
-    expected_run_id = "run:" + pdr_v0_2_hash(
-        {
-            "source_hash": document["input_snapshot"].get("source_hash"),
-            "policy_pack_hash": document["policy_context"].get("policy_pack_hash"),
-            "pdr_version": document["pdr_version"],
-        }
-    ).split(":", 1)[1][:16]
+    expected_run_id = "run:" + hash_value(run_id_input).split(":", 1)[1][:16]
     checks.append(_compare("run_id", "document", document["run_id"], expected_run_id))
 
     for index, record in enumerate(document["records"]):
@@ -143,9 +201,9 @@ def _verify_v0_2(document: dict[str, Any]) -> VerificationResult:
         neutral_record = copy.deepcopy(record)
         neutral_record["record_integrity"]["record_hash"] = None
         checks.append(
-            _compare("record_hash", subject, stated, pdr_v0_2_hash(neutral_record))
+            _compare("record_hash", subject, stated, hash_value(neutral_record))
         )
-        for key in ("pdr_version", "run_id", "input_snapshot", "policy_context"):
+        for key in shared_keys:
             checks.append(
                 VerificationCheck(
                     f"record_{key}_matches_document",

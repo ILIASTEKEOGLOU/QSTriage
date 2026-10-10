@@ -409,8 +409,8 @@ def test_pdr_projects_canonical_decision_for_score_action_divergence() -> None:
     payments = record_by_asset["payments-api"]
     ot_gateway = record_by_asset["ot-gateway"]
 
-    assert document.pdr_version == "0.2"
-    assert payments.pdr_version == "0.2"
+    assert document.pdr_version == "0.3"
+    assert payments.pdr_version == "0.3"
     assert payments.decision.risk_attention_score == 81.0
     assert payments.decision.risk_attention_band == "high"
     assert payments.decision.execution_state.value == "justified"

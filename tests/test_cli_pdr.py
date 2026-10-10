@@ -29,7 +29,7 @@ def test_pdr_generate_inventory_writes_json_document(tmp_path: Path) -> None:
 
     document = json.loads(output.read_text(encoding="utf-8"))
 
-    assert document["pdr_version"] == "0.2"
+    assert document["pdr_version"] == "0.3"
     assert document["input_snapshot"]["source_type"] == "qstriage_inventory"
     expected_source_hash = (
         "sha256:"

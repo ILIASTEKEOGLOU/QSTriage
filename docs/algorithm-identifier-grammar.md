@@ -206,7 +206,7 @@ The grammar does not:
   `ML-KEM-768+X25519`; the current data model has no hybrid-family result;
 - infer runtime implementation, key validity, protocol role, or policy
   approval from an identifier string;
-- change the policy-pack version, scoring formula, or PDR 0.2 schema.
+- change the policy-pack version, scoring formula, or PDR schema.
 
 The deferred curve identifiers remain `unrecognized_identifier` until a
 versioned, provenance-aware registry adds them. Conservative unknown handling
