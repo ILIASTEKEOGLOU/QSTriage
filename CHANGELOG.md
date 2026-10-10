@@ -4,6 +4,10 @@
 
 ### Added
 
+- Added a bundled, versioned algorithm registry
+  (`qstriage/algorithm_registry.json`) that holds classification data and
+  source metadata. Identifier matching stays in `qstriage/standards.py`.
+  Classification output and PDR output are unchanged.
 - The Evidence Closure MCP server supports mcp 2.x in addition to mcp 1.x. The
   `mcp` and `dev` extras accept `mcp>=1.27,<3`. In mcp 2.x, `FastMCP` was
   renamed to `MCPServer`; the server selects the available class at import.

@@ -1,0 +1,407 @@
+{
+  "registry_schema_version": "1",
+  "registry_id": "qstriage-algorithms",
+  "registry_version": "1",
+  "entries": [
+    {
+      "entry_id": "ml-kem",
+      "identifiers": [
+        "ML-KEM-1024",
+        "ML-KEM-512",
+        "ML-KEM-768"
+      ],
+      "scheme_type": "single",
+      "algorithm_family": "ML-KEM",
+      "primitive": "key_encapsulation",
+      "quantum_status": "quantum_resistant",
+      "standard_status": "standardized_pqc",
+      "recommended_action": "acceptable_pqc_kem",
+      "rationale": "ML-KEM is classified as a standardized post-quantum key encapsulation mechanism.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-203",
+          "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "ml-dsa",
+      "identifiers": [
+        "ML-DSA-44",
+        "ML-DSA-65",
+        "ML-DSA-87"
+      ],
+      "scheme_type": "single",
+      "algorithm_family": "ML-DSA",
+      "primitive": "digital_signature",
+      "quantum_status": "quantum_resistant",
+      "standard_status": "standardized_pqc",
+      "recommended_action": "acceptable_pqc_signature",
+      "rationale": "ML-DSA is classified as a standardized post-quantum digital signature algorithm.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-204",
+          "title": "Module-Lattice-Based Digital Signature Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "slh-dsa",
+      "identifiers": [
+        "SLH-DSA-SHA2-128F",
+        "SLH-DSA-SHA2-128S",
+        "SLH-DSA-SHA2-192F",
+        "SLH-DSA-SHA2-192S",
+        "SLH-DSA-SHA2-256F",
+        "SLH-DSA-SHA2-256S",
+        "SLH-DSA-SHAKE-128F",
+        "SLH-DSA-SHAKE-128S",
+        "SLH-DSA-SHAKE-192F",
+        "SLH-DSA-SHAKE-192S",
+        "SLH-DSA-SHAKE-256F",
+        "SLH-DSA-SHAKE-256S"
+      ],
+      "scheme_type": "single",
+      "algorithm_family": "SLH-DSA",
+      "primitive": "digital_signature",
+      "quantum_status": "quantum_resistant",
+      "standard_status": "standardized_pqc",
+      "recommended_action": "acceptable_pqc_signature_with_operational_review",
+      "rationale": "SLH-DSA is classified as a standardized stateless hash-based post-quantum digital signature algorithm. Later report layers should preserve operational caution for size and performance impact.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-205",
+          "title": "Stateless Hash-Based Digital Signature Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "ml-kem-family-unverified",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "ML-KEM",
+      "primitive": "key_encapsulation",
+      "quantum_status": "unknown",
+      "standard_status": "unknown",
+      "recommended_action": "verify_exact_parameter_set_before_classification",
+      "rationale": "The identifier matches the ML-KEM family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+      "identifier_resolution": "recognized_family_unverified_parameters",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-203",
+          "title": "Module-Lattice-Based Key-Encapsulation Mechanism Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08"
+        },
+        {
+          "source_id": "QSTRIAGE-SAFETY-POLICY",
+          "title": "QSTriage fail-closed classification policy",
+          "section": null,
+          "status": "project_policy",
+          "date": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "ml-dsa-family-unverified",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "ML-DSA",
+      "primitive": "digital_signature",
+      "quantum_status": "unknown",
+      "standard_status": "unknown",
+      "recommended_action": "verify_exact_parameter_set_before_classification",
+      "rationale": "The identifier matches the ML-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+      "identifier_resolution": "recognized_family_unverified_parameters",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-204",
+          "title": "Module-Lattice-Based Digital Signature Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08"
+        },
+        {
+          "source_id": "QSTRIAGE-SAFETY-POLICY",
+          "title": "QSTriage fail-closed classification policy",
+          "section": null,
+          "status": "project_policy",
+          "date": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "slh-dsa-family-unverified",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "SLH-DSA",
+      "primitive": "digital_signature",
+      "quantum_status": "unknown",
+      "standard_status": "unknown",
+      "recommended_action": "verify_exact_parameter_set_before_classification",
+      "rationale": "The identifier matches the SLH-DSA family boundary, but its exact parameter set is missing or is not supported by the current QSTriage standards registry. Exact parameter verification is required before a quantum or standards classification can be assigned.",
+      "identifier_resolution": "recognized_family_unverified_parameters",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-205",
+          "title": "Stateless Hash-Based Digital Signature Standard",
+          "section": null,
+          "status": "final",
+          "date": "2024-08"
+        },
+        {
+          "source_id": "QSTRIAGE-SAFETY-POLICY",
+          "title": "QSTriage fail-closed classification policy",
+          "section": null,
+          "status": "project_policy",
+          "date": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "classical-public-key-composite",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "classical_public_key_composite",
+      "primitive": "key_establishment_and_signature",
+      "quantum_status": "quantum_vulnerable",
+      "standard_status": "classical_public_key",
+      "recommended_action": "migrate_to_hybrid_or_pqc_path",
+      "rationale": "The algorithm string combines classical public-key key establishment and/or signature components and is classified as quantum-vulnerable for PQC migration planning.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-IR-8547-IPD",
+          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
+          "section": null,
+          "status": "draft",
+          "date": "2024-11"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "rsa",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "RSA",
+      "primitive": "public_key_encryption_or_signature",
+      "quantum_status": "quantum_vulnerable",
+      "standard_status": "classical_public_key",
+      "recommended_action": "migrate_to_hybrid_or_pqc_path",
+      "rationale": "RSA is classified as quantum-vulnerable public-key cryptography for PQC migration planning.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-IR-8547-IPD",
+          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
+          "section": null,
+          "status": "draft",
+          "date": "2024-11"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "dh",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "DH",
+      "primitive": "key_establishment",
+      "quantum_status": "quantum_vulnerable",
+      "standard_status": "classical_public_key",
+      "recommended_action": "migrate_to_hybrid_or_pqc_key_establishment",
+      "rationale": "Finite-field Diffie-Hellman is classified as quantum-vulnerable key establishment for PQC migration planning.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-IR-8547-IPD",
+          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
+          "section": null,
+          "status": "draft",
+          "date": "2024-11"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "ecc",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "ECC",
+      "primitive": "key_establishment_or_signature",
+      "quantum_status": "quantum_vulnerable",
+      "standard_status": "classical_public_key",
+      "recommended_action": "migrate_to_hybrid_or_pqc_path",
+      "rationale": "Elliptic-curve public-key cryptography is classified as quantum-vulnerable for PQC migration planning.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-IR-8547-IPD",
+          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
+          "section": null,
+          "status": "draft",
+          "date": "2024-11"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "aes",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "AES",
+      "primitive": "symmetric_encryption",
+      "quantum_status": "symmetric_grover_affected",
+      "standard_status": "standardized_symmetric",
+      "recommended_action": "review_key_strength_not_public_key_migration",
+      "rationale": "AES is classified as symmetric encryption and is not treated as a Shor-broken public-key migration target.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-197",
+          "title": "Advanced Encryption Standard (AES)",
+          "section": null,
+          "status": "final",
+          "date": "2001-11"
+        },
+        {
+          "source_id": "NIST-SP-800-57-PART-1-REV-5",
+          "title": "Recommendation for Key Management: Part 1 - General",
+          "section": null,
+          "status": "final",
+          "date": "2020-05"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "sha3",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "SHA-3",
+      "primitive": "hash_or_xof",
+      "quantum_status": "not_public_key",
+      "standard_status": "standardized_hash",
+      "recommended_action": "classify_separately_from_pqc_key_migration",
+      "rationale": "SHA-3 and SHAKE are classified as hash/XOF algorithms rather than public-key establishment or signature algorithms.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-202",
+          "title": "SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions",
+          "section": null,
+          "status": "final",
+          "date": "2015-08"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "sha1-sha2",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "SHA-1/SHA-2",
+      "primitive": "hash",
+      "quantum_status": "not_public_key",
+      "standard_status": "standardized_hash",
+      "recommended_action": "classify_separately_from_pqc_key_migration",
+      "rationale": "SHA-1 and SHA-2 family algorithms are classified as hash algorithms rather than public-key establishment or signature algorithms.",
+      "identifier_resolution": "exact_identifier",
+      "sources": [
+        {
+          "source_id": "NIST-FIPS-180-4",
+          "title": "Secure Hash Standard (SHS)",
+          "section": null,
+          "status": "final",
+          "date": "2015-08"
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    },
+    {
+      "entry_id": "unknown",
+      "identifiers": [],
+      "scheme_type": "single",
+      "algorithm_family": "unknown",
+      "primitive": "unknown",
+      "quantum_status": "unknown",
+      "standard_status": "unknown",
+      "recommended_action": "manual_review_required",
+      "rationale": "The algorithm string is not recognized by the current QSTriage standards registry. Conservative human review is required.",
+      "identifier_resolution": "unrecognized_identifier",
+      "sources": [
+        {
+          "source_id": "QSTRIAGE-SAFETY-POLICY",
+          "title": "QSTriage fail-closed classification policy",
+          "section": null,
+          "status": "project_policy",
+          "date": null
+        }
+      ],
+      "lifecycle": "published",
+      "components": [],
+      "validation_component": null,
+      "deadlines": []
+    }
+  ],
+  "signatures": []
+}
