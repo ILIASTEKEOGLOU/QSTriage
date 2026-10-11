@@ -1,6 +1,46 @@
 # Changelog
 
-## Unreleased
+## v1.4.0 - 2026-10-11
+
+### Added
+
+- Added `qstriage pdr verify`, which recomputes the hashes and `run_id` of a
+  PDR document, checks record consistency, and reports each check as text or
+  JSON. PDR 0.2 and 0.3 documents are each verified under their own rules. It
+  reads at most 64 MiB, rejects duplicate keys and non-finite numbers, and
+  never writes.
+- Added `qstriage pdr diff BEFORE AFTER`, which verifies two PDR documents
+  and compares them record by record. The Markdown report states how many
+  decisions changed, what differs between the two runs (input file, policy
+  pack, algorithm registry, QSTriage version, PDR format), and, for each
+  changed record, the action, algorithm status, human-review requirement,
+  and reason codes. Fields present in only one PDR format version are listed
+  separately as format differences. `--format json` gives the same content
+  with hashes. A document that fails verification stops the command with exit
+  code 1 and no comparison.
+- Added a bundled, versioned algorithm registry
+  (`qstriage/algorithm_registry.json`, schema version 2, content version 2)
+  that holds classification data, source metadata, and verbatim excerpts of
+  the cited source sections. Identifier matching stays in
+  `qstriage/standards.py`. Identifiers are unique after normalization, and
+  the file is rejected if it contains duplicate JSON keys.
+- Added an RFC 8785 (JSON Canonicalization Scheme) serializer in
+  `qstriage/canonical_json.py`, tested against the RFC examples and against
+  output from the independent `rfc8785` package. It is used for all PDR 0.3
+  hashes and for the registry hash.
+- Added registry entries for the three RFC 10024 PQ/T hybrid groups, with
+  components in shared-secret order (RFC 10024 Section 4.3), the
+  certification component (RFC 10024 Section 5), and verbatim excerpts from
+  RFC 10024 and NIST SP 800-227 Section 4.6.2. PDR target-state suggestions
+  for these groups name the components, quote RFC 10024 Section 5, and state
+  which component implementation must be shown to be certified. Markdown
+  reports list the components and the certification component.
+- The Evidence Closure MCP server supports mcp 2.x in addition to mcp 1.x. The
+  `mcp` and `dev` extras accept `mcp>=1.27,<3`. In mcp 2.x, `FastMCP` was
+  renamed to `MCPServer`; the server selects the available class at import.
+- Added a security alert workflow that opens or updates a tracking issue when
+  the scheduled Security run fails on `main`. It holds only `issues: write`
+  and runs no repository code.
 
 ### Changed
 
@@ -17,9 +57,6 @@
     `certification_component`.
   - Values that RFC 8785 cannot represent, such as integers above 2^53,
     stop PDR generation.
-- `qstriage pdr verify` verifies PDR 0.2 and 0.3 documents, each under its
-  own rules.
-- The algorithm registry file is rejected if it contains duplicate JSON keys.
 - `X25519MLKEM768`, `SecP256r1MLKEM768`, and `SecP384r1MLKEM1024` are
   classified as `pq_t_hybrid_kem`, `quantum_resistant`,
   `standardized_pq_t_hybrid` instead of `unknown`. Their canonical action is
@@ -29,55 +66,8 @@
   `unknown`.
 - Built-in policy pack `nist-pqc-basic` is version 0.3. It adds the rule
   `standardized_pq_t_hybrid_requires_certification_evidence_review` and the
-  reference `RFC-10024`. `policy_pack_hash`, and therefore PDR `run_id` and
-  hashes, change. Decisions for assets that are not RFC 10024 groups are
-  unchanged.
-- Algorithm registry schema version 2 and content version 2. Registry sources
-  may carry an `excerpt`, verbatim text from the cited section. Hybrid entries
-  must name one of their components as `certification_component`.
-  Identifiers are unique after normalization.
-
-### Added
-
-- Added `qstriage pdr diff BEFORE AFTER`, which verifies two PDR documents
-  and compares them record by record. The Markdown report states how many
-  decisions changed, what differs between the two runs (input file, policy
-  pack, algorithm registry, QSTriage version, PDR format), and, for each
-  changed record, the action, algorithm status, human-review requirement,
-  and reason codes. Fields present in only one PDR format version are listed
-  separately as format differences. `--format json` gives the same content
-  with hashes. A document that fails verification stops the command with exit
-  code 1 and no comparison.
-- Added registry entries for the three RFC 10024 PQ/T hybrid groups, with
-  components in shared-secret order (RFC 10024 Section 4.3), the
-  certification component (RFC 10024 Section 5), and verbatim excerpts from
-  RFC 10024 and NIST SP 800-227 Section 4.6.2.
-- PDR target-state suggestions for these groups name the components, quote
-  RFC 10024 Section 5, and state which component implementation must be shown
-  to be certified. Markdown reports list the components and the certification
-  component.
-- Added `qstriage pdr verify`, which recomputes the hashes and `run_id` of a
-  PDR document, checks record consistency, and reports each check as text or
-  JSON. It reads at most 64 MiB, rejects duplicate keys and non-finite
-  numbers, and never writes.
-- Added an RFC 8785 (JSON Canonicalization Scheme) serializer in
-  `qstriage/canonical_json.py`, tested against the RFC examples and against
-  output from the independent `rfc8785` package. PDR 0.2 hashing is
-  unchanged.
-- Added a bundled, versioned algorithm registry
-  (`qstriage/algorithm_registry.json`) that holds classification data and
-  source metadata. Identifier matching stays in `qstriage/standards.py`.
-  Classification output and PDR output are unchanged.
-- The Evidence Closure MCP server supports mcp 2.x in addition to mcp 1.x. The
-  `mcp` and `dev` extras accept `mcp>=1.27,<3`. In mcp 2.x, `FastMCP` was
-  renamed to `MCPServer`; the server selects the available class at import.
-
-- Added a security alert workflow that opens or updates a tracking issue when
-  the scheduled Security run fails on `main`. It holds only `issues: write`
-  and runs no repository code.
-
-### Changed
-
+  reference `RFC-10024`, and its `policy_pack_hash` changes. Decisions for
+  assets that are not RFC 10024 groups are unchanged.
 - The release workflow verifies the committed Linux release lock against
   `requirements/release.in`, freshly fetched package hashes, and the Linux
   platform resolution, starting from the committed pins. A new upstream
@@ -87,6 +77,19 @@
   metadata remains at core metadata version 2.4.
 - Updated the release workflow actions `actions/attest` to v4.2.2 and
   `pypa/gh-action-pypi-publish` to v1.14.2.
+
+### Release
+
+- Contract versions in this release: PDR 0.3, built-in policy pack
+  `nist-pqc-basic` 0.3, algorithm registry content version 2.
+- PDR 0.2 documents produced by earlier versions remain verifiable with
+  `qstriage pdr verify` and can be compared with `qstriage pdr diff`.
+- PDR documents record the engine version, so serialized PDR output and
+  hashes differ from `v1.3.0` for the same input, in addition to the contract
+  changes above.
+- Evidence Closure, the four read-only MCP tools, and the
+  `qstriage-evidence-closure` Codex skill remain a preview. Their patch
+  format, commands, and MCP tool interfaces may change in a minor release.
 
 ## v1.3.0 - 2026-10-09
 
