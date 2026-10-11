@@ -250,10 +250,28 @@ The current asset evidence review can generate findings for:
 - CBOM-defaulted retention equal to zero,
 - exposure missing under the evidence layer's missing-text check,
 - unknown or unsupported algorithm,
-- missing key size for RSA, AES, DH, ECDH, or ECDSA identifiers,
+- missing `key_size_bits` when the identifier does not state the key length (see below),
 - CBOM-defaulted criticality, local blast radius, and migration effort,
 - unknown relationship completeness for CBOM imports,
 - declared QSTriage dependency context.
+
+### Key length
+
+One rule, `key_size_requirement` in `qstriage/standards.py`, decides whether
+an asset must state `key_size_bits`. Evidence review, PDR evidence quality,
+and the score confidence label all use it.
+
+| Identifier | Key length |
+|---|---|
+| ML-KEM, ML-DSA, or SLH-DSA exact parameter set; RFC 10024 hybrid group | fixed by the identifier |
+| AES with a key length (`AES-256-GCM`), RSA with a modulus length (`RSA-2048`), FFDHE group (`FFDHE2048`), named curve (`P-256`, `ECDSA_P256`, `X25519`, `Ed25519`) | fixed by the identifier |
+| SHA-1, SHA-2, SHA-3, SHAKE | not applicable |
+| ML-KEM, ML-DSA, or SLH-DSA family without a supported parameter set | follows from the parameter set, which is verified separately |
+| Any other identifier, including an unrecognized one (`AES`, `RSA`, `RSA-PSS`, `ECDHE`, `ECDSA`, `DH`, `ECDHE_RSA`) | required |
+
+A stated `key_size_bits` is always recorded. Only a missing value for a
+"required" identifier produces the `missing_key_size_bits` finding and the
+`key_size_bits` entry in PDR `evidence_quality.missing_evidence`.
 
 For every asset treated as CBOM-imported, the current evidence review emits `unknown_dependency_completeness`. It does not infer relationship completeness from the scanner artifact or convert scanner dependencies into QSTriage blast-radius dependencies.
 

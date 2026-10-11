@@ -14,7 +14,12 @@ from qstriage.context import (
 from qstriage.graph import build_dependency_graph, calculate_graph_amplified_blast_radius
 from qstriage.limits import TraversalBudget
 from qstriage.models import CryptographicAsset, Inventory, RiskLevel
-from qstriage.standards import AlgorithmClassification, classify_algorithm
+from qstriage.standards import (
+    AlgorithmClassification,
+    KeySizeRequirement,
+    classify_algorithm,
+    key_size_requirement,
+)
 
 
 @dataclass(frozen=True)
@@ -84,7 +89,7 @@ def score_asset(
     priority_score = round(max(0.0, min(100.0, raw_total * 2.0)), 2)
     priority_band = _priority_band(priority_score)
     recommended_action = _recommended_action(priority_score, asset.migration_effort)
-    confidence = _confidence(asset)
+    confidence = _confidence(asset, classification)
 
     breakdown = ScoreBreakdown(
         cryptographic_risk=round(cryptographic_risk, 2),
@@ -252,11 +257,20 @@ def _recommended_action(score: float, effort: RiskLevel) -> str:
     return "defer; keep inventory evidence current"
 
 
-def _confidence(asset: CryptographicAsset) -> str:
-    if asset.notes and asset.key_size_bits is not None:
+def _confidence(
+    asset: CryptographicAsset,
+    classification: AlgorithmClassification,
+) -> str:
+    # The key length is known when the asset states it, when the identifier
+    # fixes it, or when the primitive has no key.
+    key_size_known = asset.key_size_bits is not None or key_size_requirement(
+        classification
+    ) in {KeySizeRequirement.fixed_by_identifier, KeySizeRequirement.not_applicable}
+
+    if asset.notes and key_size_known:
         return "medium-high"
 
-    if asset.key_size_bits is not None:
+    if key_size_known:
         return "medium"
 
     return "low"
