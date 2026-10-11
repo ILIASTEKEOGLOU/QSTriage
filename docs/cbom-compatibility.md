@@ -1,6 +1,6 @@
 # QSTriage CBOM Compatibility
 
-QSTriage provides a bounded import path for CycloneDX-style CBOM JSON cryptographic evidence. It converts supported cryptographic asset components into validated QSTriage inventory assets and can generate reports and PDR 0.2 documents from that inventory.
+QSTriage provides a bounded import path for CycloneDX-style CBOM JSON cryptographic evidence. It converts supported cryptographic asset components into validated QSTriage inventory assets and can generate reports and PDR 0.3 documents from that inventory.
 
 This document describes the public compatibility boundary implemented by `qstriage/cbom.py` and validated by the Track 5.1 external compatibility lab. Code and tests remain authoritative for executable behavior.
 
