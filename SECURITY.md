@@ -24,6 +24,7 @@ Security reports are most useful when they concern:
 
 - unsafe parsing or handling of inventory, CBOM, or configuration input,
 - policy, evidence, decision, or PDR behavior that could mislead a reviewer,
+- PDR integrity verification or comparison that accepts an altered document,
 - unsafe terminal, Markdown, or file-output behavior,
 - dependency, workflow, packaging, or release-integrity weaknesses,
 - documentation that encourages unsafe operational assumptions.
@@ -47,6 +48,11 @@ The repository uses:
 - hashed Python 3.11 application and release-tool locks,
 - dependency auditing, Bandit analysis, and full-history Gitleaks scanning,
 - Dependabot monitoring for Python and GitHub Actions,
+- a weekly scheduled Security run; when it fails on `main`, a separate alert
+  workflow with only `issues: write` opens or updates a tracking issue,
+- repository rulesets: changes to `main` require a pull request, squash merge,
+  and the required CI, security, and release checks; `main` cannot be deleted
+  or force-pushed; release tags matching `v*` cannot be deleted or moved,
 - reproducible wheel/source builds, SHA-256 manifests, and CycloneDX SBOMs.
 
 GitHub-hosted provenance and SBOM attestations run only for eligible tag pushes
@@ -56,7 +62,7 @@ requesting attestation permissions.
 
 ## Input and decision boundaries
 
-Inventory, CBOM, and configuration files are untrusted input. QSTriage enforces
+Inventory, CBOM, configuration, and PDR files are untrusted input. QSTriage enforces
 size, structure, string, collection, simulation, and graph-work limits. YAML
 aliases are rejected. Limit violations fail explicitly rather than producing a
 partial decision result.
@@ -69,7 +75,21 @@ CycloneDX validation or proof of complete cryptographic discovery. See
 [CBOM Compatibility](docs/cbom-compatibility.md).
 
 File-backed PDR generation captures each source once and parses and hashes the
-same bytes. See [PDR 0.2 Contract](docs/pdr-contract.md).
+same bytes. See [PDR Contract](docs/pdr-contract.md).
+
+## PDR integrity
+
+PDR 0.3 hashes use the RFC 8785 canonical JSON form, so they can be recomputed
+with any RFC 8785 implementation. `qstriage pdr verify` recomputes the
+document hash, every record hash, and the run identifier, and checks that each
+record repeats the document provenance. It reads at most 64 MiB, rejects
+duplicate JSON keys and non-finite numbers, and never writes.
+`qstriage pdr diff` verifies both documents first and produces no comparison if
+either fails.
+
+Verification shows that a document is internally consistent. It does not show
+who produced it or which registry and policy content were used; the recorded
+`registry_hash` and `policy_pack_hash` identify that content.
 
 ## Output handling
 

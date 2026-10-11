@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "qstriage"
 version = "1.4.0"
-description = "Cryptographic Policy & Justification Engine"
+description = "Local, deterministic engine that turns cryptographic inventories and CBOM evidence into verifiable PQC migration decision records."
 readme = "README.md"
 authors = [
     { name = "Ilias Tekeoglou" },
@@ -31,6 +31,9 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Security :: Cryptography",
 ]
 dependencies = [

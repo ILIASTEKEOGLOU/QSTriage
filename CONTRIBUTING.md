@@ -61,6 +61,27 @@ Policy-pack, registry, or classification changes must:
 - include positive, negative, and regression tests,
 - update provenance and canonical documentation.
 
+Rules taken from an external standard or regulation are implemented as
+written. They are not loosened, reinterpreted, or bypassed. Text quoted from
+such a source goes into the registry `excerpt` field verbatim, with the source
+section it comes from, and is never paraphrased. QSTriage's own wording belongs
+in `rationale` and generated messages, which quote the excerpt rather than
+restate it.
+
+Version and identity rules, enforced by tests:
+
+- A change to registry entry content requires a new `registry_version` in
+  `qstriage/algorithm_registry.json` and its `registry_hash` in
+  `tests/test_algorithm_registry.py`.
+- A change to the built-in policy pack requires a new pack version and its
+  `policy_pack_hash` in `tests/test_policy.py`.
+- A change to the meaning or serialization of a PDR field requires a new PDR
+  contract version. Earlier versions must remain verifiable.
+
+## Language
+
+Write commits, pull requests, code comments, and documentation in English.
+
 A proposal may be declined when it falls outside the product boundary. The
 project does not promise an SLA, response time, release cadence, or acceptance
 of every contribution.
