@@ -1,7 +1,7 @@
 # Algorithm Identifier Grammar
 
 This document defines the bounded algorithm-identifier grammar targeted by
-QSTriage v1.3.0. It is a deterministic classification contract, not a general
+QSTriage v1.4.0. It is a deterministic classification contract, not a general
 parser, fuzzy matcher, vendor ontology, or proof of the runtime cryptographic
 implementation.
 
@@ -73,7 +73,9 @@ Composite matching precedes leaf-family matching so that
 ## Exact standardized PQC allowlists
 
 Only the following complete normalized identifiers receive
-`quantum_resistant` and `standardized_pqc` in v1.3.0.
+`quantum_resistant` and `standardized_pqc` in v1.4.0. The RFC 10024 hybrid
+groups receive `quantum_resistant` with `standardized_pq_t_hybrid`; see
+[PQ/T hybrid key agreement groups](#pqt-hybrid-key-agreement-groups).
 
 ### ML-KEM
 
@@ -105,7 +107,7 @@ parameter verification.
 
 This allowlist does not include limited-signature SLH-DSA parameter sets from
 later draft publications. A future registry may represent them with distinct
-provenance and lifecycle status; v1.3.0 must not label them as FIPS 205
+provenance and lifecycle status; v1.4.0 must not label them as FIPS 205
 standardized identifiers.
 
 ## Classical public-key grammar
