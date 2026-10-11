@@ -15,7 +15,12 @@ from qstriage.policy import (
     get_policy_pack,
 )
 from qstriage.scoring import ScoreResult, score_inventory
-from qstriage.standards import AlgorithmClassification, classify_algorithm
+from qstriage.standards import (
+    AlgorithmClassification,
+    KeySizeRequirement,
+    classify_algorithm,
+    key_size_requirement,
+)
 
 
 class EvidenceQuality(BaseModel):
@@ -147,7 +152,7 @@ def evaluate_evidence_quality(
 
     if (
         asset.key_size_bits is None
-        and classification.algorithm_family not in {"ML-KEM", "ML-DSA", "SLH-DSA"}
+        and key_size_requirement(classification) == KeySizeRequirement.required
     ):
         missing.append("key_size_bits")
 

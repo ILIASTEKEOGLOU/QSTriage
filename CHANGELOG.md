@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- One rule now decides whether an asset must state `key_size_bits`
+  (`key_size_requirement` in `qstriage/standards.py`), used by evidence
+  review, PDR evidence quality, and the score confidence label. Identifiers
+  that fix the key length (exact ML-KEM, ML-DSA, and SLH-DSA parameter sets,
+  RFC 10024 hybrid groups, `AES-256-GCM`, `RSA-2048`, `FFDHE2048`, named
+  curves such as `P-256` and `X25519`) and hash functions no longer count as
+  missing a key length. Previously evidence review matched name prefixes,
+  PDR evidence quality exempted only ML-KEM, ML-DSA, and SLH-DSA families,
+  and the score confidence label required `key_size_bits` for every
+  algorithm. Unrecognized identifiers still require a key length.
+
 ## v1.4.0 - 2026-10-11
 
 ### Added

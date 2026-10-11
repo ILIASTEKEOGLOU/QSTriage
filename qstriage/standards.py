@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from enum import Enum
 
 from qstriage.algorithm_registry import SchemeType, load_registry, normalize_identifier
 
@@ -180,6 +181,58 @@ def _unknown_classification(original: str) -> AlgorithmClassification:
 
 def _normalize_algorithm(algorithm: str) -> str:
     return normalize_identifier(algorithm)
+
+
+class KeySizeRequirement(str, Enum):
+    """Whether an asset must state ``key_size_bits`` for its algorithm."""
+
+    required = "required"
+    fixed_by_identifier = "fixed_by_identifier"
+    not_applicable = "not_applicable"
+    # A PQC family whose parameter set is missing or unsupported. Key length
+    # follows from the parameter set, which is verified separately.
+    parameter_set_unverified = "parameter_set_unverified"
+
+
+_PARAMETER_SET_FAMILIES = frozenset({"ML-KEM", "ML-DSA", "SLH-DSA"})
+_HASH_FAMILIES = frozenset({"SHA-3", "SHA-1/SHA-2"})
+_NAMED_CURVE_PATTERN = re.compile(
+    r"(?:^|-)(?:P-?(?:256|384|521)|X25519|ED25519|CURVE25519)(?:-|$)"
+)
+
+
+def key_size_requirement(classification: AlgorithmClassification) -> KeySizeRequirement:
+    """Return whether the key length must be stated separately.
+
+    The key length is fixed by the identifier when the identifier names a
+    parameter set (ML-KEM, ML-DSA, SLH-DSA), an RFC 10024 hybrid group, an AES
+    key length, an RSA modulus length, an FFDHE group, or a named elliptic
+    curve. Hash functions and XOFs have no key. Every other identifier,
+    including an unrecognized one, requires ``key_size_bits``. A PQC family
+    with an unverified parameter set is reported separately, because its key
+    length follows from the parameter set.
+    """
+
+    family = classification.algorithm_family
+    normalized = _normalize_algorithm(classification.input_algorithm)
+
+    if family in _HASH_FAMILIES:
+        return KeySizeRequirement.not_applicable
+    if family in _PARAMETER_SET_FAMILIES:
+        if requires_parameter_verification(classification):
+            return KeySizeRequirement.parameter_set_unverified
+        return KeySizeRequirement.fixed_by_identifier
+    if classification.scheme_type != "single":
+        return KeySizeRequirement.fixed_by_identifier
+    if family == "AES" and re.match(r"AES-?(?:128|192|256)(?:-|$)", normalized):
+        return KeySizeRequirement.fixed_by_identifier
+    if family == "RSA" and re.fullmatch(r"RSA-?\d+", normalized):
+        return KeySizeRequirement.fixed_by_identifier
+    if family == "DH" and re.fullmatch(r"FFDHE-?\d+", normalized):
+        return KeySizeRequirement.fixed_by_identifier
+    if family == "ECC" and _NAMED_CURVE_PATTERN.search(normalized):
+        return KeySizeRequirement.fixed_by_identifier
+    return KeySizeRequirement.required
 
 
 def requires_parameter_verification(classification: AlgorithmClassification) -> bool:

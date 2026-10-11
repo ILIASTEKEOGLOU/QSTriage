@@ -17,7 +17,9 @@ from qstriage.models import (
     RiskLevel,
 )
 from qstriage.standards import (
+    KeySizeRequirement,
     classify_algorithm,
+    key_size_requirement,
     requires_parameter_verification,
 )
 
@@ -516,7 +518,10 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
             )
         )
 
-    if _requires_key_size(asset.algorithm) and asset.key_size_bits is None:
+    if (
+        asset.key_size_bits is None
+        and key_size_requirement(classification) == KeySizeRequirement.required
+    ):
         findings.append(
             EvidenceFinding(
                 code="missing_key_size_bits",
@@ -757,6 +762,3 @@ def _assertion_provenance(
     }[assertion.provenance]
 
 
-def _requires_key_size(algorithm: str) -> bool:
-    normalized = algorithm.upper().replace("_", "-")
-    return normalized.startswith(("RSA", "AES", "DH", "ECDH", "ECDSA"))
