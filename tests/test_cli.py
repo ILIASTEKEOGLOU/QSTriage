@@ -327,10 +327,10 @@ def test_review_context_command_prints_decision_context_findings(tmp_path: Path)
     assert "Inventory-level issues:" in result.output
     assert "No QSTriage business/security dependencies declared" in result.output
     assert "crypto-rsa-2048" in result.output
-    assert "data_class is unknown" in result.output
-    assert "retention_years is 0" in result.output
-    assert "exposure is unknown" in result.output
-    assert "criticality is the CBOM import default medium" in result.output
+    assert 'assets[crypto-rsa-2048].data_class: the value is "unknown"' in result.output
+    assert "assets[crypto-rsa-2048].retention_years: the value 0 is the" in result.output
+    assert 'assets[crypto-rsa-2048].exposure: the value is "unknown"' in result.output
+    assert 'assets[crypto-rsa-2048].criticality: the value "medium" is the' in result.output
     assert "Add business context before treating this asset score as" in result.output
     assert "decision-grade" in result.output
 

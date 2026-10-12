@@ -88,7 +88,7 @@ def test_demo_gaps_patch_and_generated_outputs_are_exact() -> None:
         for assertion in patch.assertions
     }
     assert regular == {
-        "data_class": ("customer_identity_claims", "declared", "user_declared", "architecture-review-AR-27"),
+        "data_class": ("customer_pii", "declared", "user_declared", "architecture-review-AR-27"),
         "retention_years": (10, "verified", "supplier_authoritative", "records-policy-RP-14"),
         "exposure": ("public_internet", "declared", "user_declared", "architecture-review-AR-27"),
         "criticality": ("high", "declared", "user_declared", "service-owner-confirmation"),
@@ -112,7 +112,7 @@ def test_demo_gaps_patch_and_generated_outputs_are_exact() -> None:
     assert comparison_json(comparison).encode() == (EXPECTED / "comparison.json").read_bytes()
 
 
-def test_demo_verified_outcome_preserves_canonical_migration_gate() -> None:
+def test_demo_verified_outcome_justifies_the_canonical_migration_action() -> None:
     before = load_inventory(DEMO / "imported.yaml")
     after = load_inventory(EXPECTED / "enriched.yaml")
     result = build_inventory_comparison(before, after).assets[0]
@@ -125,10 +125,10 @@ def test_demo_verified_outcome_preserves_canonical_migration_gate() -> None:
         "migration_planning", "migration_planning"
     )
     assert (result.execution_state_before, result.execution_state_after) == (
-        "gated", "gated"
+        "gated", "justified"
     )
     assert (result.verification_priority_before, result.verification_priority_after) == (
-        "high", "high"
+        "high", "none"
     )
 
     before_review = review_inventory_evidence(before)[0]
@@ -159,7 +159,8 @@ def test_demo_runner_is_cross_platform_safe_and_deterministic(tmp_path: Path) ->
             check=False,
         )
         assert result.returncode == 0, result.stderr
-        assert "Execution: gated -> gated" in result.stdout
+        assert "Execution: gated -> justified" in result.stdout
+        assert "Remaining evidence gaps: 0" in result.stdout
         assert "not production authorization" in result.stdout
         assert sorted(path.name for path in output.iterdir()) == [
             "approved.patch.yaml", "comparison.json", "enriched.yaml",

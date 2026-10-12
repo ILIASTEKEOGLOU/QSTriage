@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -43,14 +44,35 @@ def run_demo(output_dir: Path) -> None:
     _run(["closure", "compare", str(imported), str(enriched)])
     _run(["closure", "compare", str(imported), str(enriched), "--format", "json", "--output", str(comparison)])
 
-    print("\nEvidence score: 0.00 -> 1.00")
-    print("Confidence cap: 0.50 -> 1.00")
-    print("Closed evidence gaps: 7")
-    print("Action: migration_planning -> migration_planning")
-    print("Execution: gated -> gated")
-    print("\nThe enriched inventory is decision-grade for the supplied evidence.")
-    print("The migration action remains gated and requires human verification.")
-    print("This is not production authorization.")
+    _print_summary(comparison)
+
+
+def _print_summary(comparison_path: Path) -> None:
+    """Print the summary from the comparison the demo produced, not fixed text."""
+
+    data = json.loads(comparison_path.read_text(encoding="utf-8"))
+    for asset in data["assets"]:
+        print(f"\nAsset: {asset['asset_id']}")
+        print(
+            f"Evidence score: {asset['evidence_score_before']:.2f} -> "
+            f"{asset['evidence_score_after']:.2f}"
+        )
+        print(
+            f"Confidence cap: {asset['confidence_cap_before']:.2f} -> "
+            f"{asset['confidence_cap_after']:.2f}"
+        )
+        print(f"Closed evidence gaps: {len(asset['closed_finding_codes'])}")
+        print(f"Remaining evidence gaps: {len(asset['remaining_finding_codes'])}")
+        print(f"Action: {asset['action_before']} -> {asset['action_after']}")
+        print(
+            f"Execution: {asset['execution_state_before']} -> "
+            f"{asset['execution_state_after']}"
+        )
+        print(
+            f"Verification priority: {asset['verification_priority_before']} -> "
+            f"{asset['verification_priority_after']}"
+        )
+    print("\nThis is not production authorization.")
 
 
 def main() -> int:

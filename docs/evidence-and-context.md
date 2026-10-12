@@ -4,6 +4,14 @@ QSTriage separates declared business context, normalized context, context comple
 
 This document describes the public behavior implemented by `qstriage/context.py`, `qstriage/review.py`, and `qstriage/evidence.py`. Code and tests remain authoritative for executable behavior.
 
+One resolver, `normalize_asset_context` in `qstriage/context.py`, decides for
+each business context field the value, its state, its provenance, the reason it
+is not usable, and the accepted values. Evidence review, PDR evidence quality,
+Evidence Closure gaps, context review, policy facts, decision requirements, and
+the score confidence label all read its result, so they report the same
+unresolved fields. A test checks this for every combination of field state,
+CBOM or hand-written origin, and evidence assertion.
+
 ## Why the layers are separate
 
 QSTriage uses three complementary layers:
@@ -25,27 +33,48 @@ Text normalization:
 
 For example, `Public-Facing` and ` public facing ` both normalize to `public_facing`.
 
-Unknown-like values for context normalization are:
+Unknown values, after normalization, are the same in every module:
 
 - empty text,
 - `unknown`,
-- `no_assertion`,
-- `no_value`,
-- `no-value`,
-- `redacted`.
+- `no_assertion` (also written `no assertion` or `no-assertion`),
+- `noassertion` (the SPDX spelling `NOASSERTION`),
+- `no_value` (also written `no-value`).
 
-The evidence-finding layer currently uses a narrower missing-text check: absent or empty text, `unknown`, and `no assertion`. Context review and canonical decision context use the broader normalization above.
+`redacted` is not an unknown value. It means the source withheld the value, and
+it has its own state.
 
 ### Value states
 
 | State | Meaning |
 |---|---|
-| `declared` | The supplied value maps to a supported canonical category |
-| `missing` | The value is absent or unknown-like, or a required numeric value is zero |
-| `defaulted` | QSTriage supplied a conservative import default rather than business context |
-| `unmapped` | A non-empty term was supplied but is not in the current bounded mapping |
+| `verified` | The value is recognized and an evidence assertion with `state: verified` confirms it |
+| `declared` | The value is recognized; no assertion, or an assertion with `state: declared` |
+| `defaulted` | The value is a QSTriage CBOM import default and no assertion confirms it |
+| `missing` | The value is an unknown value, or `retention_years` is 0 without an assertion |
+| `redacted` | The value is `redacted`: the source withheld it |
+| `unmapped` | A value is present but is not an accepted label |
 
-`missing`, `defaulted`, and `unmapped` values require verification.
+An evidence assertion confirms a value; it cannot supply one. An assertion on
+an unknown value leaves the field `missing`, and an assertion on an
+unrecognized value leaves it `unmapped`.
+
+Each unresolved state has one effect:
+
+| Field | State | Finding code | Severity | Effect |
+|---|---|---|---|---|
+| `data_class`, `exposure` | `missing` | `missing_<field>` | high | blocks decision grade |
+| `data_class`, `exposure` | `redacted` | `redacted_<field>` | high | blocks decision grade |
+| `data_class`, `exposure` | `unmapped` | `unmapped_<field>` | high | blocks decision grade |
+| `retention_years` | `defaulted` (CBOM import, 0) | `defaulted_retention_years` | high | blocks decision grade |
+| `retention_years` | `missing` (other inventories, 0) | `unconfirmed_zero_retention_years` | high | blocks decision grade |
+| `criticality`, `local_blast_radius`, `migration_effort` | `defaulted` | `defaulted_<field>` | medium | caps confidence, requires human review |
+
+Each finding message states the value read, what it means, the accepted values,
+and what happens until the field is resolved. Invisible characters in a value
+are shown as `<U+XXXX>`. For an unrecognized label, the message names the
+closest accepted label when exactly one is within two edits; QSTriage never
+replaces the value itself.
 
 ### Data sensitivity
 
@@ -55,7 +84,13 @@ The canonical categories are:
 |---|---|
 | `sensitive` | `customer_pii`, `pii_data`, `pii`, `identity_tokens`, `payment_metadata`, `payment_data`, `gdpr_scope`, `cardholder`, `cardholder_data`, `patient`, `patient_records`, `medical`, `medical_records`, `health`, `health_data` |
 | `operational` | `telemetry`, `internal`, `operational`, `logs`, `metrics` |
-| `unknown` | Unknown-like or unmapped values |
+| `public` | `public` |
+| `unknown` | Unknown, redacted, or unmapped values |
+
+These labels are defined by QSTriage; they are not taken from an external
+classification scheme. `public` follows the FIPS 199 example of public
+information, whose confidentiality impact is not applicable. Scoring treats
+`public` like `operational`: no sensitivity increment.
 
 QSTriage does not infer sensitivity from arbitrary enterprise labels. An unrecognized term remains `unknown` with state `unmapped`.
 
@@ -70,7 +105,7 @@ The canonical categories are:
 | `internal` | `internal`, `internal_only`, `private_network`, `corp`, `corporate`, `lan` |
 | `restricted` | `restricted_network`, `restricted`, `offline`, `air_gapped`, `segmented` |
 | `isolated` | `isolated` |
-| `unknown` | Unknown-like or unmapped values |
+| `unknown` | Unknown, redacted, or unmapped values |
 
 Unmapped exposure terms are not guessed to be public, internal, or restricted.
 
@@ -78,11 +113,17 @@ Unmapped exposure terms are not guessed to be public, internal, or restricted.
 
 For every asset:
 
-- `retention_years == 0` is treated as missing context,
+- `retention_years: 0` without an evidence assertion is unresolved: `defaulted`
+  for a CBOM import, `missing` otherwise; 0 means the data is not retained, and
+  an assertion records that this is intended,
 - non-zero `retention_years` is treated as declared,
 - `criticality`, `local_blast_radius`, and `migration_effort` are treated as declared for native inventories.
 
-For CBOM-imported assets, the importer defaults `criticality`, `local_blast_radius`, and `migration_effort` to `medium`. Those values are marked `defaulted`, not declared.
+For CBOM-imported assets, the importer defaults `criticality`, `local_blast_radius`, and `migration_effort` to `medium`. Those values are marked `defaulted` until an evidence assertion confirms them.
+
+An asset is treated as CBOM-imported when the source type is CycloneDX CBOM,
+its `asset_type` is `cbom_cryptographic_asset`, or its notes contain the import
+marker `Imported from CycloneDX CBOM`.
 
 An asset has complete normalized business context only when data sensitivity, exposure, retention, criticality, local blast radius, and migration effort do not require verification.
 
@@ -95,14 +136,11 @@ An asset has complete normalized business context only when data sensitivity, ex
 - inventory-level issues,
 - issue and incomplete-asset counts.
 
-Current asset-level checks report:
-
-- unknown or unmapped `data_class`,
-- `retention_years` equal to zero,
-- unknown or unmapped `exposure`,
-- CBOM-defaulted `criticality`,
-- CBOM-defaulted `local_blast_radius`,
-- CBOM-defaulted `migration_effort`.
+Asset-level checks report every field the resolver marks unresolved, with the
+same message as the evidence finding: missing, redacted, or unmapped
+`data_class` and `exposure`; unconfirmed or CBOM-defaulted `retention_years`;
+CBOM-defaulted `criticality`, `local_blast_radius`, and `migration_effort`.
+Evidence assertions in the inventory are taken into account.
 
 An asset with any current issue is `incomplete`. The recommended action is to add business context before treating its score as decision-grade.
 
@@ -246,9 +284,9 @@ Human review is required when the review is not decision-grade or any finding re
 
 The current asset evidence review can generate findings for:
 
-- data class missing under the evidence layer's missing-text check,
-- CBOM-defaulted retention equal to zero,
-- exposure missing under the evidence layer's missing-text check,
+- missing, redacted, or unmapped data class,
+- unconfirmed or CBOM-defaulted retention equal to zero,
+- missing, redacted, or unmapped exposure,
 - unknown or unsupported algorithm,
 - missing `key_size_bits` when the identifier does not state the key length (see below),
 - CBOM-defaulted criticality, local blast radius, and migration effort,
@@ -273,7 +311,7 @@ A stated `key_size_bits` is always recorded. Only a missing value for a
 "required" identifier produces the `missing_key_size_bits` finding and the
 `key_size_bits` entry in PDR `evidence_quality.missing_evidence`.
 
-For every asset treated as CBOM-imported, the current evidence review emits `unknown_dependency_completeness`. It does not infer relationship completeness from the scanner artifact or convert scanner dependencies into QSTriage blast-radius dependencies.
+For every asset treated as CBOM-imported, the current evidence review emits `unknown_dependency_completeness` unless a relationship assertion states `none` or `known`. It does not infer relationship completeness from the scanner artifact or convert scanner dependencies into QSTriage blast-radius dependencies.
 
 For native inventory assets participating in at least one declared QSTriage dependency, the review emits an informational known-context finding. That finding does not reduce evidence score or confidence.
 

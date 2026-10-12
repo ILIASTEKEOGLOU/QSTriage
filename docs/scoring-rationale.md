@@ -156,9 +156,9 @@ review.
 | `low` | the key length is unknown | 0.45 |
 
 The default decision-grade threshold is 0.75. The `notes` field does not
-affect the label. A CBOM import value of `medium` for `criticality`,
-`local_blast_radius` or `migration_effort` counts as a default even when an
-evidence assertion confirms it.
+affect the label. Whether a field is usable is decided by the context resolver
+described in the Evidence and Context guide; an evidence assertion resolves a
+CBOM import default.
 
 ## CBOM-derived scores
 

@@ -6,7 +6,7 @@ assets:
   protocol: signature
   algorithm: RSA-2048
   key_size_bits: 2048
-  data_class: customer_identity_claims
+  data_class: customer_pii
   retention_years: 10
   exposure: public_internet
   criticality: high

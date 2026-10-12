@@ -146,8 +146,8 @@ repository Codex skill may inspect gaps, draft and validate a patch, and compare
 inventories only after the human applies it. It never applies the patch itself.
 
 The bundled demo closes seven evidence findings and moves the evidence score
-from `0.00` to `1.00`; the `migration_planning` action and `gated` state remain
-unchanged.
+from `0.00` to `1.00`; the `migration_planning` action moves from `gated` to
+`justified`, with human review still required.
 
 See the
 [Evidence Closure guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/evidence-closure.md).

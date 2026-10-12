@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+### Fixed
+
+- One resolver now decides whether each business context field is usable
+  (`normalize_asset_context` in `qstriage/context.py`). Evidence review, PDR
+  evidence quality, Evidence Closure gaps, context review, policy facts,
+  decision requirements, and the score confidence label read its result and
+  report the same unresolved fields. Previously these views used separate
+  rules: Evidence Closure could report no gaps while the decision stayed gated
+  on an unrecognized `data_class`; an evidence assertion confirming a CBOM
+  default was ignored by context review and evidence quality; `redacted` and
+  `no_value` were not reported by evidence review; and context review said "is
+  unknown" for values that were present but not recognized.
+- `qstriage pdr generate` now applies the evidence assertions recorded in the
+  inventory. Previously PDR records for an enriched inventory kept the
+  findings that the assertions resolve, while Evidence Closure comparison
+  applied them.
+- The Evidence Closure demo script prints its summary from the comparison it
+  produces instead of fixed text.
+- The decision confidence reason "constrained by partial CBOM context" is
+  given only when CBOM relationship completeness is unresolved.
+
 ### Changed
 
 - Built-in policy pack `nist-pqc-basic` 0.4. The rules
@@ -11,9 +32,24 @@
   implementation and operational context, but neither rule required it, so a
   standardized ML-KEM, ML-DSA, or SLH-DSA asset with complete business
   context received `human_review_required: false`. RFC 10024 hybrids already
-  required human review. The policy pack hash changes; decisions in PDR
-  output for the bundled sample inventory, the Evidence Closure demo, and the
-  CBOM test fixtures are unchanged.
+  required human review. The policy pack hash changes; this change
+  alone leaves the decisions in PDR output for the bundled sample inventory,
+  the Evidence Closure demo, and the CBOM test fixtures unchanged.
+- Context messages state the value read, its meaning, the accepted values, and
+  the consequence; an unrecognized label is answered with the closest accepted
+  label when exactly one is within two edits.
+- New evidence finding codes: `unmapped_data_class`, `unmapped_exposure`,
+  `redacted_data_class`, `redacted_exposure`, and
+  `unconfirmed_zero_retention_years` (`retention_years: 0` without an evidence
+  assertion outside CBOM imports). Each is high severity and blocks decision
+  grade. Evidence Closure reports them as gaps; the questions for
+  `data_class` and `exposure` list the accepted labels.
+- New context states `verified` and `redacted`. `public` is an accepted
+  `data_class` label with no sensitivity increment. `noassertion` (SPDX
+  `NOASSERTION`) is an unknown value.
+- The Evidence Closure demo patch sets `data_class` to `customer_pii`. The
+  demo now ends with the `migration_planning` action `justified`, verification
+  priority `none`, and human review still required.
 
 ## v1.4.1 - 2026-10-12
 
