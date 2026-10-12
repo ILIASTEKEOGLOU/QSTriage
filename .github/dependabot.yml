@@ -8,6 +8,9 @@ updates:
       time: "05:00"
       timezone: "Etc/UTC"
     open-pull-requests-limit: 5
+    # Raise a requirement only when the new release falls outside it, so that
+    # existing lower bounds stay as wide as the package supports.
+    versioning-strategy: increase-if-necessary
     groups:
       python-runtime-and-test:
         patterns:
