@@ -148,8 +148,13 @@ combiners, not hybrid schemes as such.
 RFC 10024 Section 5 states which component implementation must be certified.
 That section describes itself as informal notes on NIST guidance. An
 identifier cannot show whether an implementation is certified, so every
-hybrid record requires human review, and policy pack `nist-pqc-basic` 0.3 adds
-the rule `standardized_pq_t_hybrid_requires_certification_evidence_review`.
+hybrid record requires human review, and policy pack `nist-pqc-basic` (since
+0.3) has the rule
+`standardized_pq_t_hybrid_requires_certification_evidence_review`. For the
+same reason, since policy pack 0.4 every standardized ML-KEM, ML-DSA, and
+SLH-DSA record also requires human review
+(`standardized_pqc_can_be_retained_with_operational_review`,
+`ml_kem_usage_requires_key_establishment_context`).
 
 ### Verbatim source text
 

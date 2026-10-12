@@ -189,7 +189,7 @@ def test_policy_pack_rule_text_for_pq_t_hybrids() -> None:
         if rule.rule_id == "standardized_pq_t_hybrid_requires_certification_evidence_review"
     ]
 
-    assert pack.version == "0.3"
+    assert pack.version == "0.4"
     assert rule.title == "Standardized PQ/T hybrid requires certification evidence review"
     assert rule.description == (
         "Records a PQ/T hybrid key agreement group defined in RFC 10024 and "

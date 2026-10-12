@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Built-in policy pack `nist-pqc-basic` 0.4. The rules
+  `standardized_pqc_can_be_retained_with_operational_review` and
+  `ml_kem_usage_requires_key_establishment_context` now require human
+  review. Their recommendations already asked for a review of the
+  implementation and operational context, but neither rule required it, so a
+  standardized ML-KEM, ML-DSA, or SLH-DSA asset with complete business
+  context received `human_review_required: false`. RFC 10024 hybrids already
+  required human review. The policy pack hash changes; decisions in PDR
+  output for the bundled sample inventory, the Evidence Closure demo, and the
+  CBOM test fixtures are unchanged.
+
 ## v1.4.1 - 2026-10-12
 
 ### Fixed

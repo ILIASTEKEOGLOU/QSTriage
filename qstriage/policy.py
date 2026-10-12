@@ -445,7 +445,7 @@ def _ensure_unique(values: list[str], label: str) -> None:
 
 
 BUILTIN_POLICY_PACK_ID = "nist-pqc-basic"
-BUILTIN_POLICY_PACK_VERSION = "0.3"
+BUILTIN_POLICY_PACK_VERSION = "0.4"
 
 
 def get_policy_pack(policy_pack_id: str = BUILTIN_POLICY_PACK_ID) -> PolicyPack:
@@ -649,6 +649,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             ),
             severity=PolicySeverity.info,
             effects=[
+                PolicyRuleEffect.requires_human_review,
                 PolicyRuleEffect.adds_policy_context,
                 PolicyRuleEffect.recommends_target_state,
             ],
@@ -885,6 +886,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             ),
             severity=PolicySeverity.medium,
             effects=[
+                PolicyRuleEffect.requires_human_review,
                 PolicyRuleEffect.adds_policy_context,
                 PolicyRuleEffect.constrains_migration,
             ],

@@ -64,7 +64,8 @@ def test_non_exempt_algorithms_without_key_size_remain_missing(
 
 # The parameter set fixes the key length and the asset has complete business
 # context, so the score confidence label is "medium-high" (0.80) without
-# key_size_bits.
+# key_size_bits. Human review stays required: policy pack 0.4 requires it for
+# every standardized PQC and ML-KEM asset.
 def test_parameter_set_counts_as_known_key_length_for_confidence() -> None:
     record = _pdr_record_for_algorithm("ML-KEM-768")
 
@@ -72,7 +73,7 @@ def test_parameter_set_counts_as_known_key_length_for_confidence() -> None:
     assert record.evidence_quality.score == 1.0
     assert record.decision_confidence.score == 0.8
     assert record.decision.confidence_score == 0.8
-    assert record.decision.human_review_required is False
+    assert record.decision.human_review_required is True
     assert record.decision_confidence.reason == (
         "Decision confidence is based on available inventory, scoring, and standards context."
     )
