@@ -143,6 +143,23 @@ For governance use, do not read the score alone. Read it with:
 - simulation warnings
 - PDR decision confidence
 
+## Confidence label
+
+Each score carries a confidence label. PDR decision confidence starts from the
+base value of the label and is then limited by evidence quality and evidence
+review.
+
+| Label | Condition | Base value |
+|---|---|---|
+| `medium-high` | the key length is known and every business context field (`data_class`, `exposure`, `retention_years`, `criticality`, `local_blast_radius`, `migration_effort`) is usable | 0.80 |
+| `medium` | the key length is known and a business context field is unknown, unrecognized or `redacted`, `retention_years` is 0, or a value is a CBOM import default | 0.65 |
+| `low` | the key length is unknown | 0.45 |
+
+The default decision-grade threshold is 0.75. The `notes` field does not
+affect the label. A CBOM import value of `medium` for `criticality`,
+`local_blast_radius` or `migration_effort` counts as a default even when an
+evidence assertion confirms it.
+
 ## CBOM-derived scores
 
 CBOM-derived assets often contain cryptographic metadata but little business context.

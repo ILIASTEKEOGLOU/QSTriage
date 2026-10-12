@@ -14,6 +14,15 @@
   PDR evidence quality exempted only ML-KEM, ML-DSA, and SLH-DSA families,
   and the score confidence label required `key_size_bits` for every
   algorithm. Unrecognized identifiers still require a key length.
+- The score confidence label no longer depends on the `notes` field.
+  `medium-high` (decision confidence base 0.80) now requires a known key
+  length and a usable value for every business context field; otherwise the
+  label is `medium` (0.65), or `low` (0.45) when the key length is unknown.
+  Previously any non-empty `notes` text with a known key length gave
+  `medium-high`, so for an asset with complete business context the
+  execution state was `justified` with notes and `gated` without them. PDR
+  output for the bundled sample inventory, the Evidence Closure demo, and the
+  CBOM test fixtures is unchanged.
 
 ## v1.4.0 - 2026-10-11
 
