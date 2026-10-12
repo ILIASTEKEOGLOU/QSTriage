@@ -267,7 +267,10 @@ def _confidence(
         classification
     ) in {KeySizeRequirement.fixed_by_identifier, KeySizeRequirement.not_applicable}
 
-    if asset.notes and key_size_known:
+    # Free text in notes never affects the label. The higher label requires
+    # every business context field to be usable (design/context-resolution.md,
+    # section 6.1).
+    if key_size_known and normalize_asset_context(asset).business_context_present:
         return "medium-high"
 
     if key_size_known:

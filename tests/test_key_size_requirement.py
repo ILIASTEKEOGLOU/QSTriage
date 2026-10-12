@@ -99,8 +99,10 @@ def test_score_confidence_treats_known_key_length_alike(algorithm: str) -> None:
         KeySizeRequirement.not_applicable,
     }
 
-    assert with_size.confidence == "medium"
-    assert without_size.confidence == ("medium" if known else "low")
+    # The asset has complete business context, so a known key length gives
+    # the higher label.
+    assert with_size.confidence == "medium-high"
+    assert without_size.confidence == ("medium-high" if known else "low")
 
 
 def test_stated_key_size_is_still_recorded_for_fixed_identifiers() -> None:
