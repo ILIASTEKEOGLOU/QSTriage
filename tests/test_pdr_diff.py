@@ -101,7 +101,7 @@ def test_v0_2_to_v0_3_reports_format_differences_and_multiple_causes(tmp_path: P
         "PDR 0.3 records fields that PDR 0.2 does not have. They are listed here so "
         "they are not mistaken for decision changes:"
     ) in text
-    assert "- Policy pack: changed (nist-pqc-basic 0.2 -> 0.3)." in text
+    assert "- Policy pack: changed (nist-pqc-basic 0.2 -> 0.4)." in text
     assert "- Algorithm registry: changed (not recorded in PDR 0.2 -> version 2)." in text
     assert "- PDR format: changed (0.2 -> 0.3)." in text
     assert MULTIPLE_CAUSES_TEXT in text

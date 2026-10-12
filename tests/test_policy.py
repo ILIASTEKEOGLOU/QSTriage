@@ -268,7 +268,7 @@ def test_builtin_policy_registry_lists_nist_pqc_basic() -> None:
     packs = list_policy_packs()
 
     assert [pack.policy_pack_id for pack in packs] == ["nist-pqc-basic"]
-    assert packs[0].version == "0.3"
+    assert packs[0].version == "0.4"
     assert packs[0].title == "NIST PQC Basic"
 
 
@@ -470,11 +470,14 @@ def test_builtin_policy_pack_identity_is_pinned() -> None:
 
     pack = get_policy_pack("nist-pqc-basic")
 
-    # Version 0.3 adds the PQ/T hybrid certification review rule and the
-    # RFC-10024 reference. Any other content change needs a new version.
-    assert pack.version == "0.3"
+    # Version 0.3 added the PQ/T hybrid certification review rule and the
+    # RFC-10024 reference. Version 0.4 adds requires_human_review to
+    # standardized_pqc_can_be_retained_with_operational_review and
+    # ml_kem_usage_requires_key_establishment_context. Any other content
+    # change needs a new version.
+    assert pack.version == "0.4"
     assert pack.policy_pack_hash() == (
-        "sha256:98302c357ddae03f7327a3dac9a823fbaec9071486bd5fc92b914c9e14759b29"
+        "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639"
     )
 
 

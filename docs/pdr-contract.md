@@ -9,7 +9,7 @@ This document describes PDR contract version `0.3` as implemented by `qstriage/p
 - PDR contract version: `0.3`
 - Engine name: `QSTriage`
 - Engine version: the installed QSTriage package version
-- Default policy pack: `nist-pqc-basic` version `0.3`
+- Default policy pack: `nist-pqc-basic` version `0.4`
 - Algorithm registry: the registry bundled with the installed package
 
 PDR versioning is separate from the QSTriage package version. Removing, renaming, or changing the documented meaning of public PDR fields requires a PDR contract-version change. Additive fields can be introduced in a compatible minor evolution when their meaning does not alter existing fields.
