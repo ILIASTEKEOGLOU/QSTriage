@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.4.1 - 2026-10-12
 
 ### Fixed
 
@@ -20,9 +20,20 @@
   label is `medium` (0.65), or `low` (0.45) when the key length is unknown.
   Previously any non-empty `notes` text with a known key length gave
   `medium-high`, so for an asset with complete business context the
-  execution state was `justified` with notes and `gated` without them. PDR
-  output for the bundled sample inventory, the Evidence Closure demo, and the
-  CBOM test fixtures is unchanged.
+  execution state was `justified` with notes and `gated` without them.
+  Decisions in PDR output for the bundled sample inventory, the Evidence
+  Closure demo, and the CBOM test fixtures are unchanged.
+
+### Release
+
+- Contract versions are unchanged: PDR 0.3, built-in policy pack
+  `nist-pqc-basic` 0.3, algorithm registry content version 2.
+- Decision confidence and execution state can differ from `v1.4.0` for the
+  same input where the fixes above apply. PDR documents record the engine
+  version, so serialized PDR output and hashes differ from `v1.4.0` for every
+  input.
+- Evidence Closure, the four read-only MCP tools, and the
+  `qstriage-evidence-closure` Codex skill remain a preview.
 
 ## v1.4.0 - 2026-10-11
 
