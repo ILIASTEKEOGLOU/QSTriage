@@ -8,6 +8,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from qstriage.assessment import assess_inventory
+from qstriage.context import DATA_CLASS_LABELS, EXPOSURE_LABELS
 from qstriage.evidence import EvidenceFinding, review_inventory_evidence
 from qstriage.models import Inventory
 
@@ -23,17 +24,22 @@ _FIELD_ORDER = (
 )
 _CODE_TO_FIELD = {
     "missing_data_class": "data_class",
+    "redacted_data_class": "data_class",
+    "unmapped_data_class": "data_class",
     "defaulted_retention_years": "retention_years",
+    "unconfirmed_zero_retention_years": "retention_years",
     "missing_exposure": "exposure",
+    "redacted_exposure": "exposure",
+    "unmapped_exposure": "exposure",
     "defaulted_criticality": "criticality",
     "defaulted_local_blast_radius": "local_blast_radius",
     "defaulted_migration_effort": "migration_effort",
     "unknown_dependency_completeness": "relationship_completeness",
 }
 _DETAILS = {
-    "data_class": ("What business data classification applies?", "string", []),
+    "data_class": ("What business data classification applies?", "string", list(DATA_CLASS_LABELS)),
     "retention_years": ("How many years must the data remain protected?", "integer >= 0", []),
-    "exposure": ("What is the asset's exposure boundary?", "string", []),
+    "exposure": ("What is the asset's exposure boundary?", "string", list(EXPOSURE_LABELS)),
     "criticality": ("What is the asset's business criticality?", "enum", ["low", "medium", "high", "critical"]),
     "local_blast_radius": ("What is the local blast radius?", "enum", ["low", "medium", "high", "critical"]),
     "migration_effort": ("What migration effort is expected?", "enum", ["low", "medium", "high", "critical"]),

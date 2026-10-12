@@ -4,10 +4,19 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from qstriage.context import NormalizedAssetContext, normalize_asset_context
+from qstriage.context import (
+    NormalizedAssetContext,
+    is_cbom_imported_asset,
+    normalize_asset_context,
+)
 from qstriage.decision import CanonicalDecision, DecisionContext, reconcile_decision
 from qstriage.evidence import EvidenceReview, review_asset_evidence
-from qstriage.models import AssetEvidenceAssertions, CryptographicAsset, Inventory
+from qstriage.models import (
+    AssetEvidenceAssertions,
+    CryptographicAsset,
+    Inventory,
+    RelationshipEvidenceCompleteness,
+)
 from qstriage.policy import (
     PolicyEvaluationResult,
     PolicyEvaluator,
@@ -67,7 +76,9 @@ def assess_asset(
         )
 
     classification = classify_algorithm(asset.algorithm)
-    normalized_context = normalize_asset_context(asset)
+    normalized_context = normalize_asset_context(
+        asset, asset_evidence, source_type=source_type
+    )
     evidence_review = review_asset_evidence(
         asset, source_type=source_type, asset_evidence=asset_evidence
     )
@@ -77,8 +88,16 @@ def assess_asset(
         classification,
         source_type=source_type,
         evidence_review=evidence_review,
+        asset_evidence=asset_evidence,
     )
-    evidence_quality = evaluate_evidence_quality(asset, classification)
+    evidence_quality = evaluate_evidence_quality(
+        asset,
+        classification,
+        context=normalized_context,
+        relationship_unresolved=_relationship_unresolved(
+            asset, asset_evidence, source_type=source_type
+        ),
+    )
     decision_confidence = calculate_decision_confidence(
         asset,
         score,
@@ -134,35 +153,68 @@ def assess_inventory(
         for score in score_inventory(inventory)
     ]
 
+_EVIDENCE_QUALITY_KEYS = {
+    "data_class": "data_class",
+    "retention_years": "retention_years",
+    "exposure": "exposure_boundary",
+    "criticality": "business_criticality_context",
+    "local_blast_radius": "blast_radius_context",
+    "migration_effort": "migration_effort_context",
+}
+
+_EVIDENCE_QUALITY_ORDER = (
+    "data_class",
+    "retention_years",
+    "exposure",
+    "key_size_bits",
+    "criticality",
+    "local_blast_radius",
+    "migration_effort",
+)
+
+
+def _relationship_unresolved(
+    asset: CryptographicAsset,
+    asset_evidence: AssetEvidenceAssertions | None,
+    *,
+    source_type: str,
+) -> bool:
+    if not is_cbom_imported_asset(asset, source_type):
+        return False
+    assertion = asset_evidence.relationship_completeness if asset_evidence else None
+    return assertion is None or assertion.value not in {
+        RelationshipEvidenceCompleteness.none,
+        RelationshipEvidenceCompleteness.known,
+    }
+
+
 def evaluate_evidence_quality(
     asset: CryptographicAsset,
     classification: AlgorithmClassification,
+    *,
+    context: NormalizedAssetContext | None = None,
+    relationship_unresolved: bool | None = None,
 ) -> EvidenceQuality:
+    resolved = context if context is not None else normalize_asset_context(asset)
+    unresolved = {field.field for field in resolved.unresolved_fields}
     missing = []
     limitations = []
 
-    if asset.data_class.strip().lower() == "unknown":
-        missing.append("data_class")
+    for field in _EVIDENCE_QUALITY_ORDER:
+        if field == "key_size_bits":
+            if (
+                asset.key_size_bits is None
+                and key_size_requirement(classification) == KeySizeRequirement.required
+            ):
+                missing.append("key_size_bits")
+        elif field in unresolved:
+            missing.append(_EVIDENCE_QUALITY_KEYS[field])
 
-    if asset.retention_years == 0:
-        missing.append("retention_years")
-
-    if asset.exposure.strip().lower() == "unknown":
-        missing.append("exposure_boundary")
-
-    if (
-        asset.key_size_bits is None
-        and key_size_requirement(classification) == KeySizeRequirement.required
-    ):
-        missing.append("key_size_bits")
-
-    if asset.asset_type == "cbom_cryptographic_asset":
-        if asset.criticality.value == "medium":
-            missing.append("business_criticality_context")
-        if asset.local_blast_radius.value == "medium":
-            missing.append("blast_radius_context")
-        if asset.migration_effort.value == "medium":
-            missing.append("migration_effort_context")
+    if relationship_unresolved is None:
+        relationship_unresolved = _relationship_unresolved(
+            asset, None, source_type="qstriage_inventory"
+        )
+    if relationship_unresolved:
         limitations.append(
             "CBOM dependency relationships are not imported as QSTriage dependencies."
         )
@@ -220,7 +272,7 @@ def calculate_decision_confidence(
             + ", ".join(finding_codes)
             + "."
         )
-    elif asset.asset_type == "cbom_cryptographic_asset":
+    elif evidence_quality.limitations:
         reason = "Decision confidence is constrained by partial CBOM context."
     else:
         reason = (

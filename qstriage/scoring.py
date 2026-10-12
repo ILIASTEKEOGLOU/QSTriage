@@ -13,7 +13,7 @@ from qstriage.context import (
 )
 from qstriage.graph import build_dependency_graph, calculate_graph_amplified_blast_radius
 from qstriage.limits import TraversalBudget
-from qstriage.models import CryptographicAsset, Inventory, RiskLevel
+from qstriage.models import AssetEvidenceAssertions, CryptographicAsset, Inventory, RiskLevel
 from qstriage.standards import (
     AlgorithmClassification,
     KeySizeRequirement,
@@ -49,7 +49,18 @@ class ScoreResult:
 def score_inventory(inventory: Inventory) -> list[ScoreResult]:
     graph = build_dependency_graph(inventory)
     budget = TraversalBudget()
-    results = [score_asset(asset, graph, budget=budget) for asset in inventory.assets]
+    evidence_by_asset = (
+        inventory.evidence.assets if inventory.evidence is not None else {}
+    )
+    results = [
+        score_asset(
+            asset,
+            graph,
+            budget=budget,
+            asset_evidence=evidence_by_asset.get(asset.id),
+        )
+        for asset in inventory.assets
+    ]
     return sorted(results, key=lambda result: result.priority_score, reverse=True)
 
 
@@ -58,6 +69,7 @@ def score_asset(
     graph: nx.DiGraph,
     *,
     budget: TraversalBudget | None = None,
+    asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> ScoreResult:
     classification = classify_algorithm(asset.algorithm)
     cryptographic_risk = _cryptographic_risk(
@@ -89,7 +101,7 @@ def score_asset(
     priority_score = round(max(0.0, min(100.0, raw_total * 2.0)), 2)
     priority_band = _priority_band(priority_score)
     recommended_action = _recommended_action(priority_score, asset.migration_effort)
-    confidence = _confidence(asset, classification)
+    confidence = _confidence(asset, classification, asset_evidence)
 
     breakdown = ScoreBreakdown(
         cryptographic_risk=round(cryptographic_risk, 2),
@@ -260,6 +272,7 @@ def _recommended_action(score: float, effort: RiskLevel) -> str:
 def _confidence(
     asset: CryptographicAsset,
     classification: AlgorithmClassification,
+    asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> str:
     # The key length is known when the asset states it, when the identifier
     # fixes it, or when the primitive has no key.
@@ -270,7 +283,10 @@ def _confidence(
     # Free text in notes never affects the label. The higher label requires
     # every business context field to be usable (design/context-resolution.md,
     # section 6.1).
-    if key_size_known and normalize_asset_context(asset).business_context_present:
+    if (
+        key_size_known
+        and normalize_asset_context(asset, asset_evidence).business_context_present
+    ):
         return "medium-high"
 
     if key_size_known:

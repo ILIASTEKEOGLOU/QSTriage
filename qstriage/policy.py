@@ -8,8 +8,10 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from qstriage.context import (
+    ContextEffect,
     DataSensitivity,
     ExposureCategory,
+    NormalizedAssetContext,
     is_unknown_like,
     normalize_asset_context,
     normalize_context_text,
@@ -23,6 +25,7 @@ from qstriage.evidence import (
     EvidenceState,
     RelationshipCompleteness,
 )
+from qstriage.models import AssetEvidenceAssertions
 
 
 POLICY_PACK_SCHEMA_VERSION = "0.1"
@@ -229,12 +232,14 @@ class PolicyEvaluator:
         *,
         source_type: str = "qstriage_inventory",
         evidence_review: EvidenceReview | None = None,
+        asset_evidence: AssetEvidenceAssertions | None = None,
     ) -> PolicyEvaluationResult:
         facts_by_target = {
             PolicyApplicabilityTarget.asset: _asset_policy_facts(
                 asset=asset,
                 classification=classification,
                 source_type=source_type,
+                asset_evidence=asset_evidence,
             ),
         }
         if evidence_review is not None:
@@ -298,8 +303,9 @@ def _asset_policy_facts(
     asset: Any,
     classification: Any,
     source_type: str,
+    asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> dict[str, Any]:
-    context = normalize_asset_context(asset)
+    context = normalize_asset_context(asset, asset_evidence, source_type=source_type)
 
     return {
         "algorithm": asset.algorithm,
@@ -315,7 +321,7 @@ def _asset_policy_facts(
         "exposure": asset.exposure,
         "exposure_category": context.exposure.canonical_value.value,
         "exposure_state": context.exposure.state.value,
-        "business_context": _derive_business_context(asset),
+        "business_context": _business_context_fact(context),
         "source_type": source_type,
     }
 
@@ -408,16 +414,18 @@ def _derive_exposure_category(exposure: str) -> str:
     return normalize_exposure(exposure).canonical_value.value
 
 
-def _derive_business_context(asset: Any) -> str:
-    context = normalize_asset_context(asset)
-    if context.data_sensitivity.requires_verification:
-        return "missing"
-    if context.retention_years.requires_verification:
-        return "missing"
-    if context.exposure.requires_verification:
-        return "missing"
+def _business_context_fact(context: NormalizedAssetContext) -> str:
+    """'missing' when data class, retention or exposure blocks decision grade."""
+
+    for resolved in (context.data_sensitivity, context.retention_years, context.exposure):
+        if resolved.effect is ContextEffect.block:
+            return "missing"
 
     return "present"
+
+
+def _derive_business_context(asset: Any) -> str:
+    return _business_context_fact(normalize_asset_context(asset))
 
 
 def _normalize_policy_text(value: str | None) -> str:

@@ -28,8 +28,14 @@ def test_report_contains_incomplete_decision_context_review_for_cbom_import() ->
     assert "Inventory-level issues:" in report
     assert "No QSTriage business/security dependencies declared" in report
     assert "crypto-rsa-2048" in report
-    assert "`data_class`: data_class is unknown" in report
-    assert "`retention_years`: retention_years is 0" in report
-    assert "`exposure`: exposure is unknown" in report
-    assert "`criticality`: criticality is the CBOM import default medium" in report
+    assert '`data_class`: assets[crypto-rsa-2048].data_class: the value is "unknown"' in report
+    assert (
+        "`retention_years`: assets[crypto-rsa-2048].retention_years: the value 0 is the "
+        "default that the CBOM import assigns"
+    ) in report
+    assert '`exposure`: assets[crypto-rsa-2048].exposure: the value is "unknown"' in report
+    assert (
+        '`criticality`: assets[crypto-rsa-2048].criticality: the value "medium" is the '
+        "default that the CBOM import assigns"
+    ) in report
     assert "Add business context before treating this asset score as decision-grade" in report

@@ -5,6 +5,13 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from qstriage.context import (
+    ContextEffect,
+    ContextValueState,
+    NormalizedAssetContext,
+    is_cbom_imported_asset,
+    normalize_asset_context,
+)
 from qstriage.models import (
     AssetEvidenceAssertions,
     CryptographicAsset,
@@ -14,7 +21,6 @@ from qstriage.models import (
     FieldEvidenceAssertion,
     Inventory,
     RelationshipEvidenceCompleteness,
-    RiskLevel,
 )
 from qstriage.standards import (
     KeySizeRequirement,
@@ -269,7 +275,6 @@ def _recommended_next_actions(findings: list[EvidenceFinding]) -> list[str]:
 
 
 
-CBOM_IMPORT_NOTE_MARKER = "Imported from CycloneDX CBOM"
 
 
 def review_inventory_evidence(
@@ -301,21 +306,14 @@ def review_asset_evidence(
     asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> EvidenceReview:
     findings: list[EvidenceFinding] = []
-    is_cbom_imported = _is_cbom_imported_asset(asset, source_type)
+    is_cbom_imported = is_cbom_imported_asset(asset, source_type)
+    context = normalize_asset_context(asset, asset_evidence, source_type=source_type)
 
-    findings.extend(
-        _business_context_findings(
-            asset,
-            is_cbom_imported,
-            asset_evidence=asset_evidence,
-        )
-    )
+    findings.extend(_context_findings(asset, context, ("data_class", "retention_years", "exposure")))
     findings.extend(_cryptographic_context_findings(asset))
     findings.extend(
-        _supply_chain_context_findings(
-            asset,
-            is_cbom_imported=is_cbom_imported,
-            asset_evidence=asset_evidence,
+        _context_findings(
+            asset, context, ("criticality", "local_blast_radius", "migration_effort")
         )
     )
     findings.extend(
@@ -330,122 +328,91 @@ def review_asset_evidence(
     return build_evidence_review(findings, asset_id=asset.id)
 
 
-def _business_context_findings(
+_CONTEXT_CATEGORY = {
+    "data_class": EvidenceCategory.business_context,
+    "retention_years": EvidenceCategory.business_context,
+    "exposure": EvidenceCategory.business_context,
+    "criticality": EvidenceCategory.supply_chain_context,
+    "local_blast_radius": EvidenceCategory.supply_chain_context,
+    "migration_effort": EvidenceCategory.supply_chain_context,
+}
+
+_CONTEXT_EXPECTED_VALUE = {
+    "retention_years": "integer number of years, 0 only when explicitly justified",
+    "criticality": "low, medium, high, or critical based on business context",
+    "local_blast_radius": "low, medium, high, or critical based on business context",
+    "migration_effort": "low, medium, high, or critical based on business context",
+}
+
+_CONTEXT_UNRESOLVED_EFFECT = {
+    "data_class": "PDR remains not decision-grade.",
+    "retention_years": "Long-lived confidentiality risk cannot be decision-grade.",
+    "exposure": "Exposure-driven migration priority remains unreliable.",
+    "criticality": "Confidence remains capped by defaulted CBOM-derived context.",
+    "local_blast_radius": "Confidence remains capped by defaulted CBOM-derived context.",
+    "migration_effort": "Confidence remains capped by defaulted CBOM-derived context.",
+}
+
+_CONTEXT_EVIDENCE_STATE = {
+    ContextValueState.missing: EvidenceState.no_assertion,
+    ContextValueState.redacted: EvidenceState.redacted,
+    ContextValueState.unmapped: EvidenceState.unknown,
+    ContextValueState.defaulted: EvidenceState.defaulted,
+}
+
+
+def _context_findings(
     asset: CryptographicAsset,
-    is_cbom_imported: bool,
-    *,
-    asset_evidence: AssetEvidenceAssertions | None,
+    context: NormalizedAssetContext,
+    field_names: tuple[str, ...],
 ) -> list[EvidenceFinding]:
+    """Evidence findings for unresolved business context, from the resolver."""
+
     findings: list[EvidenceFinding] = []
-    provenance = (
-        EvidenceProvenance.qstriage_default
-        if is_cbom_imported
-        else EvidenceProvenance.user_declared
-    )
+    for resolved in context.fields:
+        if resolved.field not in field_names or not resolved.requires_verification:
+            continue
 
-    if _is_unknown_text(asset.data_class):
-        data_class_assertion = asset_evidence.data_class if asset_evidence else None
-        findings.append(
-            EvidenceFinding(
-                code="missing_data_class",
-                category=EvidenceCategory.business_context,
-                severity=EvidenceSeverity.high,
-                message=(
-                    "Data class is unknown; the migration priority may change "
-                    "materially once business data classification is supplied."
-                ),
-                effects=[
-                    EvidenceEffect.confidence_capped,
-                    EvidenceEffect.decision_grade_blocked,
-                    EvidenceEffect.human_review_required,
-                ],
-                asset_id=asset.id,
-                field_path=f"assets[{asset.id}].data_class",
-                evidence_state=_assertion_state(
-                    data_class_assertion, default=EvidenceState.no_assertion
-                ),
-                provenance=_assertion_provenance(
-                    data_class_assertion, default=provenance
-                ),
-                human_action=HumanAction(
-                    description=f"Set data_class for asset '{asset.id}'.",
-                    field_path=f"assets[{asset.id}].data_class",
-                    expected_value_type=(
-                        "non-empty business data classification, for example "
-                        "customer_pii, identity_tokens, payment_metadata, telemetry, or public"
-                    ),
-                    effect_if_unresolved="PDR remains not decision-grade.",
-                ),
-            )
+        blocking = resolved.effect is ContextEffect.block
+        effects = (
+            [
+                EvidenceEffect.confidence_capped,
+                EvidenceEffect.decision_grade_blocked,
+                EvidenceEffect.human_review_required,
+            ]
+            if blocking
+            else [EvidenceEffect.confidence_capped, EvidenceEffect.human_review_required]
         )
-
-    retention_assertion = asset_evidence.retention_years if asset_evidence else None
-    if (
-        asset.retention_years == 0
-        and is_cbom_imported
-        and retention_assertion is None
-    ):
-        findings.append(
-            EvidenceFinding(
-                code="defaulted_retention_years",
-                category=EvidenceCategory.business_context,
-                severity=EvidenceSeverity.high,
-                message=(
-                    "Retention period is defaulted to 0 because imported CBOM "
-                    "evidence does not carry QSTriage business retention context."
-                ),
-                effects=[
-                    EvidenceEffect.confidence_capped,
-                    EvidenceEffect.decision_grade_blocked,
-                    EvidenceEffect.human_review_required,
-                ],
-                asset_id=asset.id,
-                field_path=f"assets[{asset.id}].retention_years",
-                evidence_state=EvidenceState.defaulted,
-                provenance=EvidenceProvenance.qstriage_default,
-                human_action=HumanAction(
-                    description=f"Set retention_years for asset '{asset.id}'.",
-                    field_path=f"assets[{asset.id}].retention_years",
-                    expected_value_type="integer number of years, 0 only when explicitly justified",
-                    effect_if_unresolved="Long-lived confidentiality risk cannot be decision-grade.",
-                ),
-            )
+        evidence_state = _CONTEXT_EVIDENCE_STATE[resolved.state]
+        if resolved.state is ContextValueState.missing and resolved.source_reference is not None:
+            evidence_state = EvidenceState.unknown
+        expected = _CONTEXT_EXPECTED_VALUE.get(
+            resolved.field, "one of: " + ", ".join(resolved.accepted_values)
         )
+        verb = "Set" if blocking else "Confirm or replace"
 
-    if _is_unknown_text(asset.exposure):
-        exposure_assertion = asset_evidence.exposure if asset_evidence else None
         findings.append(
             EvidenceFinding(
-                code="missing_exposure",
-                category=EvidenceCategory.business_context,
-                severity=EvidenceSeverity.high,
-                message=(
-                    "Exposure is unknown; the system cannot determine whether "
-                    "the asset is internet-facing, internal, partner-facing, or isolated."
-                ),
-                effects=[
-                    EvidenceEffect.confidence_capped,
-                    EvidenceEffect.decision_grade_blocked,
-                    EvidenceEffect.human_review_required,
-                ],
+                code=resolved.reason_code or f"unresolved_{resolved.field}",
+                category=_CONTEXT_CATEGORY[resolved.field],
+                severity=EvidenceSeverity(resolved.severity or "medium"),
+                message=resolved.message or f"{resolved.field_path} is unresolved.",
+                effects=effects,
                 asset_id=asset.id,
-                field_path=f"assets[{asset.id}].exposure",
-                evidence_state=_assertion_state(
-                    exposure_assertion, default=EvidenceState.no_assertion
-                ),
-                provenance=_assertion_provenance(
-                    exposure_assertion, default=provenance
-                ),
+                field_path=resolved.field_path,
+                evidence_state=evidence_state,
+                provenance=EvidenceProvenance(resolved.provenance),
                 human_action=HumanAction(
-                    description=f"Set exposure for asset '{asset.id}'.",
-                    field_path=f"assets[{asset.id}].exposure",
-                    expected_value_type="internet, partner, internal, isolated, or similar exposure class",
-                    effect_if_unresolved="Exposure-driven migration priority remains unreliable.",
+                    description=f"{verb} {resolved.field} for asset '{asset.id}'.",
+                    field_path=resolved.field_path,
+                    expected_value_type=expected,
+                    effect_if_unresolved=_CONTEXT_UNRESOLVED_EFFECT[resolved.field],
                 ),
             )
         )
 
     return findings
+
 
 
 def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceFinding]:
@@ -551,51 +518,6 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
     return findings
 
 
-def _supply_chain_context_findings(
-    asset: CryptographicAsset,
-    *,
-    is_cbom_imported: bool,
-    asset_evidence: AssetEvidenceAssertions | None,
-) -> list[EvidenceFinding]:
-    if not is_cbom_imported:
-        return []
-
-    findings = [
-        _defaulted_risk_finding(
-            asset,
-            field_name="criticality",
-            value=asset.criticality,
-            assertion=asset_evidence.criticality if asset_evidence else None,
-            message=(
-                "Criticality is defaulted to medium because imported CBOM "
-                "evidence does not carry QSTriage business criticality context."
-            ),
-        ),
-        _defaulted_risk_finding(
-            asset,
-            field_name="local_blast_radius",
-            value=asset.local_blast_radius,
-            assertion=asset_evidence.local_blast_radius if asset_evidence else None,
-            message=(
-                "Local blast radius is defaulted to medium because imported CBOM "
-                "evidence does not carry QSTriage dependency impact context."
-            ),
-        ),
-        _defaulted_risk_finding(
-            asset,
-            field_name="migration_effort",
-            value=asset.migration_effort,
-            assertion=asset_evidence.migration_effort if asset_evidence else None,
-            message=(
-                "Migration effort is defaulted to medium because imported CBOM "
-                "evidence does not carry QSTriage implementation effort context."
-            ),
-        ),
-    ]
-
-    return [finding for finding in findings if finding is not None]
-
-
 def _dependency_context_findings(
     asset: CryptographicAsset,
     *,
@@ -675,39 +597,6 @@ def _dependency_context_findings(
     ]
 
 
-def _defaulted_risk_finding(
-    asset: CryptographicAsset,
-    *,
-    field_name: str,
-    value: RiskLevel,
-    assertion: FieldEvidenceAssertion | None,
-    message: str,
-) -> EvidenceFinding | None:
-    if value != RiskLevel.medium or assertion is not None:
-        return None
-
-    return EvidenceFinding(
-        code=f"defaulted_{field_name}",
-        category=EvidenceCategory.supply_chain_context,
-        severity=EvidenceSeverity.medium,
-        message=message,
-        effects=[
-            EvidenceEffect.confidence_capped,
-            EvidenceEffect.human_review_required,
-        ],
-        asset_id=asset.id,
-        field_path=f"assets[{asset.id}].{field_name}",
-        evidence_state=EvidenceState.defaulted,
-        provenance=EvidenceProvenance.qstriage_default,
-        human_action=HumanAction(
-            description=f"Confirm or replace {field_name} for asset '{asset.id}'.",
-            field_path=f"assets[{asset.id}].{field_name}",
-            expected_value_type="low, medium, high, or critical based on business context",
-            effect_if_unresolved="Confidence remains capped by defaulted CBOM-derived context.",
-        ),
-    )
-
-
 def _dependency_count_by_asset(dependencies: list[Dependency]) -> dict[str, int]:
     counts: dict[str, int] = {}
 
@@ -716,14 +605,6 @@ def _dependency_count_by_asset(dependencies: list[Dependency]) -> dict[str, int]
         counts[dependency.target] = counts.get(dependency.target, 0) + 1
 
     return counts
-
-
-def _is_cbom_imported_asset(asset: CryptographicAsset, source_type: str) -> bool:
-    return (
-        source_type == "cyclonedx_cbom"
-        or asset.asset_type == "cbom_cryptographic_asset"
-        or CBOM_IMPORT_NOTE_MARKER in asset.notes
-    )
 
 
 def _is_unknown_text(value: str | None) -> bool:

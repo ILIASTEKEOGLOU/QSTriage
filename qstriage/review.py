@@ -3,11 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from qstriage.context import (
-    ContextValueState,
     is_cbom_imported_asset,
     normalize_asset_context,
 )
-from qstriage.models import CryptographicAsset, Inventory, RiskLevel
+from qstriage.models import AssetEvidenceAssertions, CryptographicAsset, Inventory
 
 
 @dataclass(frozen=True)
@@ -43,7 +42,13 @@ class InventoryContextReview:
 
 
 def review_decision_context(inventory: Inventory) -> InventoryContextReview:
-    asset_reviews = tuple(_review_asset_context(asset) for asset in inventory.assets)
+    evidence_by_asset = (
+        inventory.evidence.assets if inventory.evidence is not None else {}
+    )
+    asset_reviews = tuple(
+        _review_asset_context(asset, evidence_by_asset.get(asset.id))
+        for asset in inventory.assets
+    )
     inventory_issues = _review_inventory_context(inventory)
 
     status = "complete"
@@ -57,57 +62,18 @@ def review_decision_context(inventory: Inventory) -> InventoryContextReview:
     )
 
 
-def _review_asset_context(asset: CryptographicAsset) -> AssetContextReview:
-    issues: list[ContextIssue] = []
-    context = normalize_asset_context(asset)
-
-    if context.data_sensitivity.requires_verification:
-        issues.append(
-            ContextIssue(
-                field="data_class",
-                message="data_class is unknown; business data sensitivity is required for decision-grade scoring.",
-            )
+def _review_asset_context(
+    asset: CryptographicAsset,
+    asset_evidence: AssetEvidenceAssertions | None = None,
+) -> AssetContextReview:
+    context = normalize_asset_context(asset, asset_evidence)
+    issues = [
+        ContextIssue(
+            field=resolved.field,
+            message=resolved.message or f"{resolved.field_path} is unresolved.",
         )
-
-    if context.retention_years.requires_verification:
-        issues.append(
-            ContextIssue(
-                field="retention_years",
-                message="retention_years is 0; shelf-life risk needs business context.",
-            )
-        )
-
-    if context.exposure.requires_verification:
-        issues.append(
-            ContextIssue(
-                field="exposure",
-                message="exposure is unknown; public, partner, internal, or restricted exposure should be reviewed.",
-            )
-        )
-
-    if context.criticality.state == ContextValueState.defaulted:
-        issues.append(
-            ContextIssue(
-                field="criticality",
-                message="criticality is the CBOM import default medium; confirm business criticality.",
-            )
-        )
-
-    if context.local_blast_radius.state == ContextValueState.defaulted:
-        issues.append(
-            ContextIssue(
-                field="local_blast_radius",
-                message="local_blast_radius is the CBOM import default medium; confirm local impact.",
-            )
-        )
-
-    if context.migration_effort.state == ContextValueState.defaulted:
-        issues.append(
-            ContextIssue(
-                field="migration_effort",
-                message="migration_effort is the CBOM import default medium; confirm migration complexity.",
-            )
-        )
+        for resolved in context.unresolved_fields
+    ]
 
     status = "complete" if not issues else "incomplete"
     recommended_action = (

@@ -3,7 +3,7 @@ source_inventory_hash: sha256:237c747d8dfe9d55963c570418674ca9c99e784e3a5fa02d04
 assertions:
 - asset_id: customer-api-rsa
   field: data_class
-  value: customer_identity_claims
+  value: customer_pii
   state: declared
   provenance: user_declared
   source_reference: architecture-review-AR-27

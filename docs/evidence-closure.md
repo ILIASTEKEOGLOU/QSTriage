@@ -117,11 +117,18 @@ The demo closes seven evidence findings and reports:
 | Evidence score | `0.00` | `1.00` |
 | Confidence cap | `0.50` | `1.00` |
 | Action | `migration_planning` | `migration_planning` |
-| Execution state | `gated` | `gated` |
-| Verification priority | `high` | `high` |
+| Execution state | `gated` | `justified` |
+| Verification priority | `high` | `none` |
 
-The enriched record becomes decision-grade. Its canonical action, gated
-execution state, and high verification priority remain unchanged.
+The enriched record becomes decision-grade, and no evidence gap remains. The
+canonical action stays `migration_planning`; it is now justified by the
+supplied evidence, and human review is still required because the asset uses
+quantum-vulnerable public-key cryptography. The summary printed by the demo is
+read from the comparison it produces.
+
+Evidence Closure gaps come from the same resolver as evidence review and
+context review. A `data_class` or `exposure` value that is not an accepted
+label is reported as a gap whose question lists the accepted labels.
 
 ## Security and privacy
 

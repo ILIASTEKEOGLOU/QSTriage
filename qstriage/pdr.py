@@ -30,7 +30,12 @@ from qstriage.limits import (
     decode_utf8,
     read_bytes_limited,
 )
-from qstriage.models import CryptographicAsset, Inventory, parse_inventory_yaml
+from qstriage.models import (
+    AssetEvidenceAssertions,
+    CryptographicAsset,
+    Inventory,
+    parse_inventory_yaml,
+)
 from qstriage.policy import (
     BUILTIN_POLICY_PACK_ID,
     BUILTIN_POLICY_PACK_VERSION,
@@ -314,6 +319,9 @@ def generate_pdr_document(
     run_id = _run_id(snapshot, policy_context, registry_context)
     lineage_id = _lineage_id(snapshot)
     score_by_asset = {result.asset_id: result for result in score_inventory(inventory)}
+    evidence_by_asset = (
+        inventory.evidence.assets if inventory.evidence is not None else {}
+    )
 
     records = [
         _build_record(
@@ -326,6 +334,7 @@ def generate_pdr_document(
             policy_context=policy_context,
             registry_context=registry_context,
             policy_pack=policy_pack,
+            asset_evidence=evidence_by_asset.get(asset.id),
             previous_record_hash=(
                 previous_record_hashes or {}
             ).get(asset.id),
@@ -357,12 +366,14 @@ def _build_record(
     registry_context: RegistryContext,
     policy_pack: PolicyPack,
     previous_record_hash: str | None,
+    asset_evidence: AssetEvidenceAssertions | None = None,
 ) -> PQCDecisionRecord:
     assessment = assess_asset(
         asset,
         score=score,
         policy_pack=policy_pack,
         source_type=input_snapshot.source_type,
+        asset_evidence=asset_evidence,
     )
 
     record = PQCDecisionRecord(
