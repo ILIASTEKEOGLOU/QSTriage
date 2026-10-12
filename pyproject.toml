@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qstriage"
-version = "1.4.0"
+version = "1.4.1"
 description = "Local, deterministic engine that turns cryptographic inventories and CBOM evidence into verifiable PQC migration decision records."
 readme = "README.md"
 authors = [
