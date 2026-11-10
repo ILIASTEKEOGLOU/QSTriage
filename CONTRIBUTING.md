@@ -77,6 +77,14 @@ Version and identity rules, enforced by tests:
   `policy_pack_hash` in `tests/test_policy.py`.
 - A change to the meaning or serialization of a PDR field requires a new PDR
   contract version. Earlier versions must remain verifiable.
+- Between releases, `main` carries the next release number with the suffix
+  `.dev0` (for example `1.5.0.dev0`), and changes are listed under
+  `## Unreleased` in `CHANGELOG.md`. The release preparation pull request sets
+  the release number (for example `1.5.0`) and renames that section to
+  `## v1.5.0 - <date>`. Only a release number can be tagged. The `.dev0`
+  suffix marks output produced from unreleased code, for example the engine
+  version in a PDR; it does not identify the commit, so reports from
+  unreleased code should also state `git rev-parse HEAD`.
 
 ## Language
 
