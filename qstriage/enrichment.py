@@ -8,7 +8,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from qstriage.closure import inventory_hash
 from qstriage.file_output import write_private_text
-from qstriage.limits import MAX_ASSETS, MAX_INVENTORY_FILE_BYTES, read_text_limited
+from qstriage.limits import (
+    MAX_ASSETS,
+    MAX_ENRICHMENT_PATCH_FILE_BYTES,
+    load_yaml_limited,
+    read_text_limited,
+)
 from qstriage.models import (
     AssetEvidenceAssertions,
     EvidenceAssertionProvenance,
@@ -77,10 +82,16 @@ class EnrichmentPatch(BaseModel):
 
 
 def load_enrichment_patch(path: str | Path) -> EnrichmentPatch:
+    """Load an enrichment patch with the limits that apply to all untrusted YAML.
+
+    Duplicate mapping keys are rejected, so the value a reviewer reads is the
+    value that is applied. Aliases, excessive nesting, and excessive event
+    counts are rejected before any object is built.
+    """
     text = read_text_limited(
-        Path(path), max_bytes=MAX_INVENTORY_FILE_BYTES, label="Enrichment patch"
+        Path(path), max_bytes=MAX_ENRICHMENT_PATCH_FILE_BYTES, label="Enrichment patch"
     )
-    raw = yaml.safe_load(text)
+    raw = load_yaml_limited(text, label="Enrichment patch")
     return EnrichmentPatch.model_validate({} if raw is None else raw)
 
 

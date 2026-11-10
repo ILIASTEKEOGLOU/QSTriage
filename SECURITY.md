@@ -62,10 +62,10 @@ requesting attestation permissions.
 
 ## Input and decision boundaries
 
-Inventory, CBOM, configuration, and PDR files are untrusted input. QSTriage enforces
-size, structure, string, collection, simulation, and graph-work limits. YAML
-aliases are rejected. Limit violations fail explicitly rather than producing a
-partial decision result.
+Inventory, CBOM, configuration, enrichment patch, and PDR files are untrusted
+input. QSTriage enforces size, structure, string, collection, simulation, and
+graph-work limits. YAML aliases and duplicate mapping keys are rejected. Limit
+violations fail explicitly rather than producing a partial decision result.
 
 The exact supported input contract is documented in
 [Input Contracts](docs/input-contracts.md).
