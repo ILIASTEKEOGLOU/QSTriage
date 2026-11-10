@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,7 @@ MAX_NOTES_LENGTH = 4_096
 
 MAX_YAML_EVENTS = 200_000
 MAX_YAML_NESTING_DEPTH = 64
+MAX_JSON_NESTING_DEPTH = 64
 
 MAX_GRAPH_TRAVERSAL_STATES = 250_000
 MAX_GRAPH_RENDER_LINES = 5_000
@@ -68,6 +70,107 @@ _UniqueKeySafeLoader.add_constructor(
 
 class ResourceLimitError(ValueError):
     """Raised when untrusted input exceeds a documented processing budget."""
+
+
+class InputStructureError(ValueError):
+    """Raised when untrusted input contains text that is not valid Unicode."""
+
+
+# One JSON string (escape aware) or one structural bracket. Possessive
+# quantifiers keep the match linear; strings are skipped so brackets inside
+# them are not counted.
+_JSON_TOKEN = re.compile(r'"(?:[^"\\]++|\\.)*+"|[\[\]{}]', re.DOTALL)
+_SURROGATE = re.compile("[\ud800-\udfff]")
+
+
+def check_json_nesting(
+    text: str,
+    *,
+    label: str,
+    max_depth: int = MAX_JSON_NESTING_DEPTH,
+) -> None:
+    """Reject JSON text nested deeper than ``max_depth`` before it is parsed.
+
+    The scan is iterative and runs before ``json.loads``, so excessive nesting
+    is reported as a limit violation instead of exhausting the interpreter
+    stack in the parser or in later processing.
+    """
+
+    depth = 0
+    for match in _JSON_TOKEN.finditer(text):
+        token = match.group()
+        if token == "[" or token == "{":
+            depth += 1
+            if depth > max_depth:
+                raise ResourceLimitError(
+                    f"{label} exceeds the supported JSON nesting depth of "
+                    f"{max_depth} (near character {match.start()})."
+                )
+        elif token == "]" or token == "}":
+            depth = max(0, depth - 1)
+
+
+def check_structure(value: Any, *, label: str, max_depth: int) -> None:
+    """Walk parsed input iteratively and reject excessive depth or lone surrogates.
+
+    Lone surrogate code points (U+D800 to U+DFFF) can be produced by JSON and
+    YAML escape sequences but are not Unicode scalar values. They cannot be
+    encoded as UTF-8 and RFC 8785 Section 3.2.2.2 requires a canonicalizer to
+    stop on them, so they are rejected in keys and values with the location.
+    """
+
+    stack: list[tuple[Any, int, tuple[str | int, ...]]] = [(value, 0, ())]
+    while stack:
+        item, depth, path = stack.pop()
+        if path and isinstance(path[-1], str):
+            _reject_surrogates(path[-1], label=label, path=path[:-1], is_key=True)
+        if isinstance(item, str):
+            _reject_surrogates(item, label=label, path=path)
+            continue
+        if isinstance(item, dict):
+            children: Any = item.items()
+        elif isinstance(item, list):
+            children = enumerate(item)
+        else:
+            continue
+        if depth + 1 > max_depth:
+            raise ResourceLimitError(
+                f"{label} exceeds the supported nesting depth of {max_depth} "
+                f"at {_format_path(path)}."
+            )
+        # Children are pushed in reverse so the first problem in document
+        # order is reported.
+        stack.extend(
+            reversed([(child, depth + 1, (*path, key)) for key, child in children])
+        )
+
+
+def _reject_surrogates(
+    text: str,
+    *,
+    label: str,
+    path: tuple[str | int, ...],
+    is_key: bool = False,
+) -> None:
+    if text.isascii():
+        return
+    match = _SURROGATE.search(text)
+    if match is None:
+        return
+    where = "a key" if is_key else "a value"
+    raise InputStructureError(
+        f"{label} has invalid text in {where} at {_format_path(path)}: "
+        f"\\u{ord(match.group()):04x} is half of a two-part character escape "
+        "(an unpaired surrogate) and is not a character. Replace it with the "
+        "intended character."
+    )
+
+
+def _format_path(path: tuple[str | int, ...]) -> str:
+    parts = ["$"]
+    for part in path:
+        parts.append(f"[{part}]" if isinstance(part, int) else f".{part}")
+    return "".join(parts)
 
 
 def read_bytes_limited(
@@ -155,9 +258,11 @@ def load_yaml_limited(text: str, *, label: str) -> Any:
 
     loader = _UniqueKeySafeLoader(text)
     try:
-        return loader.get_single_data()
+        data = loader.get_single_data()
     finally:
         loader.dispose()
+    check_structure(data, label=label, max_depth=MAX_YAML_NESTING_DEPTH)
+    return data
 
 
 class TraversalBudget:

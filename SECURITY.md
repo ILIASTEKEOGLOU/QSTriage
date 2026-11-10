@@ -83,7 +83,8 @@ PDR 0.3 hashes use the RFC 8785 canonical JSON form, so they can be recomputed
 with any RFC 8785 implementation. `qstriage pdr verify` recomputes the
 document hash, every record hash, and the run identifier, and checks that each
 record repeats the document provenance. It reads at most 64 MiB, rejects
-duplicate JSON keys and non-finite numbers, and never writes.
+duplicate JSON keys, non-finite numbers, nesting deeper than 64 levels, and
+unpaired surrogate code points before any hash is computed, and never writes.
 `qstriage pdr diff` verifies both documents first and produces no comparison if
 either fails.
 

@@ -11,6 +11,8 @@ from qstriage.file_output import write_private_text
 from qstriage.limits import (
     MAX_ASSETS,
     MAX_ENRICHMENT_PATCH_FILE_BYTES,
+    MAX_NOTES_LENGTH,
+    MAX_TEXT_LENGTH,
     load_yaml_limited,
     read_text_limited,
 )
@@ -41,8 +43,8 @@ class RegularEnrichmentAssertion(BaseModel):
     value: Any
     state: EvidenceAssertionState
     provenance: EvidenceAssertionProvenance
-    source_reference: str | None = None
-    rationale: str | None = None
+    source_reference: str | None = Field(default=None, max_length=MAX_TEXT_LENGTH)
+    rationale: str | None = Field(default=None, max_length=MAX_NOTES_LENGTH)
 
     @model_validator(mode="after")
     def require_verified_source(self) -> RegularEnrichmentAssertion:
@@ -58,8 +60,8 @@ class RelationshipEnrichmentAssertion(BaseModel):
     completeness: RelationshipEvidenceCompleteness
     state: EvidenceAssertionState
     provenance: EvidenceAssertionProvenance
-    source_reference: str | None = None
-    rationale: str | None = None
+    source_reference: str | None = Field(default=None, max_length=MAX_TEXT_LENGTH)
+    rationale: str | None = Field(default=None, max_length=MAX_NOTES_LENGTH)
 
     @model_validator(mode="after")
     def require_verified_source(self) -> RelationshipEnrichmentAssertion:
