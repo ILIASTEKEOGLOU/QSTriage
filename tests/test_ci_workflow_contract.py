@@ -60,3 +60,12 @@ def test_compatibility_job_resolves_dependencies_and_runs_full_validation() -> N
     assert "python -m pip check" in compatibility
     assert "python -m qstriage.cli version" in compatibility
     assert "python -m pytest" in compatibility
+
+
+def test_ci_covers_both_supported_mcp_major_versions() -> None:
+    baseline, compatibility = _workflow_jobs()
+
+    assert "name: Confirm MCP 1.x is under test" in baseline
+    assert "sys.exit(v.split('.')[0] != '1')" in baseline
+    assert "name: Confirm MCP 2.x is under test" in compatibility
+    assert "sys.exit(v.split('.')[0] != '2')" in compatibility
