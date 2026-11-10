@@ -73,6 +73,16 @@ def _repository_blob_targets(text: str) -> list[tuple[str, str]]:
     ]
 
 
+def test_top_level_hidden_paths_are_limited_to_git_and_github() -> None:
+    hidden = {
+        path.parts[0]
+        for path in _tracked_paths()
+        if path.parts and path.parts[0].startswith(".")
+    }
+
+    assert hidden <= {".gitattributes", ".github", ".gitignore"}
+
+
 def test_readme_release_references_match_the_package_version() -> None:
     readme = README.read_text(encoding="utf-8")
     release_refs = re.findall(r"/blob/v(\d+\.\d+\.\d+)/", readme)

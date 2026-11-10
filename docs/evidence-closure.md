@@ -7,7 +7,7 @@ commands, and MCP tool interfaces may change in a minor release.
 
 A CBOM can identify a cryptographic asset while omitting the business,
 retention, exposure, and dependency facts needed for a defensible migration
-decision. An assistant can help collect those facts. It cannot invent them,
+decision. A client of the MCP tools can help collect those facts. It cannot invent them,
 approve them, or turn them into an autonomous production change.
 
 ## What Evidence Closure adds
@@ -45,9 +45,9 @@ existing dependencies are rejected.
 ## Declared versus verified
 
 `declared` records a supplied claim without treating it as independently
-verified. `verified` is distinct and requires `source_reference`. A model may
-ask questions and draft a patch; it cannot establish that a supplied fact is
-true.
+verified. `verified` is distinct and requires `source_reference`. An MCP
+client may ask questions and draft a patch; it cannot establish that a
+supplied fact is true.
 
 ## Source inventory binding
 
@@ -57,9 +57,9 @@ when the source inventory hash differs.
 
 ## Authority boundaries
 
-- The model may inspect gaps, ask targeted questions, and draft a patch.
-- The model cannot approve evidence, change scores, apply patches, or authorize
-  migration.
+- An MCP client may inspect gaps, ask targeted questions, and draft a patch.
+- An MCP client cannot approve evidence, change scores, apply patches, or
+  authorize migration.
 - The human supplies facts, reviews every claim, and runs `closure apply`.
 - QSTriage remains the deterministic decision authority.
 - Decision-grade evidence is not production authorization.
@@ -90,13 +90,12 @@ Every file inside it, including files in subdirectories, is readable through
 the tools. Start the server from the project directory that holds the
 inventories and patches, not from a home or system directory.
 
-## Codex skill workflow
+## MCP client workflow
 
-The `qstriage-evidence-closure` skill inspects first, asks only about returned
-gaps, accepts unknown, distinguishes declared from verified, validates a
-complete draft, displays claims and provenance, and stops for explicit human
-review. It never applies a patch. Instead, it gives the exact command for the
-human to run.
+A client of the MCP tools should inspect first, ask only about returned gaps,
+accept unknown, distinguish declared from verified, validate a complete draft,
+display claims and provenance, and stop for explicit human review. The MCP
+surface cannot apply a patch; the human runs the `closure apply` command.
 
 ## Demo
 
