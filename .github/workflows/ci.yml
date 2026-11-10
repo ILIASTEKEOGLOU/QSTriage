@@ -46,6 +46,9 @@ jobs:
       - name: Check dependency consistency
         run: python -m pip check
 
+      - name: Confirm MCP 1.x is under test
+        run: python -c "import importlib.metadata as m, sys; v = m.version('mcp'); print('mcp', v); sys.exit(v.split('.')[0] != '1')"
+
       - name: Smoke test CLI
         run: python -m qstriage.cli version
 
@@ -88,6 +91,9 @@ jobs:
 
       - name: Check dependency consistency
         run: python -m pip check
+
+      - name: Confirm MCP 2.x is under test
+        run: python -c "import importlib.metadata as m, sys; v = m.version('mcp'); print('mcp', v); sys.exit(v.split('.')[0] != '2')"
 
       - name: Smoke test CLI
         run: python -m qstriage.cli version

@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Security
+
+- The supported `mcp` range (extras `mcp` and `dev`) is now
+  `>=1.30,!=2.0.*,!=2.1.*,<3`. Releases 1.8.0 to 1.29.x and 2.0.0 to 2.1.x are
+  affected by GHSA-84m7-p3x7-pcfv, GHSA-5h93-6whr-6q8j, GHSA-w4fh-qvv9-3v23,
+  and GHSA-rwrf-2pqf-9j8j. These advisories concern the HTTP transports,
+  bearer-token authentication, and client output-schema validation;
+  QSTriage uses only the stdio server.
+- Development lock: `certifi` 2026.10.23 (GHSA-6q48-6c7w-9gw2,
+  PYSEC-2026-4320) and `mcp` 1.30.0. Release lock: `certifi` 2026.10.23 and
+  `setuptools` 84.2.1 (GHSA-xmj3-9gf7-h52w). The build backend pin is
+  `setuptools==84.2.1`. The runtime lock is unchanged; it contains neither
+  package.
+- CI now confirms that the locked Python 3.11 job tests `mcp` 1.x and the
+  compatibility jobs test `mcp` 2.x.
+
 ### Fixed
 
 - One resolver now decides whether each business context field is usable
