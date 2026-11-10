@@ -81,7 +81,7 @@ def test_pypi_publish_uses_pinned_trusted_publisher_without_credentials() -> Non
 
     assert (
         "pypa/gh-action-pypi-publish@"
-        "dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2"
+        "7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3"
         in publish
     )
     assert "packages-dir: dist/" in publish
