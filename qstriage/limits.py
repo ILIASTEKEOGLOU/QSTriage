@@ -12,6 +12,10 @@ MIB = 1024 * 1024
 MAX_INVENTORY_FILE_BYTES = 10 * MIB
 MAX_CBOM_FILE_BYTES = 32 * MIB
 MAX_CONFIG_FILE_BYTES = 1 * MIB
+# A legal patch covers up to MAX_ASSETS assets with seven fields and one
+# relationship assertion each; with 256-character identifiers and
+# 512-character source references that is about 6.9 MiB.
+MAX_ENRICHMENT_PATCH_FILE_BYTES = 10 * MIB
 MAX_PDR_FILE_BYTES = 64 * MIB
 
 MAX_ASSETS = 1_000

@@ -17,6 +17,15 @@
   package.
 - CI now confirms that the locked Python 3.11 job tests `mcp` 1.x and the
   compatibility jobs test `mcp` 2.x.
+- Evidence Closure enrichment patches are now parsed with the same limits as
+  every other YAML input (`closure validate`, `closure apply`, and the MCP
+  tool `validate_enrichment_patch`). Duplicate mapping keys are rejected, so
+  the value a reviewer reads is the value that is applied; previously the last
+  duplicate key was applied silently. YAML aliases, nesting deeper than 64
+  levels, and more than 200,000 parser events are rejected before any object
+  is built. Patches have their own size limit
+  (`MAX_ENRICHMENT_PATCH_FILE_BYTES`, 10 MiB, unchanged in value). A test
+  fails if package code parses YAML outside the limited loader.
 
 ### Fixed
 

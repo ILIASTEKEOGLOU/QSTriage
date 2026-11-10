@@ -8,7 +8,7 @@ This document describes the public input contract implemented by `qstriage/model
 
 All file-backed text input must be valid UTF-8 and remain within the documented size limits. QSTriage rejects malformed structures rather than attempting to repair them.
 
-YAML input is parsed with a safe loader and additionally rejects:
+YAML input (inventory, configuration, and Evidence Closure enrichment patch) is parsed with a safe loader and additionally rejects:
 
 - YAML aliases (anchor-based value reuse),
 - duplicate mapping keys,
@@ -25,6 +25,7 @@ Unknown fields are rejected in the native inventory and configuration models.
 | Inventory YAML file | 10 MiB |
 | CycloneDX CBOM JSON file | 32 MiB |
 | Configuration YAML file | 1 MiB |
+| Enrichment patch YAML file | 10 MiB |
 | PDR JSON file read by `pdr verify` or `pdr diff` (each file) | 64 MiB |
 | Assets per inventory | 1–1,000 |
 | Dependencies per inventory | 0–10,000 |
