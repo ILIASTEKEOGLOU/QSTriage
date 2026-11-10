@@ -16,6 +16,18 @@ YAML input (inventory, configuration, and Evidence Closure enrichment patch) is 
 - more than 200,000 parser events,
 - non-scalar or unhashable mapping keys.
 
+JSON input (CycloneDX CBOM and PDR files) is scanned before parsing and
+rejects nesting deeper than 64 levels. The scan and the checks below are
+iterative, so deeply nested input is reported as a limit violation instead of
+exhausting the interpreter stack.
+
+After parsing, every key and string value of JSON and YAML input is checked
+for unpaired surrogate code points (U+D800 to U+DFFF), which escape sequences
+such as `\ud800` can produce. They are not valid Unicode text and are
+rejected with the location of the first occurrence, for example
+`$.assets[0].name`. A correctly paired escape such as `\ud83d\ude00` is
+accepted.
+
 Unknown fields are rejected in the native inventory and configuration models.
 
 ## Supported limits
@@ -35,6 +47,9 @@ Unknown fields are rejected in the native inventory and configuration models.
 | Identifier length | 256 characters |
 | General text field length | 512 characters |
 | Notes length | 4,096 characters |
+| Evidence assertion `source_reference` | 512 characters |
+| Evidence assertion `rationale` | 4,096 characters |
+| JSON and YAML nesting depth | 64 levels |
 
 The simulation-result budget is calculated as `asset_count × max(1, scenario_count)`.
 

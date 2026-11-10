@@ -27,7 +27,15 @@ from pathlib import Path
 from typing import Any, Callable
 
 from qstriage.canonical_json import CanonicalizationError, canonical_sha256
-from qstriage.limits import MAX_PDR_FILE_BYTES, ResourceLimitError, read_text_limited
+from qstriage.limits import (
+    MAX_JSON_NESTING_DEPTH,
+    MAX_PDR_FILE_BYTES,
+    InputStructureError,
+    ResourceLimitError,
+    check_json_nesting,
+    check_structure,
+    read_text_limited,
+)
 
 
 SUPPORTED_PDR_VERSIONS = frozenset({"0.2", "0.3"})
@@ -93,8 +101,19 @@ def verify_pdr_text(text: str) -> VerificationResult:
 
 
 def parse_pdr_text(text: str) -> Any:
+    """Parse PDR JSON after an iterative depth scan, then check the parsed structure.
+
+    Both checks run before any verification step, so copying, hashing, and
+    canonicalization only ever see documents within the depth limit and
+    without unpaired surrogates (legacy 0.2 documents included).
+    """
+
     try:
-        return json.loads(
+        check_json_nesting(text, label="PDR JSON")
+    except ResourceLimitError as error:
+        raise PDRVerificationInputError(str(error)) from error
+    try:
+        document = json.loads(
             text,
             object_pairs_hook=_object_without_duplicate_keys,
             parse_constant=_reject_constant,
@@ -105,6 +124,11 @@ def parse_pdr_text(text: str) -> Any:
         ) from error
     except json.JSONDecodeError as error:
         raise PDRVerificationInputError(f"PDR file is not valid JSON: {error}") from error
+    try:
+        check_structure(document, label="PDR JSON", max_depth=MAX_JSON_NESTING_DEPTH)
+    except (InputStructureError, ResourceLimitError) as error:
+        raise PDRVerificationInputError(str(error)) from error
+    return document
 
 
 def verify_pdr_document(document: Any) -> VerificationResult:

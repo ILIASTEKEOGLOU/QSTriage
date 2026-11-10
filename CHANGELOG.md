@@ -26,6 +26,18 @@
   is built. Patches have their own size limit
   (`MAX_ENRICHMENT_PATCH_FILE_BYTES`, 10 MiB, unchanged in value). A test
   fails if package code parses YAML outside the limited loader.
+- A common structure check now applies to all untrusted JSON and YAML input.
+  CBOM and PDR JSON are scanned before parsing and rejected beyond 64 levels
+  of nesting. After parsing, keys and string values of every input
+  (inventory, configuration, enrichment patch, CBOM, PDR) are checked for
+  unpaired surrogate code points and rejected with the location of the first
+  occurrence. Previously `pdr verify` and `pdr diff` stopped with an
+  unhandled error on a PDR nested about 600 levels deep and on a legacy PDR
+  0.2 file containing an unpaired surrogate, and `import cbom` accepted both.
+  The checks are iterative and cannot exhaust the interpreter stack.
+- Evidence assertion `source_reference` is limited to 512 characters and
+  `rationale` to 4,096 characters, in inventory evidence metadata and in
+  enrichment patches. Previously both were unbounded.
 
 ### Fixed
 

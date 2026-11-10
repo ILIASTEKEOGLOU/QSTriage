@@ -11,7 +11,10 @@ from qstriage.file_output import write_private_text
 from qstriage.limits import (
     MAX_CBOM_COMPONENTS,
     MAX_CBOM_FILE_BYTES,
+    MAX_JSON_NESTING_DEPTH,
     ResourceLimitError,
+    check_json_nesting,
+    check_structure,
     read_text_limited,
 )
 from qstriage.models import CryptographicAsset, Inventory
@@ -26,12 +29,14 @@ REVIEW_REQUIRED_NOTE = (
 def parse_cbom_json(text: str) -> dict[str, Any]:
     """Parse one already-captured CycloneDX CBOM text snapshot."""
 
+    check_json_nesting(text, label="CBOM JSON")
     try:
         payload = json.loads(text, object_pairs_hook=_object_without_duplicate_keys)
     except RecursionError as error:
         raise ResourceLimitError(
             "CBOM JSON exceeds the supported nesting depth."
         ) from error
+    check_structure(payload, label="CBOM JSON", max_depth=MAX_JSON_NESTING_DEPTH)
 
     _validate_cbom_document(payload)
     return payload

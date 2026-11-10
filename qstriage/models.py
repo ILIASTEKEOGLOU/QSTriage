@@ -111,8 +111,8 @@ class FieldEvidenceAssertion(BaseModel):
 
     state: EvidenceAssertionState
     provenance: EvidenceAssertionProvenance
-    source_reference: str | None = None
-    rationale: str | None = None
+    source_reference: str | None = Field(default=None, max_length=MAX_TEXT_LENGTH)
+    rationale: str | None = Field(default=None, max_length=MAX_NOTES_LENGTH)
 
     @model_validator(mode="after")
     def require_verified_source_reference(self) -> FieldEvidenceAssertion:

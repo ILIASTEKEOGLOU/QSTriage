@@ -22,7 +22,8 @@ The parser rejects:
 - non-object `cryptoProperties`,
 - non-object `algorithmProperties` or `protocolProperties`,
 - objects or arrays where supported metadata fields require scalar values,
-- JSON that triggers a recursion-depth failure during parsing,
+- nesting deeper than 64 levels, detected before parsing,
+- unpaired surrogate code points in keys or string values,
 - documents that produce no supported cryptographic assets.
 
 QSTriage performs bounded structural validation for the fields it consumes. It does not claim full CycloneDX schema validation and does not require every field defined by the wider CycloneDX specification.
