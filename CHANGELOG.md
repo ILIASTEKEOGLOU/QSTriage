@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Removed
+
+- The repository skill directory, its client configuration file, and their
+  test. The optional MCP server and its four read-only tools are unchanged.
+  README and `docs/evidence-closure.md` describe the workflow for any MCP
+  client.
+
 ### Security
 
 - The supported `mcp` range (extras `mcp` and `dev`) is now

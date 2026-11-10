@@ -141,9 +141,9 @@ provenance-aware assertions. Patches are bound to the exact source inventory,
 validated before application, written to a new inventory, and compared through
 the same deterministic assessment pipeline.
 
-The optional MCP surface exposes four read-only, path-confined tools. The
-repository Codex skill may inspect gaps, draft and validate a patch, and compare
-inventories only after the human applies it. It never applies the patch itself.
+The optional MCP surface exposes four read-only, path-confined tools. An MCP
+client may inspect gaps, draft and validate a patch, and compare inventories
+only after the human applies it. The MCP surface cannot apply a patch.
 
 The bundled demo closes seven evidence findings and moves the evidence score
 from `0.00` to `1.00`; the `migration_planning` action moves from `gated` to
