@@ -14,6 +14,22 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README = REPOSITORY_ROOT / "README.md"
 REPOSITORY_URL = "https://github.com/ILIASTEKEOGLOU/QSTriage"
 
+
+def _documented_release() -> str:
+    """Release whose tagged documentation the README links to.
+
+    A release links to its own tag. Between releases the package version is
+    ``X.Y.Z.dev0``, which is never tagged, so the README keeps linking to the
+    newest release listed in ``CHANGELOG.md``.
+    """
+
+    if not __version__.endswith(".dev0"):
+        return __version__
+    changelog = (REPOSITORY_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    newest = re.search(r"^## v(\d+\.\d+\.\d+) - ", changelog, re.MULTILINE)
+    assert newest is not None
+    return newest.group(1)
+
 pytestmark = pytest.mark.skipif(
     not (REPOSITORY_ROOT / ".git").exists() or shutil.which("git") is None,
     reason="repository-only surface contract; Git metadata is not shipped in sdist",
@@ -63,9 +79,9 @@ def test_readme_release_references_match_the_package_version() -> None:
     release_tag_examples = re.findall(r"release_tag=v(\d+\.\d+\.\d+)", readme)
 
     assert release_refs
-    assert set(release_refs) == {__version__}
+    assert set(release_refs) == {_documented_release()}
     assert release_tag_examples
-    assert set(release_tag_examples) == {__version__}
+    assert set(release_tag_examples) == {_documented_release()}
 
     relative_docs = [
         target
@@ -76,7 +92,7 @@ def test_readme_release_references_match_the_package_version() -> None:
 
     blob_targets = _repository_blob_targets(readme)
     assert blob_targets
-    assert {ref for _, ref in blob_targets} == {f"v{__version__}"}
+    assert {ref for _, ref in blob_targets} == {f"v{_documented_release()}"}
 
 
 def test_documentation_index_is_complete_and_pypi_safe() -> None:
@@ -99,7 +115,7 @@ def test_documentation_index_is_complete_and_pypi_safe() -> None:
     assert len(links) == len(tracked_docs)
     assert {path for path, _ in links} == tracked_docs
 
-    assert {ref for _, ref in links} == {f"v{__version__}"}
+    assert {ref for _, ref in links} == {f"v{_documented_release()}"}
 
 
 def test_retired_event_framing_is_absent_from_the_current_tree() -> None:

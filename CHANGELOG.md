@@ -62,6 +62,12 @@
 
 ### Changed
 
+- The version on `main` is now `1.5.0.dev0`. Output produced from unreleased
+  code, such as the engine version recorded in a PDR and `qstriage version`,
+  no longer carries the number of the published release `1.4.1`. The suffix
+  does not identify the commit. Release preparation sets `1.5.0`; tests
+  accept either form and check that `CHANGELOG.md` matches it.
+
 - Built-in policy pack `nist-pqc-basic` 0.4. The rules
   `standardized_pqc_can_be_retained_with_operational_review` and
   `ml_kem_usage_requires_key_establishment_context` now require human
