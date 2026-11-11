@@ -5,10 +5,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from qstriage.assessment import (
+    SCORE_BASIS_NOTE,
     VERIFY_FIRST_ACTION,
     AssetAssessment,
     assess_inventory,
     partition_assessments,
+    score_basis_label,
     unranked_reason,
 )
 from qstriage.graph import build_dependency_graph, render_text_graph
@@ -59,6 +61,11 @@ def generate_markdown_report(inventory: Inventory) -> str:
         f"{len(partition.verification_first)}"
     )
     lines.append(f"- Ranked assets: {len(partition.ranked)}")
+    worst_case = sum(1 for item in partition.ranked if item.score.scoring_assumptions)
+    lines.append(
+        "- Ranked assets scored at worst case because context is missing: "
+        f"{worst_case} of {len(partition.ranked)}"
+    )
     if partition.ranked:
         highest = partition.ranked[0]
         lines.append(
@@ -80,23 +87,28 @@ def generate_markdown_report(inventory: Inventory) -> str:
 
     if partition.ranked:
         lines.append(
-            "| Rank | Asset | Risk Attention | Band | Execution | Canonical Action | "
-            "Verification | Human Review |"
+            "| Rank | Asset | Risk Attention | Band | Score basis | Execution | "
+            "Canonical Action | Verification | Human Review |"
         )
-        lines.append("|---:|---|---:|---|---|---|---|---|")
+        lines.append("|---:|---|---:|---|---|---|---|---|---|")
 
     for index, assessment in enumerate(partition.ranked, start=1):
         decision = assessment.decision
         lines.append(
             f"| {index} | {markdown_table_cell(assessment.asset.name)} | "
             f"{decision.risk_attention_score:.2f} | "
-            f"{decision.risk_attention_band} | {decision.execution_state.value} | "
+            f"{decision.risk_attention_band} | "
+            f"{score_basis_label(assessment.score, short=True)} | "
+            f"{decision.execution_state.value} | "
             f"{decision.action_type.value} | "
             f"{decision.verification_priority.value} | "
             f"{'yes' if decision.human_review_required else 'no'} |"
         )
 
     lines.append("")
+    if worst_case:
+        lines.append(SCORE_BASIS_NOTE)
+        lines.append("")
     lines.extend(_render_decision_context_review(context_review))
 
     lines.append("## Asset-Level Findings")
@@ -274,7 +286,20 @@ def _render_asset_finding(
         + ("yes" if decision.human_review_required else "no")
     )
     lines.append(f"- Reason codes: {reason_codes}")
+    lines.append(f"- Score basis: {score_basis_label(score, short=True)}")
     lines.append("")
+
+    if score.scoring_assumptions:
+        lines.append("Scoring assumptions (worst case):")
+        lines.append("")
+        lines.append("| Field | Value in inventory | Problem | Scored as |")
+        lines.append("|---|---|---|---|")
+        for item in score.scoring_assumptions:
+            lines.append(
+                f"| {item.field} | {markdown_code_span(item.inventory_value)} | "
+                f"{item.problem} | {item.scored_as} |"
+            )
+        lines.append("")
 
     lines.append("Algorithm classification:")
     lines.append("")

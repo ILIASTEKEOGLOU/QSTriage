@@ -128,6 +128,37 @@ QSTriage maps the numeric score into four backlog labels:
 
 These are triage labels for planning and communication. They do not replace human decision-making.
 
+## Unresolved context is scored at its worst case
+
+A context field that cannot be used (missing, withheld, not an accepted label,
+defaulted on a CBOM import, or a zero retention that nobody confirmed) is
+scored at its most severe value. Missing evidence can therefore raise an asset
+in the backlog; it never lowers one.
+
+| Field | Scored as when unresolved |
+|---|---|
+| `data_class` | sensitive |
+| `exposure` | public |
+| `retention_years` | 10 years |
+| `criticality` | critical |
+| `local_blast_radius` | critical |
+| `migration_effort` | low (the smallest effort penalty) |
+
+The dependency graph uses the same values, so an unresolved downstream
+criticality also counts at its worst case for the assets that depend on it.
+
+Every substitution is visible. The score has a basis: `confirmed` when every
+context field the score uses is present and usable, `worst case` otherwise.
+`score` and `report` show the basis and name the fields; the report lists each
+field with its value in the inventory, the problem, and the value scored; the
+score export carries `score_basis` and `scoring_assumptions`; the PDR writes
+one line per field in `assumptions_made`. Supplying the real values replaces
+the assumption. The bundled Evidence Closure demo asset scores 100.0 at worst
+case with six fields unresolved and 93.0 confirmed after enrichment.
+
+The substitution affects only the score and its band. Execution state, action,
+evidence findings, and human review keep reading the declared values.
+
 ## Relationship to evidence review
 
 Scoring and evidence review are separate.

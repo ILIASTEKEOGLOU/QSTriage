@@ -10,9 +10,11 @@ from rich.text import Text
 
 from qstriage import __version__
 from qstriage.assessment import (
+    SCORE_BASIS_NOTE,
     VERIFY_FIRST_ACTION,
     assess_inventory,
     partition_assessments,
+    score_basis_label,
     unranked_reason,
 )
 from qstriage.cbom import import_cbom_inventory, write_imported_inventory
@@ -424,6 +426,7 @@ def score(
             f"{decision.risk_attention_band}",
             "\n".join(
                 [
+                    f"basis={score_basis_label(assessment.score, short=True)}",
                     f"execution={decision.execution_state.value}",
                     f"action={decision.action_type.value}",
                     f"verification={decision.verification_priority.value}",
@@ -434,6 +437,14 @@ def score(
         )
 
     console.print(table)
+    worst_case = [item for item in partition.ranked if item.score.scoring_assumptions]
+    if worst_case:
+        console.print()
+        for assessment in worst_case:
+            fields = ", ".join(item.field for item in assessment.score.scoring_assumptions)
+            _safe_print(f"Worst case fields for {assessment.asset.name}: {fields}")
+        console.print()
+        _safe_print(SCORE_BASIS_NOTE)
 
 
 @app.command("graph")

@@ -36,7 +36,8 @@ def test_generate_markdown_report_uses_canonical_decision_fields() -> None:
 
     report = generate_markdown_report(inventory)
 
-    assert "| Risk Attention | Band | Execution | Canonical Action |" in report
+    assert "| Risk Attention | Band | Score basis | Execution | Canonical Action |" in report
+    assert "| confirmed | justified |" in report
     assert "- Risk attention score: **81.00**" in report
     assert "- Execution state: **justified**" in report
     assert "- Canonical action: **simulate_before_migration**" in report

@@ -401,6 +401,7 @@ def _build_record(
             asset,
             assessment.evidence_quality,
             assessment.evidence_review,
+            score,
         ),
         record_integrity=RecordIntegrity(
             previous_record_hash=previous_record_hash,
@@ -705,11 +706,18 @@ def _assumptions(
     asset: CryptographicAsset,
     evidence_quality: EvidenceQuality,
     evidence_review: EvidenceReview,
+    score: ScoreResult,
 ) -> list[str]:
     assumptions = []
 
     if asset.asset_type == "cbom_cryptographic_asset":
         assumptions.append("CBOM crypto assets are treated as partial evidence until enriched with business context.")
+
+    for assumption in score.scoring_assumptions:
+        assumptions.append(
+            f"Unresolved {assumption.field} ({assumption.problem}) is scored as "
+            f"{assumption.scored_as} (worst case)."
+        )
 
     for field in evidence_quality.missing_evidence:
         assumptions.append(f"Missing {field} lowers evidence quality and decision confidence.")

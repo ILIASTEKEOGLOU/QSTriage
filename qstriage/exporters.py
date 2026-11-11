@@ -158,6 +158,8 @@ def _score_result_records(
                 "decision_confidence": decision.decision_confidence,
                 "human_review_required": decision.human_review_required,
                 "reason_codes": list(decision.reason_codes),
+                "score_basis": score.score_basis,
+                "scoring_assumptions": [asdict(item) for item in score.scoring_assumptions],
                 "breakdown": _to_json_ready(score.breakdown),
                 "explanation": _decision_safe_explanation(score),
             }
@@ -206,6 +208,11 @@ def _score_result_rows(
                 "decision_confidence": decision.decision_confidence,
                 "human_review_required": decision.human_review_required,
                 "reason_codes": " | ".join(decision.reason_codes),
+                "score_basis": score.score_basis,
+                "scoring_assumptions": " | ".join(
+                    f"{item.field}: {item.inventory_value} ({item.problem}) -> {item.scored_as}"
+                    for item in score.scoring_assumptions
+                ),
                 "cryptographic_risk": score.breakdown.cryptographic_risk,
                 "shelf_life_risk": score.breakdown.shelf_life_risk,
                 "exposure_risk": score.breakdown.exposure_risk,

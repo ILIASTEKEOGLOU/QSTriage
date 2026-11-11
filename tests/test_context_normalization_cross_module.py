@@ -83,7 +83,7 @@ def test_internal_alias_is_shared_by_policy_and_scoring(exposure: str) -> None:
     assert _exposure_risk(asset.exposure) == 4.0
 
 
-def test_unmapped_decision_bearing_context_does_not_lower_score_but_requires_verification() -> None:
+def test_unmapped_decision_bearing_context_is_scored_at_worst_case_and_requires_verification() -> None:
     asset = _asset(data_class="Personal_Info_Scope", exposure="internal")
     graph = nx.DiGraph()
     graph.add_node(
@@ -107,7 +107,13 @@ def test_unmapped_decision_bearing_context_does_not_lower_score_but_requires_ver
         context=DecisionContext(normalized_context=normalize_asset_context(asset)),
     )
 
-    assert score.breakdown.shelf_life_risk == 7.0
+    # The unmapped data class is scored as sensitive (worst case), one point
+    # above the base shelf-life risk, and the score says so.
+    assert score.breakdown.shelf_life_risk == 8.0
+    assert score.score_basis == "worst_case"
+    assert [(item.field, item.problem, item.scored_as) for item in score.scoring_assumptions] == [
+        ("data_class", "not an accepted label", "sensitive")
+    ]
     assert decision.execution_state is ExecutionState.justified
     assert decision.verification_priority is VerificationPriority.medium
     assert VerificationRequirement.business_context in decision.verification_requirements
