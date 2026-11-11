@@ -21,11 +21,16 @@ def test_export_score_results_as_json(tmp_path: Path) -> None:
     written_path = export_score_results(inventory, output_path, "json")
 
     assert written_path == output_path
-    data = json.loads(output_path.read_text(encoding="utf-8"))
+    document = json.loads(output_path.read_text(encoding="utf-8"))
 
+    assert list(document) == ["score_export_version", "verification_first", "ranked"]
+    assert document["score_export_version"] == "0.3"
+    assert document["verification_first"] == []
+    data = document["ranked"]
     assert len(data) == 5
+    assert [record["rank"] for record in data] == [1, 2, 3, 4, 5]
     assert data[0]["asset_id"]
-    assert data[0]["score_export_version"] == "0.2"
+    assert data[0]["score_export_version"] == "0.3"
     assert "breakdown" in data[0]
     assert "priority_score" in data[0]
     assert "execution_state" in data[0]
@@ -47,8 +52,11 @@ def test_export_score_results_as_csv(tmp_path: Path) -> None:
         rows = list(csv.DictReader(file))
 
     assert len(rows) == 5
+    assert list(rows[0])[:3] == ["list", "rank", "unranked_reason"]
+    assert [row["list"] for row in rows] == ["ranked"] * 5
+    assert [row["rank"] for row in rows] == ["1", "2", "3", "4", "5"]
     assert "asset_id" in rows[0]
-    assert rows[0]["score_export_version"] == "0.2"
+    assert rows[0]["score_export_version"] == "0.3"
     assert "priority_score" in rows[0]
     assert "execution_state" in rows[0]
     assert "action_type" in rows[0]
@@ -69,7 +77,7 @@ def test_score_exports_project_canonical_actions_for_known_divergences(
 
     json_rows = {
         row["asset_id"]: row
-        for row in json.loads(json_path.read_text(encoding="utf-8"))
+        for row in json.loads(json_path.read_text(encoding="utf-8"))["ranked"]
     }
     with csv_path.open("r", encoding="utf-8", newline="") as file:
         csv_rows = {row["asset_id"]: row for row in csv.DictReader(file)}
@@ -93,7 +101,7 @@ def test_score_export_projects_gated_cbom_decision(tmp_path: Path) -> None:
 
     rows = {
         row["asset_id"]: row
-        for row in json.loads(output_path.read_text(encoding="utf-8"))
+        for row in json.loads(output_path.read_text(encoding="utf-8"))["ranked"]
     }
     rsa = rows["crypto-rsa-2048"]
 
@@ -250,7 +258,7 @@ def test_json_exports_preserve_formula_like_text(tmp_path: Path) -> None:
     export_score_results(inventory, score_path, "json")
     export_simulation_results(inventory, simulation_path, "json")
 
-    score_row = json.loads(score_path.read_text(encoding="utf-8"))[0]
+    score_row = json.loads(score_path.read_text(encoding="utf-8"))["ranked"][0]
     simulation_row = json.loads(simulation_path.read_text(encoding="utf-8"))[0]
 
     assert score_row["asset_id"] == formula_like_value

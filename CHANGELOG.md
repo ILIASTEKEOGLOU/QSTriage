@@ -69,6 +69,18 @@
 
 ### Changed
 
+- Assets whose cryptography is not identified (execution state
+  `verification_first`) are no longer ranked. `score` prints them first in a
+  "Verify First: Cryptography Not Identified (not ranked)" table with the
+  algorithm field, the reason, and what to do; the ranked backlog follows with
+  contiguous ranks. `report` adds a "Verify First" section before "Priority
+  Backlog", counts these assets in the executive summary, and draws
+  dependency graph views from ranked assets only.
+- Score export contract 0.3 (breaking). JSON is an object with
+  `score_export_version`, `verification_first` (records with
+  `unranked_reason`), and `ranked` (records with `rank`); 0.2 was a flat list.
+  CSV rows start with `list`, `rank`, and `unranked_reason`.
+
 - The version on `main` is now `1.5.0.dev0`. Output produced from unreleased
   code, such as the engine version recorded in a PDR and `qstriage version`,
   no longer carries the number of the published release `1.4.1`. The suffix

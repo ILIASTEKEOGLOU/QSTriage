@@ -9,7 +9,12 @@ from rich.table import Table
 from rich.text import Text
 
 from qstriage import __version__
-from qstriage.assessment import assess_inventory
+from qstriage.assessment import (
+    VERIFY_FIRST_ACTION,
+    assess_inventory,
+    partition_assessments,
+    unranked_reason,
+)
 from qstriage.cbom import import_cbom_inventory, write_imported_inventory
 from qstriage.closure import (
     build_gap_manifest,
@@ -375,13 +380,42 @@ def score(
         _safe_print(f"Scoring failed: {error}", style="red")
         raise typer.Exit(code=1) from error
 
+    partition = partition_assessments(assessments)
+
+    if partition.verification_first:
+        verify_table = Table(
+            title="Verify First: Cryptography Not Identified (not ranked)",
+            box=None,
+        )
+        verify_table.add_column("Asset", max_width=18, overflow="fold")
+        verify_table.add_column("Algorithm field", max_width=22, overflow="fold")
+        verify_table.add_column("Why it is not ranked", overflow="fold")
+
+        for assessment in partition.verification_first:
+            verify_table.add_row(
+                _safe_text(assessment.asset.name),
+                _safe_text(assessment.classification.input_algorithm or "(empty)"),
+                _safe_text(unranked_reason(assessment.classification)),
+            )
+
+        console.print(verify_table)
+        _safe_print(f"What to do: {VERIFY_FIRST_ACTION}")
+        console.print()
+
+    if not partition.ranked:
+        _safe_print(
+            "No asset can be ranked yet: the cryptography of every asset must be "
+            "identified first (see the table above)."
+        )
+        return
+
     table = Table(title="QSTriage Canonical Decision Backlog", box=None)
     table.add_column("Rank", justify="right")
     table.add_column("Asset", max_width=18, overflow="fold")
     table.add_column("Risk Attention", justify="right")
     table.add_column("Canonical Decision", overflow="fold")
 
-    for index, assessment in enumerate(assessments, start=1):
+    for index, assessment in enumerate(partition.ranked, start=1):
         decision = assessment.decision
         table.add_row(
             str(index),

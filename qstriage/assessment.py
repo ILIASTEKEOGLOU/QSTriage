@@ -9,7 +9,12 @@ from qstriage.context import (
     is_cbom_imported_asset,
     normalize_asset_context,
 )
-from qstriage.decision import CanonicalDecision, DecisionContext, reconcile_decision
+from qstriage.decision import (
+    CanonicalDecision,
+    DecisionContext,
+    ExecutionState,
+    reconcile_decision,
+)
 from qstriage.evidence import EvidenceReview, review_asset_evidence
 from qstriage.models import (
     AssetEvidenceAssertions,
@@ -25,6 +30,7 @@ from qstriage.policy import (
 )
 from qstriage.scoring import ScoreResult, score_inventory
 from qstriage.standards import (
+    IDENTIFIER_FAMILY_UNVERIFIED,
     AlgorithmClassification,
     KeySizeRequirement,
     classify_algorithm,
@@ -152,6 +158,62 @@ def assess_inventory(
         )
         for score in score_inventory(inventory)
     ]
+
+@dataclass(frozen=True)
+class PartitionedAssessments:
+    """Assessments split into the verify-first list and the ranked backlog.
+
+    An asset whose cryptography is not identified has execution state
+    ``verification_first``. Its priority score rests on a guessed algorithm,
+    so it is listed separately and never ranked.
+    """
+
+    verification_first: list[AssetAssessment]
+    ranked: list[AssetAssessment]
+
+
+def partition_assessments(assessments: list[AssetAssessment]) -> PartitionedAssessments:
+    """Split assessments by the canonical execution state.
+
+    The ranked list keeps the deterministic risk-attention order of
+    ``assess_inventory``. The verify-first list is ordered by risk attention,
+    highest first, then by asset id, so the assets with the most exposure
+    context are verified first.
+    """
+
+    verification_first = [
+        assessment
+        for assessment in assessments
+        if assessment.decision.execution_state is ExecutionState.verification_first
+    ]
+    ranked = [
+        assessment
+        for assessment in assessments
+        if assessment.decision.execution_state is not ExecutionState.verification_first
+    ]
+    verification_first.sort(
+        key=lambda item: (-item.decision.risk_attention_score, item.asset.id)
+    )
+    return PartitionedAssessments(verification_first=verification_first, ranked=ranked)
+
+
+def unranked_reason(classification: AlgorithmClassification) -> str:
+    """Explain in one sentence why an asset is in the verify-first list."""
+
+    if classification.identifier_resolution == IDENTIFIER_FAMILY_UNVERIFIED:
+        return (
+            f"The {classification.algorithm_family} family is recognized, but the "
+            "parameter set is missing or not supported, so the exact algorithm is "
+            "not identified."
+        )
+    return "The algorithm identifier is not in the QSTriage algorithm registry."
+
+
+VERIFY_FIRST_ACTION = (
+    "Confirm the exact algorithm and parameter set with the system owner, then "
+    "correct the algorithm field in the inventory."
+)
+
 
 _EVIDENCE_QUALITY_KEYS = {
     "data_class": "data_class",

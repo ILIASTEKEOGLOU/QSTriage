@@ -4,7 +4,13 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from qstriage.assessment import AssetAssessment, assess_inventory
+from qstriage.assessment import (
+    VERIFY_FIRST_ACTION,
+    AssetAssessment,
+    assess_inventory,
+    partition_assessments,
+    unranked_reason,
+)
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.file_output import write_private_text
 from qstriage.models import Inventory, load_inventory
@@ -21,6 +27,7 @@ from qstriage.simulator import ImpactSimulationResult, simulate_inventory
 def generate_markdown_report(inventory: Inventory) -> str:
     graph = build_dependency_graph(inventory)
     assessments = assess_inventory(inventory)
+    partition = partition_assessments(assessments)
     simulations = simulate_inventory(inventory)
     context_review = review_decision_context(inventory)
 
@@ -47,22 +54,38 @@ def generate_markdown_report(inventory: Inventory) -> str:
             "relationships, if present, are not treated as QSTriage blast-radius dependencies."
         )
     lines.append(f"- Migration scenarios analyzed: {max(1, len(inventory.scenarios))}")
-    highest = assessments[0]
     lines.append(
-        "- Highest risk-attention asset: "
-        f"{markdown_inline(highest.asset.name)} "
-        f"({highest.decision.risk_attention_score})"
+        "- Assets to verify first (cryptography not identified, not ranked): "
+        f"{len(partition.verification_first)}"
     )
+    lines.append(f"- Ranked assets: {len(partition.ranked)}")
+    if partition.ranked:
+        highest = partition.ranked[0]
+        lines.append(
+            "- Highest risk-attention ranked asset: "
+            f"{markdown_inline(highest.asset.name)} "
+            f"({highest.decision.risk_attention_score})"
+        )
     lines.append("")
+    lines.extend(_render_verify_first(partition.verification_first))
     lines.append("## Priority Backlog")
     lines.append("")
-    lines.append(
-        "| Rank | Asset | Risk Attention | Band | Execution | Canonical Action | "
-        "Verification | Human Review |"
-    )
-    lines.append("|---:|---|---:|---|---|---|---|---|")
 
-    for index, assessment in enumerate(assessments, start=1):
+    if not partition.ranked:
+        lines.append(
+            "No asset can be ranked yet: the cryptography of every asset must be "
+            "identified first (see Verify First above)."
+        )
+        lines.append("")
+
+    if partition.ranked:
+        lines.append(
+            "| Rank | Asset | Risk Attention | Band | Execution | Canonical Action | "
+            "Verification | Human Review |"
+        )
+        lines.append("|---:|---|---:|---|---|---|---|---|")
+
+    for index, assessment in enumerate(partition.ranked, start=1):
         decision = assessment.decision
         lines.append(
             f"| {index} | {markdown_table_cell(assessment.asset.name)} | "
@@ -79,7 +102,7 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append("## Asset-Level Findings")
     lines.append("")
 
-    for assessment in assessments:
+    for assessment in (*partition.verification_first, *partition.ranked):
         lines.extend(
             _render_asset_finding(
                 assessment,
@@ -90,7 +113,7 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append("## Dependency Graph Views")
     lines.append("")
 
-    for assessment in assessments[:3]:
+    for assessment in partition.ranked[:3]:
         lines.append(f"### {markdown_inline(assessment.asset.name)}")
         lines.append("")
         lines.append(
@@ -135,6 +158,39 @@ def write_markdown_report(
         overwrite=overwrite,
         protected_paths=(inventory_path, *protected_paths),
     )
+
+
+def _render_verify_first(assessments: list[AssetAssessment]) -> list[str]:
+    lines = ["## Verify First: Cryptography Not Identified", ""]
+
+    if not assessments:
+        lines.append("None. Every asset has an identified algorithm and is ranked below.")
+        lines.append("")
+        return lines
+
+    lines.append(
+        "These assets are not ranked. Their algorithm field does not identify an "
+        "exact algorithm and parameter set, so a priority score for them would rest "
+        "on a guess. Identify the cryptography first; the asset then enters the "
+        "Priority Backlog."
+    )
+    lines.append("")
+    lines.append(f"What to do: {VERIFY_FIRST_ACTION}")
+    lines.append("")
+    lines.append("| Asset | Asset ID | Algorithm field | Why it is not ranked |")
+    lines.append("|---|---|---|---|")
+
+    for assessment in assessments:
+        algorithm = assessment.classification.input_algorithm
+        lines.append(
+            f"| {markdown_table_cell(assessment.asset.name)} | "
+            f"{markdown_code_span(assessment.asset.id)} | "
+            f"{markdown_code_span(algorithm) if algorithm else '(empty)'} | "
+            f"{markdown_table_cell(unranked_reason(assessment.classification))} |"
+        )
+
+    lines.append("")
+    return lines
 
 
 def _render_decision_context_review(review: InventoryContextReview) -> list[str]:
