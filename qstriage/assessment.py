@@ -209,6 +209,28 @@ def unranked_reason(classification: AlgorithmClassification) -> str:
     return "The algorithm identifier is not in the QSTriage algorithm registry."
 
 
+SCORE_BASIS_NOTE = (
+    'Score basis: "confirmed" means every context field the score uses is present '
+    'and usable. "worst case" means the listed fields are missing, withheld, not an '
+    "accepted label, or defaulted on import; each is scored at its most severe value, "
+    "so missing evidence can raise an asset but never bury it. Supply the listed "
+    "fields to replace the assumption with the real value."
+)
+
+
+def score_basis_label(score: ScoreResult, *, short: bool = False) -> str:
+    """Text for the Score basis column of the ranked backlog."""
+
+    if not score.scoring_assumptions:
+        return "confirmed"
+    count = len(score.scoring_assumptions)
+    noun = "field" if count == 1 else "fields"
+    if short:
+        return f"worst case ({count} {noun})"
+    fields = ", ".join(item.field for item in score.scoring_assumptions)
+    return f"worst case for {count} {noun}: {fields}"
+
+
 VERIFY_FIRST_ACTION = (
     "Confirm the exact algorithm and parameter set with the system owner, then "
     "correct the algorithm field in the inventory."

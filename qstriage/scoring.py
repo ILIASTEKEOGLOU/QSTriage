@@ -5,8 +5,10 @@ from dataclasses import dataclass
 import networkx as nx
 
 from qstriage.context import (
+    ContextValueState,
     DataSensitivity,
     ExposureCategory,
+    ResolvedField,
     normalize_asset_context,
     normalize_data_sensitivity,
     normalize_exposure,
@@ -35,6 +37,16 @@ class ScoreBreakdown:
 
 
 @dataclass(frozen=True)
+class ScoringAssumption:
+    """One context field scored at its worst case because its value is unusable."""
+
+    field: str
+    inventory_value: str
+    problem: str
+    scored_as: str
+
+
+@dataclass(frozen=True)
 class ScoreResult:
     asset_id: str
     asset_name: str
@@ -44,22 +56,105 @@ class ScoreResult:
     confidence: str
     breakdown: ScoreBreakdown
     explanation: list[str]
+    score_basis: str = "confirmed"
+    scoring_assumptions: tuple[ScoringAssumption, ...] = ()
+
+
+SCORE_BASIS_CONFIRMED = "confirmed"
+SCORE_BASIS_WORST_CASE = "worst_case"
+
+# Worst case per context field, used for scoring only when the field is
+# unresolved. Missing evidence can raise an asset in the backlog; it never
+# lowers one (design/context-resolution.md, D6).
+WORST_CASE_DATA_CLASS = "customer_pii"
+WORST_CASE_EXPOSURE = "public"
+WORST_CASE_RETENTION_YEARS = 10
+_WORST_CASE_SCORED_AS = {
+    "data_class": "sensitive",
+    "exposure": "public",
+    "retention_years": "10 years",
+    "criticality": "critical",
+    "local_blast_radius": "critical",
+    "migration_effort": "low",
+}
+
+_PROBLEM_BY_STATE = {
+    ContextValueState.missing: "missing",
+    ContextValueState.redacted: "withheld",
+    ContextValueState.unmapped: "not an accepted label",
+    ContextValueState.defaulted: "defaulted on import",
+}
+
+
+def describe_context_problem(field: ResolvedField) -> str:
+    """Plain words for why a context value cannot be used."""
+
+    if field.reason_code == "unconfirmed_zero_retention_years":
+        return "zero retention not confirmed"
+    return _PROBLEM_BY_STATE.get(field.state, field.state.value)
+
+
+def scoring_view(
+    asset: CryptographicAsset,
+    asset_evidence: AssetEvidenceAssertions | None = None,
+) -> tuple[CryptographicAsset, tuple[ScoringAssumption, ...]]:
+    """Return the asset as scored, with every unresolved field at its worst case.
+
+    The returned asset is used only to compute the priority score and the
+    dependency graph. Decision logic keeps reading the declared values.
+    """
+
+    context = normalize_asset_context(asset, asset_evidence)
+    updates: dict[str, object] = {}
+    assumptions: list[ScoringAssumption] = []
+    for field in context.unresolved_fields:
+        name = field.field
+        if name == "data_class":
+            updates[name] = WORST_CASE_DATA_CLASS
+        elif name == "exposure":
+            updates[name] = WORST_CASE_EXPOSURE
+        elif name == "retention_years":
+            updates[name] = WORST_CASE_RETENTION_YEARS
+        elif name in {"criticality", "local_blast_radius"}:
+            updates[name] = RiskLevel.critical
+        elif name == "migration_effort":
+            updates[name] = RiskLevel.low
+        else:
+            continue
+        raw = field.raw_value
+        inventory_value = raw.value if isinstance(raw, RiskLevel) else str(raw)
+        assumptions.append(
+            ScoringAssumption(
+                field=name,
+                inventory_value=inventory_value,
+                problem=describe_context_problem(field),
+                scored_as=_WORST_CASE_SCORED_AS[name],
+            )
+        )
+    if not updates:
+        return asset, ()
+    return asset.model_copy(update=updates), tuple(assumptions)
 
 
 def score_inventory(inventory: Inventory) -> list[ScoreResult]:
-    graph = build_dependency_graph(inventory)
-    budget = TraversalBudget()
     evidence_by_asset = (
         inventory.evidence.assets if inventory.evidence is not None else {}
     )
+    views = [scoring_view(asset, evidence_by_asset.get(asset.id)) for asset in inventory.assets]
+    # The graph is built from the scoring view, so an unresolved downstream
+    # criticality counts at its worst case for the assets that depend on it.
+    scoring_inventory = inventory.model_copy(update={"assets": [view for view, _ in views]})
+    graph = build_dependency_graph(scoring_inventory)
+    budget = TraversalBudget()
     results = [
         score_asset(
             asset,
             graph,
             budget=budget,
             asset_evidence=evidence_by_asset.get(asset.id),
+            scored_view=view,
         )
-        for asset in inventory.assets
+        for asset, view in zip(inventory.assets, views)
     ]
     return sorted(results, key=lambda result: result.priority_score, reverse=True)
 
@@ -70,23 +165,25 @@ def score_asset(
     *,
     budget: TraversalBudget | None = None,
     asset_evidence: AssetEvidenceAssertions | None = None,
+    scored_view: tuple[CryptographicAsset, tuple[ScoringAssumption, ...]] | None = None,
 ) -> ScoreResult:
+    scored, assumptions = scored_view or scoring_view(asset, asset_evidence)
     classification = classify_algorithm(asset.algorithm)
     cryptographic_risk = _cryptographic_risk(
         asset.algorithm,
         asset.key_size_bits,
         classification,
     )
-    shelf_life_risk = _shelf_life_risk(asset.retention_years, asset.data_class)
-    exposure_risk = _exposure_risk(asset.exposure)
-    criticality_score = _risk_level_score(asset.criticality)
+    shelf_life_risk = _shelf_life_risk(scored.retention_years, scored.data_class)
+    exposure_risk = _exposure_risk(scored.exposure)
+    criticality_score = _risk_level_score(scored.criticality)
     blast_radius = calculate_graph_amplified_blast_radius(
         graph,
         asset.id,
         budget=budget,
     ).total_score
-    deadline_pressure = _deadline_pressure(asset, classification)
-    effort_penalty = _effort_penalty(asset.migration_effort)
+    deadline_pressure = _deadline_pressure(scored, classification)
+    effort_penalty = _effort_penalty(scored.migration_effort)
 
     raw_total = (
         cryptographic_risk
@@ -100,7 +197,7 @@ def score_asset(
 
     priority_score = round(max(0.0, min(100.0, raw_total * 2.0)), 2)
     priority_band = _priority_band(priority_score)
-    recommended_action = _recommended_action(priority_score, asset.migration_effort)
+    recommended_action = _recommended_action(priority_score, scored.migration_effort)
     confidence = _confidence(asset, classification, asset_evidence)
 
     breakdown = ScoreBreakdown(
@@ -115,12 +212,17 @@ def score_asset(
     )
 
     explanation = _explain(
-        asset,
+        scored,
         breakdown,
         priority_band,
         recommended_action,
         classification,
     )
+    for assumption in assumptions:
+        explanation.append(
+            f"Unresolved {assumption.field} ({assumption.problem}) is scored as "
+            f"{assumption.scored_as} (worst case)."
+        )
 
     return ScoreResult(
         asset_id=asset.id,
@@ -131,6 +233,8 @@ def score_asset(
         confidence=confidence,
         breakdown=breakdown,
         explanation=explanation,
+        score_basis=SCORE_BASIS_WORST_CASE if assumptions else SCORE_BASIS_CONFIRMED,
+        scoring_assumptions=assumptions,
     )
 
 

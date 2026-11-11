@@ -500,7 +500,7 @@ All decisions were adopted as listed on 2026-10-11.
 | D3 | An assertion resolves a CBOM default | adopted | an assertion of `medium` is indistinguishable from the default value; the assertion and its source reference are the difference |
 | D4 | `closure validate` warns on an unmapped patch value and exits 0 | adopted; the comparison step still shows the field unresolved | a non-zero exit would stop automated runs earlier |
 | D5 | Confidence label from resolved context, not `notes` (6.1) | adopted; its own PR first, for a patch release | changes decision confidence for assets without notes |
-| D6 | Unresolved `data_class` and `exposure` scored with the worst case (`sensitive`, `public`), with the assumption written to `assumptions_made` | adopted; its own PR | raises every CBOM import to high attention; that is the intended effect of fail-closed |
+| D6 | Unresolved `data_class` and `exposure` scored with the worst case (`sensitive`, `public`), with the assumption written to `assumptions_made` | adopted; delivered 2026-11-11 for all six scored context fields (amendment A5) | raises every CBOM import to high attention; that is the intended effect of fail-closed |
 | D7 | Divergence rules in 7.2 and 7.3 | adopted | stopping on a copied hyphen adds friction; the message makes the fix one step |
 | D8 | Schema errors: report all, write nothing | adopted | the principle "explain instead of stop" is met by the explanation; a record built on an undefined value would be misleading |
 | D9 | Profiles and mapping rule in section 8, with PDR 0.4 | rule adopted; the PDR change returns for separate approval | the rule raises attention for OFFICIAL information intended for publication |
@@ -508,6 +508,17 @@ All decisions were adopted as listed on 2026-10-11.
 | D11 | Organization mapping constraints in section 9 | adopted | requiring `source_reference` adds effort for small teams |
 
 ### 12.1 Delivery order
+
+Amendment A5 (2026-11-11): D6 is implemented for every context field the
+score reads, not only `data_class` and `exposure`: `retention_years` (10
+years), `criticality` and `local_blast_radius` (critical), `migration_effort`
+(low, the smallest penalty). The dependency graph is built from the same
+scoring view. Each score carries a basis (`confirmed` or `worst_case`) and the
+list of substitutions; `score`, `report`, the score export, and the PDR
+`assumptions_made` show the same list. Decision fields keep reading the
+declared values. Reason: the maintainer's public statement that missing
+evidence can raise an asset but never bury it must hold for the whole score,
+and a contract test enforces it for every scored field.
 
 1. This record, as `design/context-resolution.md`.
 2. D5: confidence label (small PR; candidate for 1.4.1). Until step 3 it

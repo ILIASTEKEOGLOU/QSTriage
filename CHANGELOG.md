@@ -69,6 +69,23 @@
 
 ### Changed
 
+- Unresolved context is scored at its worst case. A context field that is
+  missing, withheld, not an accepted label, defaulted on a CBOM import, or a
+  zero retention nobody confirmed is scored as sensitive (`data_class`),
+  public (`exposure`), 10 years (`retention_years`), critical (`criticality`,
+  `local_blast_radius`), or low (`migration_effort`); the dependency graph
+  uses the same values. Missing evidence can raise an asset in the backlog
+  but never lowers one; previously an unknown exposure scored below public
+  and an unknown data class received no sensitivity increment. Every score
+  now has a basis, `confirmed` or `worst case`: `score` shows
+  `basis=worst case (N fields)` and lists the fields; `report` adds a Score
+  basis column, a count in the executive summary, and a per-asset table of
+  field, value in inventory, problem, and value scored; the score export
+  carries `score_basis` and `scoring_assumptions`; the PDR writes one
+  `assumptions_made` line per field. Decision fields keep reading the
+  declared values. PDR record hashes change for assets with unresolved
+  context. The bundled Evidence Closure demo asset now scores 100.0 at worst
+  case before enrichment and 93.0 confirmed after.
 - Assets whose cryptography is not identified (execution state
   `verification_first`) are no longer ranked. `score` prints them first in a
   "Verify First: Cryptography Not Identified (not ranked)" table with the

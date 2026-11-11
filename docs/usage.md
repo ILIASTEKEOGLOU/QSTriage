@@ -85,9 +85,16 @@ findings, confidence caps, and decision-grade rules are defined in
 qstriage score examples/sample_inventory.yaml
 ```
 
-The backlog shows risk attention, execution state, canonical action,
-verification priority, and human-review status. The score ranks assets for
-review; it does not authorize execution.
+The backlog shows risk attention, score basis, execution state, canonical
+action, verification priority, and human-review status. The score ranks assets
+for review; it does not authorize execution.
+
+Score basis is `confirmed` when every context field the score uses is present
+and usable, and `worst case (N fields)` when N fields are missing, withheld,
+not an accepted label, or defaulted on import. Those fields are scored at
+their most severe value, so missing evidence can raise an asset but never bury
+it; the fields are listed under the table. Supply them to replace the
+assumption with the real value.
 
 See [Scoring Rationale](scoring-rationale.md) for score semantics and
 [Canonical Decision Model](decision-model.md) for reconciliation and gating.
@@ -235,6 +242,11 @@ priority score rests on a guess and it is never ranked.
 - CSV starts every row with `list` (`verification_first` or `ranked`), `rank`
   (empty for verification-first rows), and `unranked_reason`; verification-first
   rows come first.
+
+Every record carries `score_basis` (`confirmed` or `worst_case`) and
+`scoring_assumptions`, one entry per field scored at its worst case with
+`field`, `inventory_value`, `problem`, and `scored_as` (CSV: one column,
+entries joined with ` | `).
 
 Every record keeps the planning-score fields and the canonical decision fields.
 The compatibility field `recommended_action` aliases `action_type`. JSON
