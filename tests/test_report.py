@@ -91,13 +91,32 @@ def test_generate_markdown_report_neutralizes_untrusted_structure() -> None:
                     "criticality": "high",
                     "local_blast_radius": "high",
                     "migration_effort": "medium",
-                }
+                },
+                {
+                    # Ranked asset whose graph view must be fenced safely.
+                    "id": "graph```id",
+                    "name": "Graph asset",
+                    "environment": "prod",
+                    "asset_type": "service",
+                    "protocol": "TLS",
+                    "algorithm": "RSA-2048",
+                    "key_size_bits": 2048,
+                    "data_class": "sensitive",
+                    "retention_years": 10,
+                    "exposure": "public",
+                    "criticality": "high",
+                    "local_blast_radius": "high",
+                    "migration_effort": "medium",
+                },
             ]
         }
     )
 
     report = generate_markdown_report(inventory)
 
+    # The unidentified algorithm is shown in the Verify First table as a code
+    # span whose fence is longer than any backtick run inside it.
+    assert "| ````RSA```text```` |" in report
     assert "\u202e" not in report
     assert "\n## Forged\n" not in report
     assert "<script>" not in report

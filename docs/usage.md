@@ -194,6 +194,8 @@ qstriage report \
   --output reports/qstriage_report.md
 ```
 
+Reports list assets whose cryptography is not identified in a separate
+"Verify First" section before the ranked backlog; those assets are not ranked.
 Reports include the canonical decision backlog, asset-level findings,
 classification evidence, context review, simulation warnings, dependency views,
 and method notes. Reports, score output, PDR records, and score exports consume
@@ -222,10 +224,24 @@ qstriage export scores \
   --output reports/scores.csv
 ```
 
-Score contract 0.2 retains planning-score fields and projects the canonical
-decision fields. The compatibility field `recommended_action` aliases
-`action_type`. JSON preserves nested score breakdowns; CSV flattens fields for
-review.
+Score contract 0.3 separates assets whose cryptography is not identified from
+the ranking. Such an asset has execution state `verification_first`: its
+algorithm field does not identify an exact algorithm and parameter set, so its
+priority score rests on a guess and it is never ranked.
+
+- JSON is an object with `score_export_version` (`"0.3"`),
+  `verification_first` (records with `unranked_reason`), and `ranked`
+  (records with `rank`, starting at 1).
+- CSV starts every row with `list` (`verification_first` or `ranked`), `rank`
+  (empty for verification-first rows), and `unranked_reason`; verification-first
+  rows come first.
+
+Every record keeps the planning-score fields and the canonical decision fields.
+The compatibility field `recommended_action` aliases `action_type`. JSON
+preserves nested score breakdowns; CSV flattens fields for review.
+
+Contract 0.2 wrote a flat JSON list and CSV rows without `list`, `rank`, and
+`unranked_reason`, with unidentified assets ranked among the others.
 
 ## Export simulation results
 

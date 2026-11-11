@@ -266,7 +266,9 @@ def test_export_scores_command_uses_config_defaults(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert output_path.exists()
-    assert output_path.read_text(encoding="utf-8").startswith("asset_id,asset_name")
+    assert output_path.read_text(encoding="utf-8").startswith(
+        "list,rank,unranked_reason,asset_id,asset_name"
+    )
 
 
 def test_export_simulations_command_uses_config_defaults(tmp_path: Path) -> None:

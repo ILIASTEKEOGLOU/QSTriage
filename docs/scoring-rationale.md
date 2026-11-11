@@ -26,7 +26,7 @@ It combines seven factors:
 - deadline pressure
 - migration effort
 
-The score is mainly useful for ranking assets inside the same inventory. It should be read together with the asset explanation, evidence review, dependency completeness, decision context review, simulation warnings, and PDR confidence.
+The score is mainly useful for ranking assets inside the same inventory. An asset whose algorithm field does not identify an exact algorithm and parameter set (execution state `verification_first`) is not ranked: `score`, `report`, and `export scores` list it separately under "Verify First", because its score would rest on a guessed algorithm. It should be read together with the asset explanation, evidence review, dependency completeness, decision context review, simulation warnings, and PDR confidence.
 
 ## What the score is not
 

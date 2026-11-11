@@ -9,7 +9,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from qstriage.assessment import AssetAssessment, assess_inventory
+from qstriage.assessment import (
+    AssetAssessment,
+    assess_inventory,
+    partition_assessments,
+    unranked_reason,
+)
 from qstriage.file_output import write_private_text
 from qstriage.models import Inventory
 from qstriage.scoring import ScoreResult
@@ -21,7 +26,7 @@ class ExportFormat(str, Enum):
     csv = "csv"
 
 
-SCORE_EXPORT_VERSION = "0.2"
+SCORE_EXPORT_VERSION = "0.3"
 
 
 def export_score_results(
@@ -39,7 +44,7 @@ def export_score_results(
     if normalized_format == ExportFormat.json:
         _write_json(
             destination,
-            _score_result_records(assessments),
+            _score_export_document(assessments),
             overwrite=overwrite,
             protected_paths=protected_paths,
         )
@@ -102,6 +107,28 @@ def _to_json_ready(value: Any) -> dict[str, Any]:
     return asdict(value)
 
 
+def _score_export_document(assessments: list[AssetAssessment]) -> dict[str, Any]:
+    """Score export 0.3: the verify-first list is separate from the ranking.
+
+    Assets whose cryptography is not identified are listed under
+    ``verification_first`` with the reason and are never ranked. Ranked
+    records carry an explicit ``rank`` starting at 1.
+    """
+
+    partition = partition_assessments(assessments)
+    verification_first = _score_result_records(partition.verification_first)
+    for record, assessment in zip(verification_first, partition.verification_first):
+        record["unranked_reason"] = unranked_reason(assessment.classification)
+    ranked = _score_result_records(partition.ranked)
+    for rank, record in enumerate(ranked, start=1):
+        record["rank"] = rank
+    return {
+        "score_export_version": SCORE_EXPORT_VERSION,
+        "verification_first": verification_first,
+        "ranked": ranked,
+    }
+
+
 def _score_result_records(
     assessments: list[AssetAssessment],
 ) -> list[dict[str, Any]]:
@@ -142,13 +169,26 @@ def _score_result_records(
 def _score_result_rows(
     assessments: list[AssetAssessment],
 ) -> list[dict[str, Any]]:
+    """CSV rows: verify-first rows first, then ranked rows with their rank."""
+
+    partition = partition_assessments(assessments)
+    listed = [
+        ("verification_first", "", unranked_reason(item.classification), item)
+        for item in partition.verification_first
+    ] + [
+        ("ranked", rank, "", item)
+        for rank, item in enumerate(partition.ranked, start=1)
+    ]
     rows: list[dict[str, Any]] = []
 
-    for assessment in assessments:
+    for list_name, rank, reason, assessment in listed:
         score = assessment.score
         decision = assessment.decision
         rows.append(
             {
+                "list": list_name,
+                "rank": rank,
+                "unranked_reason": reason,
                 "asset_id": score.asset_id,
                 "asset_name": score.asset_name,
                 "score_export_version": SCORE_EXPORT_VERSION,
@@ -217,7 +257,7 @@ def _simulation_result_rows(results: list[ImpactSimulationResult]) -> list[dict[
 
 def _write_json(
     destination: Path,
-    data: list[dict[str, Any]],
+    data: list[dict[str, Any]] | dict[str, Any],
     *,
     overwrite: bool,
     protected_paths: Iterable[str | Path | None],
