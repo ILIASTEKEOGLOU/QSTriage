@@ -25,8 +25,10 @@ from qstriage.models import (
 from qstriage.standards import (
     KeySizeRequirement,
     classify_algorithm,
+    conflicting_key_size_message,
     key_size_requirement,
     requires_parameter_verification,
+    resolve_key_size,
 )
 
 
@@ -511,6 +513,40 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
                     field_path=f"assets[{asset.id}].key_size_bits",
                     expected_value_type="integer key length in bits",
                     effect_if_unresolved="Confidence remains degraded.",
+                ),
+            )
+        )
+
+    # The same resolver feeds scoring, so the finding and the provisional
+    # score always describe the same conflict.
+    key_size = resolve_key_size(classification, asset.key_size_bits)
+    if key_size.conflict:
+        findings.append(
+            EvidenceFinding(
+                code="conflicting_key_size",
+                category=EvidenceCategory.cryptographic_context,
+                severity=EvidenceSeverity.high,
+                message=conflicting_key_size_message(key_size),
+                effects=[
+                    EvidenceEffect.decision_grade_blocked,
+                    EvidenceEffect.human_review_required,
+                ],
+                asset_id=asset.id,
+                field_path=f"assets[{asset.id}].key_size_bits",
+                evidence_state=EvidenceState.declared,
+                provenance=EvidenceProvenance.user_declared,
+                human_action=HumanAction(
+                    description=(
+                        f"Verify the RSA modulus size of asset '{asset.id}' against "
+                        "the source record, then correct either the algorithm "
+                        "identifier or key_size_bits so that both state the same size."
+                    ),
+                    field_path=f"assets[{asset.id}].key_size_bits",
+                    expected_value_type="integer RSA modulus length in bits",
+                    effect_if_unresolved=(
+                        "The decision stays gated and the priority score stays "
+                        f"provisional at {key_size.scored_bits} bits."
+                    ),
                 ),
             )
         )

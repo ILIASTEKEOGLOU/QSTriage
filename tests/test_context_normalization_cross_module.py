@@ -12,7 +12,13 @@ from qstriage.decision import (
 from qstriage.evidence import build_evidence_review
 from qstriage.models import CryptographicAsset, RiskLevel
 from qstriage.policy import _derive_data_class_sensitivity, _derive_exposure_category
-from qstriage.scoring import _deadline_pressure, _exposure_risk, _shelf_life_risk, score_asset
+from qstriage.scoring import (
+    _cryptographic_risk,
+    _deadline_pressure,
+    _exposure_risk,
+    _shelf_life_risk,
+    score_asset,
+)
 from qstriage.simulator import _middlebox_risk
 from qstriage.standards import classify_algorithm
 from tests.test_decision import _policy_result, _score
@@ -71,7 +77,7 @@ def test_external_alias_is_shared_by_policy_scoring_and_simulator(
     assert context.exposure.canonical_value is category
     assert _derive_exposure_category(asset.exposure) == category.value
     assert _exposure_risk(asset.exposure) == risk
-    assert _deadline_pressure(asset) == 3.0
+    assert _deadline_pressure(asset, _cryptographic_risk(asset.algorithm, asset.key_size_bits)) == 3.0
     assert _middlebox_risk(asset, 1.0) == "high"
 
 

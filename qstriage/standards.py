@@ -226,13 +226,110 @@ def key_size_requirement(classification: AlgorithmClassification) -> KeySizeRequ
         return KeySizeRequirement.fixed_by_identifier
     if family == "AES" and re.match(r"AES-?(?:128|192|256)(?:-|$)", normalized):
         return KeySizeRequirement.fixed_by_identifier
-    if family == "RSA" and re.fullmatch(r"RSA-?\d+", normalized):
+    if family == "RSA" and _RSA_MODULUS_IDENTIFIER.fullmatch(normalized):
         return KeySizeRequirement.fixed_by_identifier
     if family == "DH" and re.fullmatch(r"FFDHE-?\d+", normalized):
         return KeySizeRequirement.fixed_by_identifier
     if family == "ECC" and _NAMED_CURVE_PATTERN.search(normalized):
         return KeySizeRequirement.fixed_by_identifier
     return KeySizeRequirement.required
+
+
+class KeySizeSource(str, Enum):
+    """Where the key size used for scoring comes from."""
+
+    declared = "declared"
+    algorithm_identifier = "algorithm_identifier"
+    conflict_smaller = "conflict_smaller"
+
+
+@dataclass(frozen=True)
+class KeySizeResolution:
+    """The key size used for scoring, with both declarations kept.
+
+    Scoring uses a key size only for quantum-vulnerable RSA
+    (``key_size_affects_score``). For every other identifier ``scored_bits``
+    and ``source`` are None and the declared ``key_size_bits`` stays only in
+    the inventory and the PDR. Only RSA identifiers that state a modulus
+    length (``RSA-2048``) carry a size of their own.
+    """
+
+    declared_bits: int | None
+    identifier_bits: int | None
+    scored_bits: int | None
+    source: KeySizeSource | None
+
+    @property
+    def conflict(self) -> bool:
+        return self.source == KeySizeSource.conflict_smaller
+
+
+_RSA_MODULUS_IDENTIFIER = re.compile(r"RSA-?(\d+)")
+
+
+def key_size_affects_score(classification: AlgorithmClassification) -> bool:
+    """True when the cryptographic risk score depends on the key size.
+
+    Mirrors the RSA branch of ``qstriage.scoring._cryptographic_risk``.
+    """
+
+    return (
+        classification.quantum_status == "quantum_vulnerable"
+        and classification.algorithm_family == "RSA"
+    )
+
+
+def resolve_key_size(
+    classification: AlgorithmClassification,
+    declared_bits: int | None,
+) -> KeySizeResolution:
+    """Return the one key size that scoring and evidence review both use.
+
+    - The identifier states an RSA modulus length and ``key_size_bits`` is
+      absent: the identifier's size is used.
+    - Both state the same size: the size is declared.
+    - They differ: both are kept, and the smaller size is used for a
+      provisional score (QSTriage rule: a conflict never lowers priority).
+    """
+
+    if not key_size_affects_score(classification):
+        return KeySizeResolution(declared_bits, None, None, None)
+
+    identifier_bits = None
+    match = _RSA_MODULUS_IDENTIFIER.fullmatch(
+        _normalize_algorithm(classification.input_algorithm)
+    )
+    if match:
+        identifier_bits = int(match.group(1))
+
+    if identifier_bits is None:
+        source = KeySizeSource.declared if declared_bits is not None else None
+        return KeySizeResolution(declared_bits, None, declared_bits, source)
+    if declared_bits is None:
+        return KeySizeResolution(
+            None, identifier_bits, identifier_bits, KeySizeSource.algorithm_identifier
+        )
+    if declared_bits == identifier_bits:
+        return KeySizeResolution(
+            declared_bits, identifier_bits, declared_bits, KeySizeSource.declared
+        )
+    return KeySizeResolution(
+        declared_bits,
+        identifier_bits,
+        min(declared_bits, identifier_bits),
+        KeySizeSource.conflict_smaller,
+    )
+
+
+def conflicting_key_size_message(resolution: KeySizeResolution) -> str:
+    """The maintainer-approved text for a key size conflict."""
+
+    return (
+        f"The algorithm identifier says {resolution.identifier_bits} bits. "
+        f'"key_size_bits" says {resolution.declared_bits} bits. '
+        f"The planning score uses {resolution.scored_bits} bits as a precaution. "
+        "Verify the RSA modulus size against the source record before proceeding."
+    )
 
 
 def requires_parameter_verification(classification: AlgorithmClassification) -> bool:

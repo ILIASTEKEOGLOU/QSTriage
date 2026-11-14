@@ -155,7 +155,7 @@ Each selected component becomes one QSTriage asset with these defaults when busi
 | `asset_type` | `cbom_cryptographic_asset` |
 | `protocol` | Protocol metadata, primitive, asset type, or `unknown` |
 | `algorithm` | Derived from explicit algorithm metadata, family/parameter data, or component name |
-| `key_size_bits` | Explicit supported key-size field or a bounded numeric identifier extracted from the algorithm string |
+| `key_size_bits` | Explicit supported key-size field, otherwise null; never extracted from the algorithm string or name |
 | `data_class` | `unknown` |
 | `retention_years` | `0` |
 | `exposure` | `unknown` |

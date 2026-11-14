@@ -6,6 +6,7 @@ from qstriage.policy import (
     _derive_exposure_category,
 )
 from qstriage.scoring import (
+    _cryptographic_risk,
     _deadline_pressure,
     _exposure_risk,
     _shelf_life_risk,
@@ -76,5 +77,5 @@ def test_legacy_exposure_context_contract(
 
     assert _derive_exposure_category(exposure) == policy_category
     assert _exposure_risk(exposure) == exposure_risk
-    assert _deadline_pressure(asset) == deadline_pressure
+    assert _deadline_pressure(asset, _cryptographic_risk(asset.algorithm, asset.key_size_bits)) == deadline_pressure
     assert _middlebox_risk(asset, 1.0) == middlebox_risk

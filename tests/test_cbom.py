@@ -42,13 +42,15 @@ def test_imported_cbom_assets_keep_crypto_metadata_in_notes() -> None:
     kem_asset = next(asset for asset in inventory.assets if asset.id == "crypto-ml-kem-768")
 
     assert rsa_asset.algorithm == "RSA-2048"
-    assert rsa_asset.key_size_bits == 2048
+    # No explicit size field in the source: the size is not derived from the
+    # identifier text. Scoring takes it from the identifier and records that.
+    assert rsa_asset.key_size_bits is None
     assert rsa_asset.protocol == "signature"
     assert "business context requires human review" in rsa_asset.notes.lower()
     assert "cbom dependency relationships are not imported" in rsa_asset.notes.lower()
 
     assert kem_asset.algorithm == "ML-KEM-768"
-    assert kem_asset.key_size_bits == 768
+    assert kem_asset.key_size_bits is None
     assert kem_asset.protocol == "kem"
     assert "nistQuantumSecurityLevel=3" in kem_asset.notes
 
@@ -96,10 +98,10 @@ def test_cbom_import_normalizes_split_ml_kem_metadata_for_registry() -> None:
     asset = inventory.assets[0]
 
     assert asset.algorithm == "ML-KEM-768"
-    assert asset.key_size_bits == 768
+    assert asset.key_size_bits is None
 
 
-def test_cbom_import_normalizes_rsa_family_and_key_size_for_registry() -> None:
+def test_cbom_import_keeps_rsa_family_and_explicit_key_size_apart() -> None:
     cbom = {
         "bomFormat": "CycloneDX",
         "specVersion": "1.6",
@@ -126,11 +128,13 @@ def test_cbom_import_normalizes_rsa_family_and_key_size_for_registry() -> None:
 
     asset = inventory.assets[0]
 
-    assert asset.algorithm == "RSA-2048"
+    # One size declaration with clear provenance: the identifier is not built
+    # from the size field.
+    assert asset.algorithm == "RSA"
     assert asset.key_size_bits == 2048
 
 
-def test_cbom_import_normalizes_aes_family_and_key_size_for_registry() -> None:
+def test_cbom_import_keeps_aes_family_and_explicit_key_size_apart() -> None:
     cbom = {
         "bomFormat": "CycloneDX",
         "specVersion": "1.6",
@@ -155,7 +159,7 @@ def test_cbom_import_normalizes_aes_family_and_key_size_for_registry() -> None:
 
     asset = inventory.assets[0]
 
-    assert asset.algorithm == "AES-256"
+    assert asset.algorithm == "AES"
     assert asset.key_size_bits == 256
 
 
@@ -192,7 +196,8 @@ def test_cbom_import_normalizes_cdxgen_aes_names_for_registry(
     asset = inventory.assets[0]
 
     assert asset.algorithm == expected_algorithm
-    assert asset.key_size_bits == 256
+    # The name maps to a full identifier; no size is taken from its digits.
+    assert asset.key_size_bits is None
 
 
 def test_cbom_rejects_non_object_root() -> None:

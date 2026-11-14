@@ -6,6 +6,8 @@ from pathlib import Path
 
 from qstriage.assessment import (
     SCORE_BASIS_NOTE,
+    conflict_messages,
+    key_size_used_text,
     VERIFY_FIRST_ACTION,
     AssetAssessment,
     assess_inventory,
@@ -16,6 +18,7 @@ from qstriage.assessment import (
 from qstriage.graph import build_dependency_graph, render_text_graph
 from qstriage.file_output import write_private_text
 from qstriage.models import Inventory, load_inventory
+from qstriage.scoring import ASSUMPTION_CONFLICTING_KEY_SIZE
 from qstriage.presentation import (
     markdown_code_block,
     markdown_code_span,
@@ -62,9 +65,15 @@ def generate_markdown_report(inventory: Inventory) -> str:
     )
     lines.append(f"- Ranked assets: {len(partition.ranked)}")
     worst_case = sum(1 for item in partition.ranked if item.score.scoring_assumptions)
+    conflicts = sum(1 for item in partition.ranked if conflict_messages(item.score))
+    unusable = sum(
+        1
+        for item in partition.ranked
+        if any(a.kind != ASSUMPTION_CONFLICTING_KEY_SIZE for a in item.score.scoring_assumptions)
+    )
     lines.append(
-        "- Ranked assets scored at worst case because context is missing: "
-        f"{worst_case} of {len(partition.ranked)}"
+        f"- Ranked assets scored at worst case: {worst_case} of {len(partition.ranked)} "
+        f"(missing or unusable context: {unusable}; conflicting key size: {conflicts})"
     )
     if partition.ranked:
         highest = partition.ranked[0]
@@ -287,6 +296,11 @@ def _render_asset_finding(
     )
     lines.append(f"- Reason codes: {reason_codes}")
     lines.append(f"- Score basis: {score_basis_label(score, short=True)}")
+    key_size_used = key_size_used_text(score, asset.algorithm)
+    if key_size_used is not None:
+        lines.append(f"- Key size used for scoring: {key_size_used}")
+    for message in conflict_messages(score):
+        lines.append(f"- Conflicting key size: {markdown_inline(message)}")
     lines.append("")
 
     if score.scoring_assumptions:

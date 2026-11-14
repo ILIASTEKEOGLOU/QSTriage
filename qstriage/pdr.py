@@ -713,11 +713,14 @@ def _assumptions(
     if asset.asset_type == "cbom_cryptographic_asset":
         assumptions.append("CBOM crypto assets are treated as partial evidence until enriched with business context.")
 
-    for assumption in score.scoring_assumptions:
+    if score.key_size_source == "algorithm_identifier":
         assumptions.append(
-            f"Unresolved {assumption.field} ({assumption.problem}) is scored as "
-            f"{assumption.scored_as} (worst case)."
+            f"Key size {score.key_size_bits_scored} bits taken from the algorithm "
+            f"identifier {asset.algorithm}."
         )
+
+    for assumption in score.scoring_assumptions:
+        assumptions.append(assumption.describe())
 
     for field in evidence_quality.missing_evidence:
         assumptions.append(f"Missing {field} lowers evidence quality and decision confidence.")
