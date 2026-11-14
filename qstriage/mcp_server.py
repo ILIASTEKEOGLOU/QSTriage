@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import errno
 from pathlib import Path
 from typing import Any, Callable, TypeVar
+
+import yaml
 
 try:
     # mcp 2.x renamed FastMCP to MCPServer.
     from mcp.server.mcpserver import MCPServer as _MCPServer
+    from mcp.server.mcpserver.exceptions import ToolError
 except ImportError:
     # mcp 1.x
     from mcp.server.fastmcp import FastMCP as _MCPServer
+    from mcp.server.fastmcp.exceptions import ToolError
 
 from qstriage.closure import (
     build_gap_manifest,
@@ -38,12 +43,86 @@ mcp = _MCPServer(
 T = TypeVar("T")
 
 
+MAX_ERROR_MESSAGE_LENGTH = 500
+# The parser's own description is shortened first, so the file name, line,
+# and column always fit in the message.
+MAX_PARSER_DETAIL_LENGTH = 200
+
+# Short causes for read failures; the client sees these instead of the
+# operating system text, which names the server's absolute path.
+_READ_FAILURE_REASONS = {
+    errno.EACCES: "permission denied",
+    errno.EPERM: "permission denied",
+    errno.ENOENT: "file not found",
+    errno.EISDIR: "is a directory",
+}
+
+
+def _one_line(text: str) -> str:
+    return text.replace("\r", " ").replace("\n", " ")
+
+
+def _client_message(text: str) -> str:
+    return _one_line(text)[:MAX_ERROR_MESSAGE_LENGTH]
+
+
+def _message_with_path(before: str, path_value: str, after: str) -> str:
+    """Build a message that always ends with its cause.
+
+    When the whole text is longer than the limit, only the path is shortened,
+    keeping its end (the file name) after "...". The limit applies to the
+    QSTriage message; the SDK may add its own prefix.
+    """
+
+    before, path_text, after = _one_line(before), _one_line(path_value), _one_line(after)
+    room = MAX_ERROR_MESSAGE_LENGTH - len(before) - len(after)
+    if len(path_text) > room:
+        keep = max(room - 3, 0)
+        path_text = "..." + (path_text[-keep:] if keep else "")
+    return _client_message(before + path_text + after)
+
+
 def _safe_call(operation: Callable[[], T]) -> T:
+    """Run a tool and turn expected failures into ``ToolError``.
+
+    Both supported SDK majors pass a ``ToolError`` message to the client as
+    the tool result (``isError: true``). Any other exception is reported by
+    the SDK as an unexpected failure.
+    """
+
     try:
         return operation()
-    except (OSError, ValueError) as error:
-        message = str(error).replace("\r", " ").replace("\n", " ")[:500]
-        raise ValueError(message) from None
+    except ToolError:
+        raise
+    except ValueError as error:
+        raise ToolError(_client_message(str(error))) from None
+    except OSError:
+        raise ToolError("File access failed.") from None
+
+
+def _read_confined(path_value: str, loader: Callable[[Path], T]) -> T:
+    """Check the path, then read and parse it, naming the file as the client gave it."""
+
+    resolved = _confined_file(path_value)
+    try:
+        return loader(resolved)
+    except OSError as error:
+        reason = _READ_FAILURE_REASONS.get(error.errno, "the file could not be read")
+        raise ToolError(_message_with_path("Cannot read ", path_value, f": {reason}.")) from None
+    except yaml.YAMLError as error:
+        raise ToolError(_message_with_path("YAML is malformed in ", path_value, _yaml_detail(error))) from None
+
+
+def _yaml_detail(error: yaml.YAMLError) -> str:
+    mark = getattr(error, "problem_mark", None)
+    problem = getattr(error, "problem", None)
+    where = f" near line {mark.line + 1}, column {mark.column + 1}" if mark is not None else ""
+    if not problem:
+        return f"{where}."
+    problem = _one_line(problem)
+    if len(problem) > MAX_PARSER_DETAIL_LENGTH:
+        return f"{where}: {problem[: MAX_PARSER_DETAIL_LENGTH - 3]}..."
+    return f"{where}: {problem}."
 
 
 def _confined_file(path_value: str) -> Path:
@@ -53,15 +132,19 @@ def _confined_file(path_value: str) -> Path:
     try:
         resolved = unresolved.resolve(strict=True)
     except OSError as error:
-        raise ValueError(
-            f"File is unavailable inside the working directory: {path_value}"
+        raise ToolError(
+            _message_with_path(
+                "File is unavailable inside the working directory: ", path_value, ""
+            )
         ) from error
     try:
         resolved.relative_to(root)
     except ValueError:
         raise ValueError("Path resolves outside the MCP working directory.") from None
     if not resolved.is_file():
-        raise ValueError(f"Path is not an existing regular file: {path_value}")
+        raise ToolError(
+            _message_with_path("Path is not an existing regular file: ", path_value, "")
+        )
     return resolved
 
 
@@ -70,7 +153,7 @@ def inspect_evidence_gaps(inventory_path: str) -> dict[str, Any]:
     """Return the structured unresolved evidence-gap manifest for an inventory."""
     return _safe_call(
         lambda: build_gap_manifest(
-            load_inventory(_confined_file(inventory_path))
+            _read_confined(inventory_path, load_inventory)
         ).model_dump(mode="json")
     )
 
@@ -79,7 +162,7 @@ def inspect_evidence_gaps(inventory_path: str) -> dict[str, Any]:
 def generate_patch_template(inventory_path: str) -> str:
     """Return deterministic YAML containing empty skeletons for unresolved gaps."""
     return _safe_call(
-        lambda: build_patch_template(load_inventory(_confined_file(inventory_path)))
+        lambda: build_patch_template(_read_confined(inventory_path, load_inventory))
     )
 
 
@@ -90,8 +173,8 @@ def validate_enrichment_patch(
 ) -> dict[str, Any]:
     """Validate a patch against an inventory without applying or writing it."""
     def validate() -> dict[str, Any]:
-        inventory = load_inventory(_confined_file(inventory_path))
-        patch = load_enrichment_patch(_confined_file(patch_path))
+        inventory = _read_confined(inventory_path, load_inventory)
+        patch = _read_confined(patch_path, load_enrichment_patch)
         validate_patch(inventory, patch)
         return {
             "valid": True,
@@ -109,8 +192,8 @@ def compare_inventories(
     """Return a deterministic before/after decision and evidence comparison."""
     return _safe_call(
         lambda: build_inventory_comparison(
-            load_inventory(_confined_file(before_path)),
-            load_inventory(_confined_file(after_path)),
+            _read_confined(before_path, load_inventory),
+            _read_confined(after_path, load_inventory),
         ).model_dump(mode="json")
     )
 

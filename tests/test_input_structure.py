@@ -294,7 +294,7 @@ def test_mcp_tools_reject_surrogate_inventory(tmp_path: Path, monkeypatch, call)
     (tmp_path / "patch.yaml").write_bytes((DEMO / "approved_enrichment.patch.yaml").read_bytes())
     monkeypatch.chdir(tmp_path)
 
-    with pytest.raises(ValueError, match=r"in a value at \$\.assets\[0\]\.name: \\ud800"):
+    with pytest.raises(mcp_server.ToolError, match=r"in a value at \$\.assets\[0\]\.name: \\ud800"):
         call()
 
 
