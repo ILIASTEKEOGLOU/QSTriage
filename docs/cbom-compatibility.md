@@ -59,7 +59,7 @@ Each supported component becomes one QSTriage asset.
 | `asset_type` | `cbom_cryptographic_asset` |
 | `protocol` | protocol metadata for protocol assets; otherwise primitive, asset type, then `unknown` |
 | `algorithm` | bounded algorithm derivation described below |
-| `key_size_bits` | supported key-size fields or a 3–5 digit sequence in the algorithm identifier |
+| `key_size_bits` | an explicit key-size field only (see below); otherwise null |
 | `data_class` | `unknown` |
 | `retention_years` | `0` |
 | `exposure` | `unknown` |
@@ -72,24 +72,37 @@ Imported business and operational values are conservative placeholders. Evidence
 
 ## Algorithm identifier derivation
 
-QSTriage selects the first available supported signal in this order:
+QSTriage keeps the identifier the source states. It selects the first
+available signal in this order:
 
-1. `parameterSetIdentifier`,
-2. explicit `algorithm`,
-3. `algorithmFamily`,
-4. component name, except for assets explicitly typed as protocols,
-5. `unknown`.
+1. a full `parameterSetIdentifier` (not a bare number), such as `RSA-2048`,
+2. a full `algorithm`,
+3. a bare `parameterSetIdentifier` through an explicit mapping (below),
+4. `algorithmFamily`,
+5. component name, except for assets explicitly typed as protocols,
+6. `unknown`.
 
-Supported structural combinations include:
+Explicit mappings for a bare `parameterSetIdentifier`:
 
-- parameter identifiers joined to a supplied family,
-- `ML-KEM` parameter sets 512, 768, and 1024,
-- `ML-DSA` parameter sets 44, 65, and 87,
-- RSA family plus key size,
-- AES family plus key size,
-- cdxgen forms `aes256-CBC` and `aes256-GCM`.
+- `ML-KEM` with 512, 768, or 1024,
+- `ML-DSA` with 44, 65, or 87,
+- `AES` with 128, 192, or 256 (the form the CycloneDX CBOM guide uses).
 
-The cdxgen AES forms normalize to `AES-256-CBC` and `AES-256-GCM`.
+An `algorithm` that only repeats the family (`algorithm: ML-KEM` with
+`algorithmFamily: ML-KEM`, or `algorithm: ML-KEM` without a family) is not a
+full identifier, so the mapping still applies and yields `ML-KEM-768`.
+Family names are compared with the algorithm registry's normalization, so
+`ML KEM`, `ml_kem`, and `ML-KEM` are the same family.
+Any other bare number is ignored. It never produces an identifier and never
+replaces a full identifier stated elsewhere. With an RSA family it is not
+mapped, because a bare number in RSA metadata does not reliably name the
+modulus: the CycloneDX CBOM guide's RSA signature example carries `512`, the
+SHA-512 digest. An identifier is never built from a key-size field or from
+digits in a name: `algorithmFamily: RSA` with `keySize: 4096` imports as
+`algorithm: RSA` and `key_size_bits: 4096`.
+
+The cdxgen forms `aes256-CBC` and `aes256-GCM` are full identifiers and
+normalize to `AES-256-CBC` and `AES-256-GCM`.
 
 After import, algorithm classification uses the bounded registry described in [Standards and Classification](standards-and-classification.md). Unknown identifiers remain unknown and require manual cryptographic verification.
 
@@ -102,9 +115,13 @@ QSTriage checks these algorithm-property fields in order:
 3. `keyLength`,
 4. `publicKeySize`.
 
-An integer value or digit-only string is accepted. If none is present, QSTriage searches the derived algorithm text for the first 3–5 digit sequence.
-
-This is a limited extraction rule and does not infer cryptographic strength.
+An integer value or digit-only string is accepted. If none is present,
+`key_size_bits` stays null. QSTriage does not take a size from digits in the
+algorithm text or the component name, so `ML-KEM-768`, `SHA-256`, and
+`X25519MLKEM768` import without a key size. For an RSA identifier that states
+a modulus length, such as `RSA-2048`, scoring uses that length and records
+that it comes from the identifier (see
+[Evidence and Context](evidence-and-context.md#key-size-used-for-scoring)).
 
 ## Protocol handling
 

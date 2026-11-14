@@ -11,6 +11,7 @@ from rich.text import Text
 from qstriage import __version__
 from qstriage.assessment import (
     SCORE_BASIS_NOTE,
+    conflict_messages,
     VERIFY_FIRST_ACTION,
     assess_inventory,
     partition_assessments,
@@ -442,7 +443,12 @@ def score(
         console.print()
         for assessment in worst_case:
             fields = ", ".join(item.field for item in assessment.score.scoring_assumptions)
-            _safe_print(f"Worst case fields for {assessment.asset.name}: {fields}")
+            _safe_print(
+                f"Worst case fields for {assessment.asset.name} "
+                f"(asset ID {assessment.asset.id}): {fields}"
+            )
+            for message in conflict_messages(assessment.score):
+                _safe_print(f"  Asset ID {assessment.asset.id}: {message}")
         console.print()
         _safe_print(SCORE_BASIS_NOTE)
 

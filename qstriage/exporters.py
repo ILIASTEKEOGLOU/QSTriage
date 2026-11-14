@@ -159,7 +159,19 @@ def _score_result_records(
                 "human_review_required": decision.human_review_required,
                 "reason_codes": list(decision.reason_codes),
                 "score_basis": score.score_basis,
-                "scoring_assumptions": [asdict(item) for item in score.scoring_assumptions],
+                "scoring_assumptions": [
+                    {
+                        "field": item.field,
+                        "inventory_value": item.inventory_value,
+                        "problem": item.problem,
+                        "scored_as": item.scored_as,
+                        "kind": item.kind,
+                        "message": item.describe(),
+                    }
+                    for item in score.scoring_assumptions
+                ],
+                "key_size_bits_scored": score.key_size_bits_scored,
+                "key_size_source": score.key_size_source,
                 "breakdown": _to_json_ready(score.breakdown),
                 "explanation": _decision_safe_explanation(score),
             }
@@ -213,6 +225,10 @@ def _score_result_rows(
                     f"{item.field}: {item.inventory_value} ({item.problem}) -> {item.scored_as}"
                     for item in score.scoring_assumptions
                 ),
+                "key_size_bits_scored": (
+                    "" if score.key_size_bits_scored is None else score.key_size_bits_scored
+                ),
+                "key_size_source": score.key_size_source or "",
                 "cryptographic_risk": score.breakdown.cryptographic_risk,
                 "shelf_life_risk": score.breakdown.shelf_life_risk,
                 "exposure_risk": score.breakdown.exposure_risk,

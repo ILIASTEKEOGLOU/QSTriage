@@ -74,6 +74,64 @@
 
 ### Fixed
 
+- RSA key size: one rule, `resolve_key_size` in `qstriage/standards.py`,
+  decides the size that scoring and evidence review use. Previously scoring
+  read only `key_size_bits` and ignored the size in the identifier, so
+  `RSA-2048` without the field scored as an unknown size (cryptographic risk
+  8.0 instead of 9.0), `RSA-4096` without the field scored 8.0 instead of 7.0,
+  and `RSA-2048` with `key_size_bits: 4096` was `justified` with no finding
+  (7.0). Now:
+  - only the score for quantum-vulnerable RSA uses a key size; the score
+    export reports `key_size_bits_scored` and `key_size_source` only there
+    and leaves both null for every other identifier, even when
+    `key_size_bits` is declared (the declared value stays in the inventory
+    and the PDR);
+  - without `key_size_bits`, an RSA identifier with a modulus length
+    (`RSA-2048`) supplies the size; the score export records
+    `key_size_source: algorithm_identifier`, the PDR keeps
+    `observed_state.key_size_bits: null` and adds one `assumptions_made`
+    line; the score basis stays `confirmed`;
+  - when the identifier and `key_size_bits` differ, both values are kept,
+    the smaller one is scored (score basis worst case), the evidence finding
+    `conflicting_key_size` blocks decision grade, and the decision is `gated`
+    with requirement `cryptographic_parameters`. This applies even when both
+    sizes fall in the same risk step, and to a declared `0`. The message,
+    shown by `score`, `report`, the score export, and the PDR, names both
+    sizes and asks to verify the RSA modulus against the source record;
+    `score` names the asset by name and asset ID;
+  - `deadline_pressure` reads the cryptographic risk already computed for the
+    asset instead of computing it again from `key_size_bits`. Example, 10
+    years retention and internal exposure: `RSA-4096` without the field goes
+    from 8.0 / 5.0 (risk / deadline) to 7.0 / 1.0, and `RSA-2048` with
+    `key_size_bits: 4096` from 7.0 / 1.0 to 9.0 / 5.0.
+  Scores, decisions, and the hashes of newly generated PDRs can change for RSA
+  assets. Issued PDRs keep verifying with their original hashes.
+- CBOM import no longer derives a key size from digits in the algorithm text
+  or the component name, and no longer builds an identifier from a key-size
+  field or from a family plus a number. Previously `X25519MLKEM768` imported
+  with `key_size_bits: 25519`, `ML-KEM-768` with 768, `SHA-256` with 256, a
+  family `RSA` with a component name `billing-api-v202` became `RSA-202`, and
+  a bare `parameterSetIdentifier: "512"` with an RSA family replaced a full
+  `algorithm: RSA-2048` with `RSA-512`. Now `key_size_bits` comes only from
+  `keySize`, `keySizeBits`, `keyLength`, or `publicKeySize`; a full source
+  identifier is kept; a bare parameter set is used only for ML-KEM (512, 768,
+  1024), ML-DSA (44, 65, 87), and AES (128, 192, 256), also when `algorithm`
+  only repeats the family, in any spelling the algorithm registry treats as
+  the same identifier (`ML-KEM`, `ML KEM`, `ml_kem`). `algorithmFamily: RSA`
+  with `keySize: 4096` imports as `algorithm: RSA`, `key_size_bits: 4096`.
+  Re-importing the same CBOM can change `algorithm` and `key_size_bits` in
+  the inventory and in new PDRs, which also affects custom policies that
+  compare the exact `algorithm` value. Inventories imported earlier may hold
+  sizes derived from digits without any record of that; re-importing from the
+  original CBOM restores the distinction. A re-import that changes the
+  inventory changes its hash, so an Evidence Closure patch bound to the
+  earlier import no longer validates and must be bound to the new inventory.
+  The bundled demo is updated: its imported asset now has
+  `key_size_bits: null` (scored at 2048 bits from `RSA-2048`), and the patch,
+  gap manifest, enriched inventory, and comparison carry the new hashes; the
+  decisions and evidence scores are unchanged.
+
+
 - A PDR compatibility corpus (`tests/fixtures/pdr_compat/`) now pins PDRs
   issued by QSTriage 1.2.1 (PDR 0.2) and 1.4.1 (PDR 0.3) and one generated on
   the development line, in plain text and with Greek text, composed and

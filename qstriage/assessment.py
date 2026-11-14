@@ -28,7 +28,7 @@ from qstriage.policy import (
     PolicyPack,
     get_policy_pack,
 )
-from qstriage.scoring import ScoreResult, score_inventory
+from qstriage.scoring import ASSUMPTION_CONFLICTING_KEY_SIZE, ScoreResult, score_inventory
 from qstriage.standards import (
     IDENTIFIER_FAMILY_UNVERIFIED,
     AlgorithmClassification,
@@ -211,11 +211,38 @@ def unranked_reason(classification: AlgorithmClassification) -> str:
 
 SCORE_BASIS_NOTE = (
     'Score basis: "confirmed" means every context field the score uses is present '
-    'and usable. "worst case" means the listed fields are missing, withheld, not an '
-    "accepted label, or defaulted on import; each is scored at its most severe value, "
-    "so missing evidence can raise an asset but never bury it. Supply the listed "
-    "fields to replace the assumption with the real value."
+    "and usable, and no stated key size conflicts with the algorithm identifier. "
+    '"worst case" means a listed field cannot be used as stated: a context field is '
+    "missing, withheld, not an accepted label, or defaulted on import, or "
+    "key_size_bits differs from the size in the algorithm identifier. Each is "
+    "scored at its most severe value (for a key size conflict, the smaller size), "
+    "so missing or conflicting evidence can raise an asset but never bury it. "
+    "Supply or correct the listed fields to replace the assumption with the real "
+    "value."
 )
+
+
+def conflict_messages(score: ScoreResult) -> list[str]:
+    """Messages for assumptions that record a contradiction, not a gap."""
+
+    return [
+        item.message
+        for item in score.scoring_assumptions
+        if item.kind == ASSUMPTION_CONFLICTING_KEY_SIZE
+    ]
+
+
+def key_size_used_text(score: ScoreResult, algorithm: str) -> str | None:
+    """Plain text for the key size the score used, or None when no size applies."""
+
+    if score.key_size_bits_scored is None:
+        return None
+    bits = score.key_size_bits_scored
+    if score.key_size_source == "algorithm_identifier":
+        return f"{bits} bits, taken from the algorithm identifier {algorithm}"
+    if score.key_size_source == "conflict_smaller":
+        return f"{bits} bits, the smaller of two conflicting sizes (provisional)"
+    return f"{bits} bits, declared in key_size_bits"
 
 
 def score_basis_label(score: ScoreResult, *, short: bool = False) -> str:

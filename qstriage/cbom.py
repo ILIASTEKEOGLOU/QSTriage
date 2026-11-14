@@ -7,6 +7,7 @@ from typing import Any
 
 import yaml
 
+from qstriage.algorithm_registry import normalize_identifier
 from qstriage.file_output import write_private_text
 from qstriage.limits import (
     MAX_CBOM_COMPONENTS,
@@ -224,7 +225,7 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
         asset_type="cbom_cryptographic_asset",
         protocol=str(protocol),
         algorithm=str(algorithm),
-        key_size_bits=_extract_key_size_bits(algorithm_properties, str(algorithm)),
+        key_size_bits=_extract_key_size_bits(algorithm_properties),
         data_class="unknown",
         retention_years=0,
         exposure="unknown",
@@ -241,28 +242,42 @@ def _cbom_algorithm_identifier(
     *,
     asset_type: str | None = None,
 ) -> str:
+    """Return the algorithm identifier exactly as the source states it.
+
+    Identifiers are never built from a key size field or from digits in a
+    name. A bare parameter set is used only through an explicit mapping
+    (``_PARAMETER_SET_IDENTIFIERS``); any other bare number is ignored, so it
+    cannot replace a full identifier stated elsewhere. A value that only
+    repeats the family (``algorithm: ML-KEM`` with ``algorithmFamily:
+    ML-KEM``) is not a full identifier, so the mapping still applies.
+    """
+
     parameter_set = _string_or_none(algorithm_properties.get("parameterSetIdentifier"))
     algorithm = _string_or_none(algorithm_properties.get("algorithm"))
     family = _string_or_none(algorithm_properties.get("algorithmFamily"))
     component_name = _string_or_none(component.get("name"))
 
-    key_size_bits = _extract_key_size_bits(
-        algorithm_properties,
-        " ".join(value for value in (parameter_set, algorithm, family, component_name) if value),
-    )
-
+    # The family may be stated as algorithmFamily or only as algorithm.
+    stated_family = family or algorithm
     for value in (parameter_set, algorithm):
-        if value:
-            return _normalize_cbom_algorithm_string(value, family, key_size_bits)
+        if value and _is_full_identifier(value, stated_family):
+            return _normalize_cbom_algorithm_string(value, family)
+
+    mapped = _mapped_parameter_set(stated_family, parameter_set)
+    if mapped is not None:
+        return mapped
+
+    if algorithm and not algorithm.strip().isdigit():
+        return _normalize_cbom_algorithm_string(algorithm, family)
 
     if family:
-        return _normalize_cbom_algorithm_string(family, family, key_size_bits)
+        return _normalize_cbom_algorithm_string(family, family)
 
     if asset_type == "protocol":
         return "unknown"
 
     if component_name:
-        return _normalize_cbom_algorithm_string(component_name, None, key_size_bits)
+        return _normalize_cbom_algorithm_string(component_name, None)
 
     return "unknown"
 
@@ -293,33 +308,50 @@ def _cbom_protocol_identifier(
     )
 
 
-def _normalize_cbom_algorithm_string(
-    value: str,
-    family: str | None,
-    key_size_bits: int | None,
-) -> str:
+# Families whose bare parameterSetIdentifier names exactly one identifier.
+# The CycloneDX CBOM guide uses "128" with algorithmFamily AES. A bare number
+# with an RSA family is not mapped: in the same guide an RSA signature example
+# carries "512", which belongs to SHA-512, not to the RSA modulus.
+_PARAMETER_SET_IDENTIFIERS = {
+    "ML-KEM": ("ML-KEM", frozenset({"512", "768", "1024"})),
+    "ML-DSA": ("ML-DSA", frozenset({"44", "65", "87"})),
+    "AES": ("AES", frozenset({"128", "192", "256"})),
+}
+
+
+def _identifier_key(value: str) -> str:
+    # The registry's normalization, so "ML KEM", "ml_kem" and "ML-KEM" name
+    # the same family here as they do in classification.
+    return normalize_identifier(value)
+
+
+def _is_full_identifier(value: str, family: str | None) -> bool:
+    """True unless the value is a bare number or only repeats the family."""
+
+    if value.strip().isdigit():
+        return False
+    return not (family and _identifier_key(value) == _identifier_key(family))
+
+
+def _mapped_parameter_set(family: str | None, parameter_set: str | None) -> str | None:
+    if not family or not parameter_set:
+        return None
+    mapping = _PARAMETER_SET_IDENTIFIERS.get(_identifier_key(family))
+    if mapping is None:
+        return None
+    prefix, accepted = mapping
+    value = parameter_set.strip()
+    return f"{prefix}-{value}" if value in accepted else None
+
+
+def _normalize_cbom_algorithm_string(value: str, family: str | None) -> str:
     cleaned = value.strip()
     family_cleaned = family.strip() if family else ""
     cleaned_upper = cleaned.upper().replace("_", "-")
     family_upper = family_cleaned.upper().replace("_", "-")
 
-    if family_upper and cleaned_upper.isdigit():
-        return f"{family_cleaned}-{cleaned}"
-
     if family_upper and cleaned_upper.startswith(f"{family_upper}-"):
         return cleaned
-
-    if family_upper == "ML-KEM" and cleaned_upper in {"512", "768", "1024"}:
-        return f"ML-KEM-{cleaned}"
-
-    if family_upper == "ML-DSA" and cleaned_upper in {"44", "65", "87"}:
-        return f"ML-DSA-{cleaned}"
-
-    if family_upper == "RSA" and key_size_bits is not None and cleaned_upper == "RSA":
-        return f"RSA-{key_size_bits}"
-
-    if family_upper == "AES" and key_size_bits is not None and cleaned_upper == "AES":
-        return f"AES-{key_size_bits}"
 
     cdxgen_aes = re.fullmatch(r"AES(128|192|256)-(CBC|GCM)", cleaned_upper)
     if cdxgen_aes:
@@ -354,20 +386,15 @@ def _normalize_asset_id(component: dict[str, Any]) -> str:
     return normalized.strip("-") or "cbom-cryptographic-asset"
 
 
-def _extract_key_size_bits(
-    algorithm_properties: dict[str, Any],
-    algorithm: str,
-) -> int | None:
+def _extract_key_size_bits(algorithm_properties: dict[str, Any]) -> int | None:
+    """Return a key size only from an explicit size field, never from a name."""
+
     for key in ("keySize", "keySizeBits", "keyLength", "publicKeySize"):
         value = algorithm_properties.get(key)
         if isinstance(value, int):
             return value
         if isinstance(value, str) and value.isdigit():
             return int(value)
-
-    match = re.search(r"(\d{3,5})", algorithm)
-    if match:
-        return int(match.group(1))
 
     return None
 

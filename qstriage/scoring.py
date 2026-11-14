@@ -19,8 +19,11 @@ from qstriage.models import AssetEvidenceAssertions, CryptographicAsset, Invento
 from qstriage.standards import (
     AlgorithmClassification,
     KeySizeRequirement,
+    KeySizeResolution,
     classify_algorithm,
+    conflicting_key_size_message,
     key_size_requirement,
+    resolve_key_size,
 )
 
 
@@ -36,14 +39,36 @@ class ScoreBreakdown:
     total: float
 
 
+ASSUMPTION_UNRESOLVED_CONTEXT = "unresolved_context"
+ASSUMPTION_CONFLICTING_KEY_SIZE = "conflicting_key_size"
+
+
 @dataclass(frozen=True)
 class ScoringAssumption:
-    """One context field scored at its worst case because its value is unusable."""
+    """One field scored at its worst case.
+
+    ``unresolved_context``: a context value is unusable (missing, withheld,
+    not an accepted label, defaulted). ``conflicting_key_size``: the RSA
+    identifier and ``key_size_bits`` state different sizes; the smaller one
+    is scored and ``message`` says what to verify.
+    """
 
     field: str
     inventory_value: str
     problem: str
     scored_as: str
+    kind: str = ASSUMPTION_UNRESOLVED_CONTEXT
+    message: str = ""
+
+    def describe(self) -> str:
+        """One sentence for explanations and PDR assumptions."""
+
+        if self.kind == ASSUMPTION_CONFLICTING_KEY_SIZE:
+            return self.message
+        return (
+            f"Unresolved {self.field} ({self.problem}) is scored as "
+            f"{self.scored_as} (worst case)."
+        )
 
 
 @dataclass(frozen=True)
@@ -58,6 +83,8 @@ class ScoreResult:
     explanation: list[str]
     score_basis: str = "confirmed"
     scoring_assumptions: tuple[ScoringAssumption, ...] = ()
+    key_size_bits_scored: int | None = None
+    key_size_source: str | None = None
 
 
 SCORE_BASIS_CONFIRMED = "confirmed"
@@ -169,9 +196,11 @@ def score_asset(
 ) -> ScoreResult:
     scored, assumptions = scored_view or scoring_view(asset, asset_evidence)
     classification = classify_algorithm(asset.algorithm)
+    key_size = resolve_key_size(classification, asset.key_size_bits)
+    assumptions = (*assumptions, *_key_size_assumptions(key_size))
     cryptographic_risk = _cryptographic_risk(
         asset.algorithm,
-        asset.key_size_bits,
+        key_size.scored_bits,
         classification,
     )
     shelf_life_risk = _shelf_life_risk(scored.retention_years, scored.data_class)
@@ -182,7 +211,7 @@ def score_asset(
         asset.id,
         budget=budget,
     ).total_score
-    deadline_pressure = _deadline_pressure(scored, classification)
+    deadline_pressure = _deadline_pressure(scored, cryptographic_risk)
     effort_penalty = _effort_penalty(scored.migration_effort)
 
     raw_total = (
@@ -218,11 +247,13 @@ def score_asset(
         recommended_action,
         classification,
     )
-    for assumption in assumptions:
+    if key_size.source is not None and key_size.source.value == "algorithm_identifier":
         explanation.append(
-            f"Unresolved {assumption.field} ({assumption.problem}) is scored as "
-            f"{assumption.scored_as} (worst case)."
+            f"Key size {key_size.scored_bits} bits is taken from the algorithm "
+            f"identifier {asset.algorithm}."
         )
+    for assumption in assumptions:
+        explanation.append(assumption.describe())
 
     return ScoreResult(
         asset_id=asset.id,
@@ -235,6 +266,26 @@ def score_asset(
         explanation=explanation,
         score_basis=SCORE_BASIS_WORST_CASE if assumptions else SCORE_BASIS_CONFIRMED,
         scoring_assumptions=assumptions,
+        key_size_bits_scored=key_size.scored_bits,
+        key_size_source=key_size.source.value if key_size.source else None,
+    )
+
+
+def _key_size_assumptions(key_size: KeySizeResolution) -> tuple[ScoringAssumption, ...]:
+    if not key_size.conflict:
+        return ()
+    return (
+        ScoringAssumption(
+            field="key_size_bits",
+            inventory_value=str(key_size.declared_bits),
+            problem=(
+                "differs from the algorithm identifier, which says "
+                f"{key_size.identifier_bits} bits"
+            ),
+            scored_as=f"{key_size.scored_bits} bits",
+            kind=ASSUMPTION_CONFLICTING_KEY_SIZE,
+            message=conflicting_key_size_message(key_size),
+        ),
     )
 
 
@@ -246,6 +297,7 @@ def _cryptographic_risk(
     classification = classification or classify_algorithm(algorithm)
 
     if classification.quantum_status == "quantum_vulnerable":
+        # Keep in step with standards.key_size_affects_score.
         if classification.algorithm_family == "RSA":
             if key_size_bits is None:
                 return 8.0
@@ -306,15 +358,10 @@ def _exposure_risk(exposure: str) -> float:
     return 5.0
 
 
-def _deadline_pressure(
-    asset: CryptographicAsset,
-    classification: AlgorithmClassification | None = None,
-) -> float:
-    if asset.retention_years >= 10 and _cryptographic_risk(
-        asset.algorithm,
-        asset.key_size_bits,
-        classification,
-    ) >= 8.0:
+def _deadline_pressure(asset: CryptographicAsset, cryptographic_risk: float) -> float:
+    # Takes the cryptographic risk already computed for this asset, so both
+    # components always read the same key size.
+    if asset.retention_years >= 10 and cryptographic_risk >= 8.0:
         return 5.0
 
     exposure_category = normalize_asset_context(asset).exposure.canonical_value

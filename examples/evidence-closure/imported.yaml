@@ -5,7 +5,7 @@ assets:
   asset_type: cbom_cryptographic_asset
   protocol: signature
   algorithm: RSA-2048
-  key_size_bits: 2048
+  key_size_bits: null
   data_class: unknown
   retention_years: 0
   exposure: unknown

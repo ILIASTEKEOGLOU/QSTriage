@@ -112,8 +112,9 @@ It combines only supported structural signals. Current explicit transformations 
 |---|---|
 | `algorithmFamily=ML-KEM`, parameter `768` | `ML-KEM-768` |
 | `algorithmFamily=ML-DSA`, parameter `65` | `ML-DSA-65` |
-| `algorithmFamily=RSA`, key size `2048` | `RSA-2048` |
-| `algorithmFamily=AES`, key size `256` | `AES-256` |
+| `algorithmFamily=AES`, parameter `256` | `AES-256` |
+| `algorithmFamily=RSA`, key size `2048` | `RSA` (key size kept in `key_size_bits`) |
+| `algorithmFamily=RSA`, parameter `512` | `RSA` (bare number not mapped) |
 | cdxgen component name `aes256-CBC` | `AES-256-CBC` |
 | cdxgen component name `aes256-GCM` | `AES-256-GCM` |
 

@@ -63,7 +63,8 @@ def test_normalized_cbom_rsa_flows_into_scoring_registry_evidence() -> None:
     result = score_inventory(inventory)[0]
     joined = "\n".join(result.explanation)
 
-    assert inventory.assets[0].algorithm == "RSA-2048"
+    assert inventory.assets[0].algorithm == "RSA"
+    assert inventory.assets[0].key_size_bits == 2048
     assert result.breakdown.cryptographic_risk == 9.0
     assert "Algorithm registry classifies RSA as quantum_vulnerable" in joined
     assert "registry action is migrate_to_hybrid_or_pqc_path" in joined

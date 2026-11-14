@@ -247,8 +247,17 @@ priority score rests on a guess and it is never ranked.
 
 Every record carries `score_basis` (`confirmed` or `worst_case`) and
 `scoring_assumptions`, one entry per field scored at its worst case with
-`field`, `inventory_value`, `problem`, and `scored_as` (CSV: one column,
-entries joined with ` | `).
+`field`, `inventory_value`, `problem`, `scored_as`, `kind`
+(`unresolved_context` or `conflicting_key_size`), and `message`, the sentence
+also written to the PDR (CSV: one column, entries joined with ` | `).
+
+Every record also carries `key_size_bits_scored`, the key size the score used,
+and `key_size_source`: `declared`, `algorithm_identifier` (taken from an RSA
+identifier such as `RSA-2048`), or `conflict_smaller` (the identifier and
+`key_size_bits` disagree; the smaller size is scored). Only the score for
+quantum-vulnerable RSA uses a key size; for every other identifier both fields
+are null, even when `key_size_bits` is declared. CSV writes empty cells for
+null.
 
 Every record keeps the planning-score fields and the canonical decision fields.
 The compatibility field `recommended_action` aliases `action_type`. JSON

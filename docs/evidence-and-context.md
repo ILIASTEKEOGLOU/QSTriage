@@ -311,6 +311,38 @@ A stated `key_size_bits` is always recorded. Only a missing value for a
 "required" identifier produces the `missing_key_size_bits` finding and the
 `key_size_bits` entry in PDR `evidence_quality.missing_evidence`.
 
+### Key size used for scoring
+
+One rule, `resolve_key_size` in `qstriage/standards.py`, decides which key
+size scoring uses. Scoring and evidence review both call it, so the score
+and the evidence finding always describe the same size. Only the score for
+quantum-vulnerable RSA depends on a key size. For every other identifier no
+size is reported as used (`key_size_bits_scored` and `key_size_source` are
+null), even when `key_size_bits` is declared; the declared value stays in the
+inventory and in PDR `observed_state`. An RSA identifier that states a
+modulus length (`RSA-2048`, `RSA4096`) carries a size of its own.
+
+| Inventory | Size scored | `key_size_source` | Effect |
+|---|---|---|---|
+| `RSA-2048`, no `key_size_bits` | 2048 | `algorithm_identifier` | none; PDR `observed_state.key_size_bits` stays null and `assumptions_made` says the size comes from the identifier |
+| `RSA-2048`, `key_size_bits: 2048` | 2048 | `declared` | none |
+| `RSA-2048`, `key_size_bits: 4096` (or the reverse) | the smaller, 2048 | `conflict_smaller` | finding `conflicting_key_size`, decision `gated` with requirement `cryptographic_parameters`, score basis worst case |
+| `RSA`, `key_size_bits: 4096` | 4096 | `declared` | none |
+| `SHA-256`, `key_size_bits: 256` (or ML-KEM, AES, FFDHE, ECC) | not used | null | none; the score is the same with or without the field |
+
+Both values of a conflict are kept as declared. The smaller one is used only
+for the provisional score; this is a QSTriage rule, so a conflict can raise an
+asset but never lower it. The rule applies even when both sizes fall in the
+same risk step, and to a declared `0`. The finding is
+`decision_grade_blocked` and `human_review_required`, and its message is:
+
+> The algorithm identifier says 2048 bits. "key_size_bits" says 4096 bits.
+> The planning score uses 2048 bits as a precaution. Verify the RSA modulus
+> size against the source record before proceeding.
+
+`cryptographic_risk` is computed once with this size, and `deadline_pressure`
+reads that computed value, so both components always use the same size.
+
 For every asset treated as CBOM-imported, the current evidence review emits `unknown_dependency_completeness` unless a relationship assertion states `none` or `known`. It does not infer relationship completeness from the scanner artifact or convert scanner dependencies into QSTriage blast-radius dependencies.
 
 For native inventory assets participating in at least one declared QSTriage dependency, the review emits an informational known-context finding. That finding does not reduce evidence score or confidence.

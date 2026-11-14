@@ -243,6 +243,8 @@ def test_every_surface_lists_the_same_worst_case_fields(tmp_path: Path) -> None:
     assert record["scoring_assumptions"][0] == {
         "field": "data_class", "inventory_value": "unknown",
         "problem": "missing", "scored_as": "sensitive",
+        "kind": "unresolved_context",
+        "message": "Unresolved data_class (missing) is scored as sensitive (worst case).",
     }
 
     rows = list(
@@ -267,7 +269,10 @@ def test_every_surface_lists_the_same_worst_case_fields(tmp_path: Path) -> None:
 
     report = generate_markdown_report(inventory)
     assert "| worst case (6 fields) | gated |" in report
-    assert "- Ranked assets scored at worst case because context is missing: 1 of 1" in report
+    assert (
+        "- Ranked assets scored at worst case: 1 of 1 "
+        "(missing or unusable context: 1; conflicting key size: 0)"
+    ) in report
     assert SCORE_BASIS_NOTE in report
     assert "| exposure | `unknown` | missing | public |" in report
 
@@ -275,7 +280,10 @@ def test_every_surface_lists_the_same_worst_case_fields(tmp_path: Path) -> None:
     output = _flat(result.output)
     assert result.exit_code == 0
     assert "basis=worst case (6 fields)" in output
-    assert "Worst case fields for Customer API RSA Signing Key: " + ", ".join(expected) in output
+    assert (
+        "Worst case fields for Customer API RSA Signing Key (asset ID customer-api-rsa): "
+        + ", ".join(expected)
+    ) in output
     assert _flat(SCORE_BASIS_NOTE) in output
 
 

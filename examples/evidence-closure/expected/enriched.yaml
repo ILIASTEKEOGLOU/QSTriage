@@ -5,7 +5,7 @@ assets:
   asset_type: cbom_cryptographic_asset
   protocol: signature
   algorithm: RSA-2048
-  key_size_bits: 2048
+  key_size_bits: null
   data_class: customer_pii
   retention_years: 10
   exposure: public_internet
@@ -20,7 +20,7 @@ dependencies: []
 scenarios: []
 evidence:
   version: '0.1'
-  source_inventory_hash: sha256:237c747d8dfe9d55963c570418674ca9c99e784e3a5fa02d04b82f55366de3ab
+  source_inventory_hash: sha256:3490a15a8131728dc1c6b3b46a3a4afdc112ef7de3e197e3d089ff7fa0aa5d68
   assets:
     customer-api-rsa:
       environment: null

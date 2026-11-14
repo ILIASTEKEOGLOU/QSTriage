@@ -1,5 +1,5 @@
 patch_version: '0.1'
-source_inventory_hash: sha256:237c747d8dfe9d55963c570418674ca9c99e784e3a5fa02d04b82f55366de3ab
+source_inventory_hash: sha256:3490a15a8131728dc1c6b3b46a3a4afdc112ef7de3e197e3d089ff7fa0aa5d68
 assertions:
 - asset_id: customer-api-rsa
   field: data_class
