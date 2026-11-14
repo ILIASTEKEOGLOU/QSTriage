@@ -236,7 +236,13 @@ gh attestation verify qstriage-*.tar.gz --repo ILIASTEKEOGLOU/QSTriage
 ```
 
 Release tags must match the package version exactly, for example `v1.4.1` for
-package version `1.4.1`. PyPI publication uses an exact existing tag, a guarded
+package version `1.4.1`. From this version of `release.yml`, the workflow
+accepts only an exact `vMAJOR.MINOR.PATCH` tag on tag push and on manual
+dispatch, so it does not build, attest, or publish from a development tag such
+as `v1.5.0.dev0`. GitHub runs the workflow definition of the ref that started
+the run: the tagged commit for a tag push, and the branch or tag selected with `--ref`
+for a manual dispatch. A tag on an older commit is therefore checked by that commit's
+workflow. The check does not restrict who can create tags. PyPI publication uses an exact existing tag, a guarded
 GitHub environment, and OIDC Trusted Publishing rather than a stored PyPI API
 token.
 

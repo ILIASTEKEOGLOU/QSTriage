@@ -9,3 +9,6 @@
 *.csv text eol=lf
 *.lock text eol=lf
 SHA256SUMS text eol=lf
+
+# PDR compatibility corpus: stored bytes are hashed; never convert line endings.
+tests/fixtures/pdr_compat/** -text

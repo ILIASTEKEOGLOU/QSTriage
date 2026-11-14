@@ -137,8 +137,10 @@ and checks that each record carries the document's `pdr_version`, `run_id`,
 `input_snapshot`, `policy_context`, and, for PDR 0.3, `registry_context`.
 PDR 0.2 and 0.3 documents are each checked under their own rules.
 Verification reads the file once within the 64 MiB limit, rejects duplicate
-JSON keys, non-finite numbers, nesting deeper than 64 levels, and unpaired
-surrogate code points, and does not write. The exit code is 0 when
+JSON keys, non-finite numbers (`NaN`, `Infinity`, `-Infinity`, and numbers
+that overflow to an infinity as IEEE 754 doubles, such as `1e400`), nesting
+deeper than 64 levels, and unpaired surrogate code points before any hash is
+computed, and does not write. The exit code is 0 when
 every check passes and 1 otherwise.
 
 ## Compare two PQC Decision Records

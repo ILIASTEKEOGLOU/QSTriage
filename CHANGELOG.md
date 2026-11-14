@@ -11,6 +11,32 @@
 
 ### Security
 
+- `pdr verify` and `pdr diff` now reject every non-finite number (`NaN`,
+  `Infinity`, `-Infinity`, and numbers that overflow to an infinity as IEEE 754
+  doubles) before any hash is computed, for PDR 0.2 and 0.3, and name its
+  location and spelling. The same applies to documents passed to
+  `verify_pdr_document`, including arrays given as tuples. Previously a number
+  such as `1e400` was read as an infinity and reached hashing. A PDR 0.2 document carrying such a
+  number with hashes recomputed over the infinity passed every check, because
+  the frozen 0.2 hash serializes it as `Infinity`. For PDR 0.3 the rejection
+  follows RFC 8785 Section 3.1 (numbers must be expressible as IEEE 754
+  doubles) and Section 3.2.2.3 (NaN and Infinity stop canonicalization); for
+  PDR 0.2 it is a QSTriage rule, since `Infinity` is not JSON (RFC 8259
+  Section 6). Issued PDRs with finite numbers verify as before. Numbers that
+  round when read, such as `1e-400`, are not affected.
+- Input locations in error messages are unambiguous: a key that is not a
+  plain ASCII name is shown in quoted bracket form (RFC 9535), so a key named
+  `a.b` appears as `$['a.b']` and a nested key as `$.a.b`. A YAML key that is
+  not a string (null, number, boolean, or date) appears as `[YAML key null]`,
+  `[YAML key 7]`, and so on, so a key `7` is not shown as the list index `[7]`.
+  Previously such keys were printed as text (`$.assets[0].None`), and keys
+  `true` and `7` looked like list indices.
+- The release workflow now applies the exact `vMAJOR.MINOR.PATCH` tag check on
+  tag push as well as on manual dispatch. Previously a pushed development tag
+  that matched the package version, such as `v1.5.0.dev0`, passed the source
+  identity check, so the workflow would build and attest its artifacts
+  (publication to PyPI already required a manual dispatch with an exact tag). The check does
+  not restrict who can create tags.
 - The supported `mcp` range (extras `mcp` and `dev`) is now
   `>=1.30,!=2.0.*,!=2.1.*,<3`. Releases 1.8.0 to 1.29.x and 2.0.0 to 2.1.x are
   affected by GHSA-84m7-p3x7-pcfv, GHSA-5h93-6whr-6q8j, GHSA-w4fh-qvv9-3v23,
@@ -48,6 +74,14 @@
 
 ### Fixed
 
+- A PDR compatibility corpus (`tests/fixtures/pdr_compat/`) now pins PDRs
+  issued by QSTriage 1.2.1 (PDR 0.2) and 1.4.1 (PDR 0.3) and one generated on
+  the development line, in plain text and with Greek text, composed and
+  decomposed accents, and an emoji. Tests rebuild each original file byte for
+  byte, check its recorded SHA-256, verify it with the hashes it was issued
+  with, verify its ASCII-escaped encoding with the same hashes, and compare the
+  1.2.1 and 1.4.1 records with `pdr diff`. The corpus is stored as ASCII and
+  excluded from line-ending conversion.
 - One resolver now decides whether each business context field is usable
   (`normalize_asset_context` in `qstriage/context.py`). Evidence review, PDR
   evidence quality, Evidence Closure gaps, context review, policy facts,

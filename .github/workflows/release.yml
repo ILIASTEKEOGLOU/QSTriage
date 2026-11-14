@@ -66,16 +66,25 @@ jobs:
           source_sha=$(git rev-parse HEAD)
           source_epoch=$(git show -s --format=%ct HEAD)
 
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            requested_tag="$REQUESTED_RELEASE_TAG"
-            if [[ ! "$requested_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "ERROR: release_tag must be an exact vMAJOR.MINOR.PATCH tag"
+          # Both tag paths (manual dispatch and tag push) accept only an exact
+          # vMAJOR.MINOR.PATCH tag, so nothing is built, attested, or
+          # published from a development tag such as v1.5.0.dev0. This check
+          # does not restrict who can create tags.
+          require_exact_release_tag() {
+            if [[ ! "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "ERROR: tag '$1' is not an exact vMAJOR.MINOR.PATCH release tag (for example v1.5.0); release artifacts are built only from exact release tags"
               exit 1
             fi
+          }
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            requested_tag="$REQUESTED_RELEASE_TAG"
+            require_exact_release_tag "$requested_tag"
             tag_sha=$(git rev-parse "refs/tags/$requested_tag^{commit}")
             test "$tag_sha" = "$source_sha"
             test "$requested_tag" = "v$version"
           elif [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            require_exact_release_tag "$GITHUB_REF_NAME"
             tag_sha=$(git rev-parse "refs/tags/$GITHUB_REF_NAME^{commit}")
             test "$tag_sha" = "$source_sha"
             test "$GITHUB_REF_NAME" = "v$version"
