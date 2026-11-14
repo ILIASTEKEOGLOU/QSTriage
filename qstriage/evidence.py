@@ -14,6 +14,7 @@ from qstriage.context import (
 )
 from qstriage.models import (
     AssetEvidenceAssertions,
+    cbom_key_size_pairs,
     CryptographicAsset,
     Dependency,
     EvidenceAssertionProvenance,
@@ -487,8 +488,18 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
             )
         )
 
+    # The same resolver feeds scoring, so the finding and the provisional
+    # score always describe the same conflict.
+    key_size = resolve_key_size(
+        classification, asset.key_size_bits, cbom_key_size_pairs(asset)
+    )
+
+    # CBOM size fields replace a missing key_size_bits only when they form a
+    # recognized RSA conflict; for any other algorithm they are not used, so
+    # the size is still missing.
     if (
         asset.key_size_bits is None
+        and not key_size.conflict
         and key_size_requirement(classification) == KeySizeRequirement.required
     ):
         findings.append(
@@ -517,10 +528,22 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
             )
         )
 
-    # The same resolver feeds scoring, so the finding and the provisional
-    # score always describe the same conflict.
-    key_size = resolve_key_size(classification, asset.key_size_bits)
     if key_size.conflict:
+        field_path = (
+            f"assets[{asset.id}].cbom_key_sizes"
+            if key_size.from_cbom
+            else f"assets[{asset.id}].key_size_bits"
+        )
+        description = (
+            f"Confirm the RSA modulus size of asset '{asset.id}' in the original "
+            "CBOM, correct the size fields there, and import the CBOM again."
+            if key_size.from_cbom
+            else (
+                f"Verify the RSA modulus size of asset '{asset.id}' against "
+                "the source record, then correct either the algorithm "
+                "identifier or key_size_bits so that both state the same size."
+            )
+        )
         findings.append(
             EvidenceFinding(
                 code="conflicting_key_size",
@@ -532,16 +555,12 @@ def _cryptographic_context_findings(asset: CryptographicAsset) -> list[EvidenceF
                     EvidenceEffect.human_review_required,
                 ],
                 asset_id=asset.id,
-                field_path=f"assets[{asset.id}].key_size_bits",
+                field_path=field_path,
                 evidence_state=EvidenceState.declared,
                 provenance=EvidenceProvenance.user_declared,
                 human_action=HumanAction(
-                    description=(
-                        f"Verify the RSA modulus size of asset '{asset.id}' against "
-                        "the source record, then correct either the algorithm "
-                        "identifier or key_size_bits so that both state the same size."
-                    ),
-                    field_path=f"assets[{asset.id}].key_size_bits",
+                    description=description,
+                    field_path=field_path,
                     expected_value_type="integer RSA modulus length in bits",
                     effect_if_unresolved=(
                         "The decision stays gated and the priority score stays "

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 
@@ -258,10 +259,17 @@ class KeySizeResolution:
     identifier_bits: int | None
     scored_bits: int | None
     source: KeySizeSource | None
+    cbom_sizes: tuple[tuple[str, int], ...] = ()
 
     @property
     def conflict(self) -> bool:
         return self.source == KeySizeSource.conflict_smaller
+
+    @property
+    def from_cbom(self) -> bool:
+        """True when the conflict includes size fields kept from a CBOM."""
+
+        return bool(self.cbom_sizes)
 
 
 _RSA_MODULUS_IDENTIFIER = re.compile(r"RSA-?(\d+)")
@@ -282,16 +290,20 @@ def key_size_affects_score(classification: AlgorithmClassification) -> bool:
 def resolve_key_size(
     classification: AlgorithmClassification,
     declared_bits: int | None,
+    cbom_sizes: Iterable[tuple[str, int]] = (),
 ) -> KeySizeResolution:
     """Return the one key size that scoring and evidence review both use.
 
-    - The identifier states an RSA modulus length and ``key_size_bits`` is
-      absent: the identifier's size is used.
-    - Both state the same size: the size is declared.
-    - They differ: both are kept, and the smaller size is used for a
+    The stated sizes are the RSA modulus length in the identifier
+    (``RSA-2048``), ``key_size_bits``, and the CBOM size fields kept in
+    ``cbom_key_sizes`` because they disagreed on import.
+
+    - One size is stated, or all stated sizes agree: that size is used.
+    - Stated sizes differ: all are kept, and the smallest is used for a
       provisional score (QSTriage rule: a conflict never lowers priority).
     """
 
+    cbom = tuple(cbom_sizes)
     if not key_size_affects_score(classification):
         return KeySizeResolution(declared_bits, None, None, None)
 
@@ -302,34 +314,63 @@ def resolve_key_size(
     if match:
         identifier_bits = int(match.group(1))
 
-    if identifier_bits is None:
-        source = KeySizeSource.declared if declared_bits is not None else None
-        return KeySizeResolution(declared_bits, None, declared_bits, source)
-    if declared_bits is None:
+    stated = [bits for _, bits in cbom]
+    if declared_bits is not None:
+        stated.append(declared_bits)
+    if identifier_bits is not None:
+        stated.append(identifier_bits)
+
+    if not stated:
+        return KeySizeResolution(None, None, None, None)
+    if len(set(stated)) > 1:
+        return KeySizeResolution(
+            declared_bits,
+            identifier_bits,
+            min(stated),
+            KeySizeSource.conflict_smaller,
+            cbom,
+        )
+    if declared_bits is None and not cbom:
         return KeySizeResolution(
             None, identifier_bits, identifier_bits, KeySizeSource.algorithm_identifier
         )
-    if declared_bits == identifier_bits:
-        return KeySizeResolution(
-            declared_bits, identifier_bits, declared_bits, KeySizeSource.declared
-        )
     return KeySizeResolution(
-        declared_bits,
-        identifier_bits,
-        min(declared_bits, identifier_bits),
-        KeySizeSource.conflict_smaller,
+        declared_bits, identifier_bits, stated[0], KeySizeSource.declared, cbom
     )
 
 
 def conflicting_key_size_message(resolution: KeySizeResolution) -> str:
-    """The maintainer-approved text for a key size conflict."""
+    """Text for a key size conflict.
 
-    return (
-        f"The algorithm identifier says {resolution.identifier_bits} bits. "
-        f'"key_size_bits" says {resolution.declared_bits} bits. '
-        f"The planning score uses {resolution.scored_bits} bits as a precaution. "
-        "Verify the RSA modulus size against the source record before proceeding."
+    Without CBOM size fields this is the maintainer-approved text for an
+    identifier that disagrees with ``key_size_bits``.
+    """
+
+    if not resolution.from_cbom:
+        return (
+            f"The algorithm identifier says {resolution.identifier_bits} bits. "
+            f'"key_size_bits" says {resolution.declared_bits} bits. '
+            f"The planning score uses {resolution.scored_bits} bits as a precaution. "
+            "Verify the RSA modulus size against the source record before proceeding."
+        )
+
+    sentences = []
+    if resolution.identifier_bits is not None:
+        sentences.append(
+            f"The algorithm identifier says {resolution.identifier_bits} bits."
+        )
+    fields = ", ".join(f"{name} says {bits} bits" for name, bits in resolution.cbom_sizes)
+    sentences.append(f"The CBOM gives different sizes for this RSA key: {fields}.")
+    if resolution.declared_bits is not None:
+        sentences.append(f'"key_size_bits" says {resolution.declared_bits} bits.')
+    sentences.append(
+        f"The planning score uses {resolution.scored_bits} bits as a precaution."
     )
+    sentences.append(
+        "Confirm the RSA modulus size in the original CBOM, correct it there, "
+        "and import it again."
+    )
+    return " ".join(sentences)
 
 
 def requires_parameter_verification(classification: AlgorithmClassification) -> bool:

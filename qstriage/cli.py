@@ -116,12 +116,20 @@ def _write_cbom_import_or_exit(
     output_path: Path,
     *,
     overwrite: bool,
+    notices: list[str],
 ) -> Path:
     try:
-        return write_imported_inventory(input_path, output_path, overwrite=overwrite)
+        return write_imported_inventory(
+            input_path, output_path, overwrite=overwrite, notices=notices
+        )
     except (OSError, json.JSONDecodeError, ValidationError, ValueError) as error:
         _safe_print(f"CBOM import failed: {error}", style="red")
         raise typer.Exit(code=1) from error
+
+
+def _print_cbom_notices(notices: list[str]) -> None:
+    for notice in notices:
+        _safe_print(notice, style="yellow")
 
 
 def _load_inventory_for_review_or_exit(
@@ -134,7 +142,10 @@ def _load_inventory_for_review_or_exit(
         if normalized_format == "inventory":
             return load_inventory(input_path), "qstriage_inventory"
         if normalized_format == "cbom":
-            return import_cbom_inventory(input_path), "cyclonedx_cbom"
+            notices: list[str] = []
+            inventory = import_cbom_inventory(input_path, notices)
+            _print_cbom_notices(notices)
+            return inventory, "cyclonedx_cbom"
 
         raise ValueError("Unsupported evidence review input format. Expected 'inventory' or 'cbom'.")
     except (OSError, json.JSONDecodeError, yaml.YAMLError, ValidationError, ValueError) as error:
@@ -150,7 +161,9 @@ def _write_pdr_document_or_exit(
     overwrite: bool,
 ) -> Path:
     try:
-        captured_input = load_pdr_input(input_path, input_format)
+        notices: list[str] = []
+        captured_input = load_pdr_input(input_path, input_format, notices)
+        _print_cbom_notices(notices)
 
         document = generate_pdr_document(
             captured_input.inventory,
@@ -554,13 +567,16 @@ def import_cbom_command(
     ),
 ) -> None:
     """Import CycloneDX CBOM JSON as a partial QSTriage inventory."""
+    notices: list[str] = []
     written_path = _write_cbom_import_or_exit(
         input_path,
         output,
         overwrite=overwrite,
+        notices=notices,
     )
 
     _safe_print(f"CBOM imported: {written_path}", style="green")
+    _print_cbom_notices(notices)
     console.print(
         "CBOM dependencies were not imported as QSTriage blast-radius dependencies.",
         style="yellow",

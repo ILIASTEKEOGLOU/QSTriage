@@ -74,6 +74,35 @@
 
 ### Fixed
 
+- CBOM size fields that disagree are no longer lost on import. Previously the
+  importer kept the first of `keySize`, `keySizeBits`, `keyLength`, and
+  `publicKeySize` and dropped the rest, so `keySize: 2048` with
+  `keySizeBits: 4096` imported as `key_size_bits: 2048` with no trace of the
+  4096. Now, for RSA, all disagreeing fields are kept in the new optional
+  asset field `cbom_key_sizes` (field name and bits), `key_size_bits` stays
+  null, and the evaluation reports `conflicting_key_size` with its field path
+  `assets[<id>].cbom_key_sizes`: the decision is `gated` with requirement
+  `cryptographic_parameters`, and the smallest stated size (CBOM fields,
+  `key_size_bits`, and an RSA identifier such as `RSA-2048`) is used only for
+  the provisional score. The message names every stated size and asks to
+  correct the CBOM and import it again. The same holds for direct CBOM input
+  (`review evidence`, `pdr generate` with `--input-format cbom`) and for an
+  imported inventory reloaded from YAML. For other algorithms the first size
+  field is still kept; the import now says that the fields disagree, and
+  `cbom_key_sizes` written by hand on such an asset does not replace a
+  missing `key_size_bits` (`missing_key_size_bits` is still reported).
+  Inventories without `cbom_key_sizes` serialize exactly as before, so their
+  hashes, bound Evidence Closure patches, and PDR source hashes are unchanged.
+- A CBOM size field that is not a key size is ignored with a notice instead
+  of being imported. Previously `keySize: true` imported as
+  `key_size_bits: 1`, and a string such as `"\u00b2"` stopped the import with
+  an error. A size is a JSON integer, or a string of ASCII digits (leading
+  zeros allowed), from 0 to 2^53 (the integer range QSTriage writes to a
+  PDR); a string with too many digits is ignored before conversion, so it
+  cannot stop the import. `null` is treated as absent, and an array or object
+  still stops the import as before. `import cbom`, `review evidence`, and
+  `pdr generate` print one notice per ignored field, naming the component,
+  its asset ID, the field, and its value (shortened when long).
 - MCP tool errors now reach the client with their cause under every
   supported SDK. Expected failures (invalid patch or inventory, malformed
   YAML, file outside the working directory, unreadable file) are raised as

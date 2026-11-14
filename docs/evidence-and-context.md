@@ -320,7 +320,11 @@ quantum-vulnerable RSA depends on a key size. For every other identifier no
 size is reported as used (`key_size_bits_scored` and `key_size_source` are
 null), even when `key_size_bits` is declared; the declared value stays in the
 inventory and in PDR `observed_state`. An RSA identifier that states a
-modulus length (`RSA-2048`, `RSA4096`) carries a size of its own.
+modulus length (`RSA-2048`, `RSA4096`) carries a size of its own, and an
+imported RSA asset can carry the disagreeing CBOM size fields in
+`cbom_key_sizes`. The stated sizes are the identifier's, `key_size_bits`, and
+each entry of `cbom_key_sizes`. When they all agree, that size is used; when
+they differ, the smallest is used for a provisional score.
 
 | Inventory | Size scored | `key_size_source` | Effect |
 |---|---|---|---|
@@ -328,6 +332,7 @@ modulus length (`RSA-2048`, `RSA4096`) carries a size of its own.
 | `RSA-2048`, `key_size_bits: 2048` | 2048 | `declared` | none |
 | `RSA-2048`, `key_size_bits: 4096` (or the reverse) | the smaller, 2048 | `conflict_smaller` | finding `conflicting_key_size`, decision `gated` with requirement `cryptographic_parameters`, score basis worst case |
 | `RSA`, `key_size_bits: 4096` | 4096 | `declared` | none |
+| `RSA`, `cbom_key_sizes` with keySize 2048 and keySizeBits 4096 | the smallest, 2048 | `conflict_smaller` | finding `conflicting_key_size` at `assets[<id>].cbom_key_sizes`, decision `gated` with requirement `cryptographic_parameters`, score basis worst case; no `missing_key_size_bits` finding |
 | `SHA-256`, `key_size_bits: 256` (or ML-KEM, AES, FFDHE, ECC) | not used | null | none; the score is the same with or without the field |
 
 Both values of a conflict are kept as declared. The smaller one is used only
@@ -339,6 +344,14 @@ same risk step, and to a declared `0`. The finding is
 > The algorithm identifier says 2048 bits. "key_size_bits" says 4096 bits.
 > The planning score uses 2048 bits as a precaution. Verify the RSA modulus
 > size against the source record before proceeding.
+
+When the conflict involves CBOM size fields, the message names every stated
+size and asks for the CBOM to be corrected and imported again, for example:
+
+> The CBOM gives different sizes for this RSA key: keySize says 2048 bits,
+> keySizeBits says 4096 bits. The planning score uses 2048 bits as a
+> precaution. Confirm the RSA modulus size in the original CBOM, correct it
+> there, and import it again.
 
 `cryptographic_risk` is computed once with this size, and `deadline_pressure`
 reads that computed value, so both components always use the same size.

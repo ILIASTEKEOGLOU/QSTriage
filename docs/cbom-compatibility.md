@@ -60,6 +60,7 @@ Each supported component becomes one QSTriage asset.
 | `protocol` | protocol metadata for protocol assets; otherwise primitive, asset type, then `unknown` |
 | `algorithm` | bounded algorithm derivation described below |
 | `key_size_bits` | an explicit key-size field only (see below); otherwise null |
+| `cbom_key_sizes` | only for RSA when the size fields disagree (see below); otherwise absent |
 | `data_class` | `unknown` |
 | `retention_years` | `0` |
 | `exposure` | `unknown` |
@@ -115,8 +116,32 @@ QSTriage checks these algorithm-property fields in order:
 3. `keyLength`,
 4. `publicKeySize`.
 
-An integer value or digit-only string is accepted. If none is present,
-`key_size_bits` stays null. QSTriage does not take a size from digits in the
+Each field is read as follows:
+
+| Value in the CBOM | Result |
+|---|---|
+| JSON integer from 0 to 2^53, or a string of ASCII digits with that value (leading zeros allowed, so `"0002048"` is 2048) | a size |
+| `null` | treated as absent, without a notice |
+| boolean, negative or larger integer, number with a fraction or exponent (`2048.0`), any other string (`"2048 bits"`, `""`, non-ASCII digits) | ignored; the import prints a notice naming the component, its asset ID, the field, and its value (shortened when long) |
+| array or object | the import stops with an error, because every listed field must be a JSON scalar value |
+
+2^53 is the integer range QSTriage writes to a PDR. If no field holds a size,
+`key_size_bits` stays null.
+
+When the size fields agree, their value becomes `key_size_bits`. When they
+disagree:
+
+- RSA: all disagreeing fields are kept in `cbom_key_sizes`, as written in the
+  CBOM, and `key_size_bits` stays null. The evaluation reports
+  `conflicting_key_size` (see
+  [Evidence and Context](evidence-and-context.md#key-size-used-for-scoring));
+  correct the CBOM and import it again.
+- Other algorithms: the first field in the order above is kept, as before, and
+  the import prints a notice that the fields disagree. Only RSA sizes are
+  compared, because only the RSA score depends on a key size.
+
+`import cbom`, `review evidence --input-format cbom`, and
+`pdr generate --input-format cbom` print these notices. QSTriage does not take a size from digits in the
 algorithm text or the component name, so `ML-KEM-768`, `SHA-256`, and
 `X25519MLKEM768` import without a key size. For an RSA identifier that states
 a modulus length, such as `RSA-2048`, scoring uses that length and records

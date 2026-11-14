@@ -18,7 +18,9 @@ from qstriage.limits import (
     check_structure,
     read_text_limited,
 )
-from qstriage.models import CryptographicAsset, Inventory
+from qstriage.canonical_json import MAX_SAFE_INTEGER
+from qstriage.models import CBOM_KEY_SIZE_PROPERTIES, CryptographicAsset, Inventory
+from qstriage.standards import classify_algorithm, key_size_affects_score
 
 
 REVIEW_REQUIRED_NOTE = (
@@ -53,11 +55,21 @@ def load_cbom_json(path: str | Path) -> dict[str, Any]:
     return parse_cbom_json(text)
 
 
-def inventory_from_cbom(cbom: dict[str, Any]) -> Inventory:
+def inventory_from_cbom(
+    cbom: dict[str, Any],
+    notices: list[str] | None = None,
+) -> Inventory:
+    """Convert a CBOM into a partial inventory.
+
+    ``notices`` collects one line per CBOM value the import ignored or kept
+    in ``cbom_key_sizes``; the caller decides where to show them.
+    """
+
     _validate_cbom_document(cbom)
     components = cbom.get("components", [])
+    collected = notices if notices is not None else []
     assets = [
-        _asset_from_component(component)
+        _asset_from_component(component, collected)
         for component in components
         if _is_cryptographic_asset(component)
     ]
@@ -68,8 +80,11 @@ def inventory_from_cbom(cbom: dict[str, Any]) -> Inventory:
     return Inventory(assets=assets, dependencies=[], scenarios=[])
 
 
-def import_cbom_inventory(input_path: str | Path) -> Inventory:
-    return inventory_from_cbom(load_cbom_json(input_path))
+def import_cbom_inventory(
+    input_path: str | Path,
+    notices: list[str] | None = None,
+) -> Inventory:
+    return inventory_from_cbom(load_cbom_json(input_path), notices)
 
 
 def write_imported_inventory(
@@ -77,8 +92,9 @@ def write_imported_inventory(
     output_path: str | Path,
     *,
     overwrite: bool = False,
+    notices: list[str] | None = None,
 ) -> Path:
-    inventory = import_cbom_inventory(input_path)
+    inventory = import_cbom_inventory(input_path, notices)
     destination = Path(output_path)
     return write_private_text(
         destination,
@@ -194,7 +210,10 @@ def _is_cryptographic_asset(component: dict[str, Any]) -> bool:
     )
 
 
-def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
+def _asset_from_component(
+    component: dict[str, Any],
+    notices: list[str],
+) -> CryptographicAsset:
     crypto_properties = component.get("cryptoProperties") or {}
     algorithm_properties = crypto_properties.get("algorithmProperties") or {}
     protocol_properties = crypto_properties.get("protocolProperties") or {}
@@ -212,8 +231,16 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
         component,
     )
 
+    asset_id = _normalize_asset_id(component)
+    key_size_bits, cbom_key_sizes = _cbom_key_size(
+        algorithm_properties,
+        algorithm=str(algorithm),
+        where=_component_label(component, asset_id),
+        notices=notices,
+    )
+
     return CryptographicAsset(
-        id=_normalize_asset_id(component),
+        id=asset_id,
         name=str(component.get("name") or algorithm),
         environment=str(
             _first_non_empty(
@@ -225,7 +252,8 @@ def _asset_from_component(component: dict[str, Any]) -> CryptographicAsset:
         asset_type="cbom_cryptographic_asset",
         protocol=str(protocol),
         algorithm=str(algorithm),
-        key_size_bits=_extract_key_size_bits(algorithm_properties),
+        key_size_bits=key_size_bits,
+        cbom_key_sizes=cbom_key_sizes,
         data_class="unknown",
         retention_years=0,
         exposure="unknown",
@@ -386,17 +414,111 @@ def _normalize_asset_id(component: dict[str, Any]) -> str:
     return normalized.strip("-") or "cbom-cryptographic-asset"
 
 
-def _extract_key_size_bits(algorithm_properties: dict[str, Any]) -> int | None:
-    """Return a key size only from an explicit size field, never from a name."""
+def _component_label(component: dict[str, Any], asset_id: str) -> str:
+    name = component.get("name")
+    if isinstance(name, str) and name.strip():
+        return f"CBOM component '{name}' (asset ID {asset_id})"
+    return f"CBOM component with asset ID {asset_id}"
 
-    for key in ("keySize", "keySizeBits", "keyLength", "publicKeySize"):
-        value = algorithm_properties.get(key)
-        if isinstance(value, int):
-            return value
-        if isinstance(value, str) and value.isdigit():
-            return int(value)
 
-    return None
+_SHOWN_VALUE_LIMIT = 40
+
+
+def _shown_value(value: Any) -> str:
+    """The value as JSON, shortened so one notice stays one readable line."""
+
+    # Python refuses to write an integer with more than 4,300 digits as text,
+    # so a very large integer is described instead of shown.
+    if isinstance(value, int) and not isinstance(value, bool):
+        if abs(value) > MAX_SAFE_INTEGER:
+            sign = "-" if value < 0 else ""
+            return f"an integer beyond {sign}2^53"
+    try:
+        text = json.dumps(value, ensure_ascii=True)
+    except (TypeError, ValueError):
+        return f"a {type(value).__name__} value that cannot be shown"
+    if len(text) <= _SHOWN_VALUE_LIMIT:
+        return text
+    return f"{text[:_SHOWN_VALUE_LIMIT]}... ({len(text)} characters)"
+
+
+def _size_value(value: Any) -> int | None:
+    """Return a key size in bits, or None when the value is not one.
+
+    A size is a JSON integer, or a string of ASCII digits (leading zeros
+    allowed), from 0 to 2**53 (the integer range QSTriage can write to a
+    PDR). Booleans are not sizes.
+    """
+
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        bits = value
+    elif isinstance(value, str) and value.isascii() and value.isdigit():
+        # Check the length before int(): Python refuses to convert strings
+        # longer than 4,300 digits, and such a value is never a key size.
+        digits = value.lstrip("0") or "0"
+        if len(digits) > len(str(MAX_SAFE_INTEGER)):
+            return None
+        bits = int(digits)
+    else:
+        return None
+    return bits if 0 <= bits <= MAX_SAFE_INTEGER else None
+
+
+def _cbom_key_size(
+    algorithm_properties: dict[str, Any],
+    *,
+    algorithm: str,
+    where: str,
+    notices: list[str],
+) -> tuple[int | None, list[dict[str, Any]] | None]:
+    """Return ``key_size_bits`` and ``cbom_key_sizes`` for one component.
+
+    Sizes come only from explicit size fields, never from a name. Fields that
+    agree give ``key_size_bits``. For RSA, fields that disagree are all kept
+    in ``cbom_key_sizes`` and ``key_size_bits`` stays null, so evaluation can
+    report the conflict. For other algorithms the first field is kept, as
+    before; only RSA sizes are compared.
+    """
+
+    stated: list[tuple[str, int]] = []
+    for name in CBOM_KEY_SIZE_PROPERTIES:
+        if name not in algorithm_properties or algorithm_properties[name] is None:
+            continue
+        raw = algorithm_properties[name]
+        bits = _size_value(raw)
+        if bits is None:
+            notices.append(
+                f"{where}: {name} is {_shown_value(raw)}, which is not a key size "
+                f"(a whole number of bits from 0 to {MAX_SAFE_INTEGER}). "
+                "QSTriage ignored this field. Correct it in the CBOM if the key "
+                "size matters."
+            )
+            continue
+        stated.append((name, bits))
+
+    if not stated:
+        return None, None
+    if len({bits for _, bits in stated}) == 1:
+        return stated[0][1], None
+
+    listed = ", ".join(f"{name} {bits} bits" for name, bits in stated)
+    if key_size_affects_score(classify_algorithm(algorithm)):
+        notices.append(
+            f"{where}: the size fields disagree ({listed}). QSTriage kept all of "
+            "them in cbom_key_sizes and left key_size_bits empty; the decision "
+            "stays gated until the CBOM states one size."
+        )
+        return None, [{"property": name, "bits": bits} for name, bits in stated]
+
+    first_name, first_bits = stated[0]
+    notices.append(
+        f"{where}: the size fields disagree ({listed}). QSTriage compares sizes "
+        f"only for RSA and kept {first_name} ({first_bits} bits). Confirm the "
+        "size in the CBOM."
+    )
+    return first_bits, None
 
 
 def _build_notes(
