@@ -26,6 +26,7 @@ from qstriage.limits import (
     MAX_TEXT_LENGTH,
     MAX_YAML_NESTING_DEPTH,
     InputStructureError,
+    NonStringKey,
     ResourceLimitError,
     check_json_nesting,
     check_structure,
@@ -332,3 +333,70 @@ def test_inventory_evidence_assertion_text_is_bounded(tmp_path: Path) -> None:
 
     with pytest.raises(ValidationError, match="source_reference"):
         load_inventory(path)
+
+
+@pytest.mark.parametrize(
+    ("path", "rendered"),
+    [
+        (("records", 0, "note"), "$.records[0].note"),
+        (("a", "b"), "$.a.b"),
+        (("a.b",), "$['a.b']"),
+        (("x y",), "$['x y']"),
+        (("it's",), "$['it\\'s']"),
+        (("back\\slash",), "$['back\\\\slash']"),
+        (("line\nbreak",), "$['line\\nbreak']"),
+        (("\x01",), "$['\\u0001']"),
+        (("",), "$['']"),
+        (("9lives",), "$['9lives']"),
+        ((NonStringKey(None),), "$[YAML key null]"),
+        ((NonStringKey(7), 7), "$[YAML key 7][7]"),
+        ((NonStringKey(False),), "$[YAML key false]"),
+    ],
+)
+def test_input_path_names_exactly_one_location(path: tuple, rendered: str) -> None:
+    # NonStringKey cases cover YAML keys that are not strings.
+    from qstriage.limits import format_input_path
+
+    assert format_input_path(path) == rendered
+
+
+@pytest.mark.parametrize(
+    ("key", "shown"),
+    [
+        ("null", "[YAML key null]"),
+        ("~", "[YAML key null]"),
+        ("1.5", "[YAML key 1.5]"),
+        ("7", "[YAML key 7]"),
+        ("true", "[YAML key true]"),
+        ("2026-11-14", "[YAML key 2026-11-14]"),
+        ("2026-11-14 10:00:00", "[YAML key 2026-11-14 10:00:00]"),
+        ('"7"', "['7']"),
+    ],
+)
+def test_validate_locates_a_problem_under_a_yaml_key_that_is_not_a_string(
+    tmp_path: Path, key: str, shown: str
+) -> None:
+    # YAML keys may be null, numbers, booleans, or dates. The location must
+    # render without an error and keep a key 7 apart from the list index [7].
+    path = tmp_path / "inventory.yaml"
+    path.write_text(
+        "assets:\n- id: a\n  " + key + ': "\\ud800"\ndependencies: []\nscenarios: []\n',
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["validate", str(path)])
+
+    assert result.exit_code == 1
+    assert result.exception is None or isinstance(result.exception, SystemExit)
+    assert "Traceback" not in result.output
+    assert (
+        "Inventory YAML has invalid text in a value at $.assets[0]" + shown + ": "
+        "\\ud800 is half of a two-part character escape"
+    ) in _flat(result.output)
+
+
+def test_non_finite_number_under_a_non_string_key_is_located() -> None:
+    from qstriage.pdr_verify import verify_pdr_document
+
+    with pytest.raises(PDRVerificationInputError, match=r"at \$\[YAML key 7\]: inf is not"):
+        verify_pdr_document({7: float("inf")})

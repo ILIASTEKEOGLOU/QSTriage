@@ -119,7 +119,7 @@ def check_structure(value: Any, *, label: str, max_depth: int) -> None:
     stop on them, so they are rejected in keys and values with the location.
     """
 
-    stack: list[tuple[Any, int, tuple[str | int, ...]]] = [(value, 0, ())]
+    stack: list[tuple[Any, int, InputPath]] = [(value, 0, ())]
     while stack:
         item, depth, path = stack.pop()
         if path and isinstance(path[-1], str):
@@ -128,7 +128,7 @@ def check_structure(value: Any, *, label: str, max_depth: int) -> None:
             _reject_surrogates(item, label=label, path=path)
             continue
         if isinstance(item, dict):
-            children: Any = item.items()
+            children: Any = mapping_children(item)
         elif isinstance(item, list):
             children = enumerate(item)
         else:
@@ -136,7 +136,7 @@ def check_structure(value: Any, *, label: str, max_depth: int) -> None:
         if depth + 1 > max_depth:
             raise ResourceLimitError(
                 f"{label} exceeds the supported nesting depth of {max_depth} "
-                f"at {_format_path(path)}."
+                f"at {format_input_path(path)}."
             )
         # Children are pushed in reverse so the first problem in document
         # order is reported.
@@ -149,7 +149,7 @@ def _reject_surrogates(
     text: str,
     *,
     label: str,
-    path: tuple[str | int, ...],
+    path: InputPath,
     is_key: bool = False,
 ) -> None:
     if text.isascii():
@@ -159,18 +159,89 @@ def _reject_surrogates(
         return
     where = "a key" if is_key else "a value"
     raise InputStructureError(
-        f"{label} has invalid text in {where} at {_format_path(path)}: "
+        f"{label} has invalid text in {where} at {format_input_path(path)}: "
         f"\\u{ord(match.group()):04x} is half of a two-part character escape "
         "(an unpaired surrogate) and is not a character. Replace it with the "
         "intended character."
     )
 
 
-def _format_path(path: tuple[str | int, ...]) -> str:
+class NonStringKey:
+    """A mapping key that is not a string, such as a YAML null, number, or date.
+
+    JSON keys are always strings. YAML keys may be other scalars; wrapping them
+    keeps them apart from list indices when a location is shown.
+    """
+
+    __slots__ = ("key",)
+
+    def __init__(self, key: Any) -> None:
+        self.key = key
+
+
+InputPath = tuple[str | int | NonStringKey, ...]
+
+
+def mapping_children(mapping: dict[Any, Any]) -> list[tuple[Any, Any]]:
+    """Return (path part, value) pairs, wrapping keys that are not strings."""
+
+    return [
+        (key if isinstance(key, str) else NonStringKey(key), value)
+        for key, value in mapping.items()
+    ]
+
+
+# The ASCII subset of the RFC 9535 Section 2.5.1.1 member-name-shorthand.
+_SHORTHAND_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+_NAME_ESCAPES = {"\\": "\\\\", "'": "\\'", "\b": "\\b", "\f": "\\f",
+                 "\n": "\\n", "\r": "\\r", "\t": "\\t"}
+
+
+def format_input_path(path: InputPath) -> str:
+    """Render a location so that it names exactly one place.
+
+    - A list index is ``[0]``.
+    - A string key that is a plain ASCII name uses dot notation
+      (``$.records[0].note``). Any other string key uses a quoted name
+      selector (RFC 9535 Section 2.3.1) with the escapes of Section 2.3.1.2,
+      so a key containing a dot (``$['a.b']``) is never confused with a nested
+      key (``$.a.b``).
+    - A key that is not a string (YAML only) is shown as ``[YAML key null]``,
+      ``[YAML key 7]``, or ``[YAML key 2026-11-14]``. JSONPath has no form for
+      such keys; the label keeps a key ``7`` apart from the list index ``[7]``.
+    """
+
     parts = ["$"]
     for part in path:
-        parts.append(f"[{part}]" if isinstance(part, int) else f".{part}")
+        if isinstance(part, NonStringKey):
+            parts.append(f"[YAML key {_escape_name(_yaml_scalar_text(part.key))}]")
+        elif isinstance(part, int) and not isinstance(part, bool):
+            parts.append(f"[{part}]")
+        elif isinstance(part, str) and _SHORTHAND_NAME.fullmatch(part):
+            parts.append(f".{part}")
+        else:
+            parts.append(f"['{_escape_name(str(part))}']")
     return "".join(parts)
+
+
+def _yaml_scalar_text(key: Any) -> str:
+    if key is None:
+        return "null"
+    if isinstance(key, bool):
+        return "true" if key else "false"
+    return str(key)
+
+
+def _escape_name(name: str) -> str:
+    out = []
+    for character in name:
+        if character in _NAME_ESCAPES:
+            out.append(_NAME_ESCAPES[character])
+        elif ord(character) < 0x20 or 0xD800 <= ord(character) <= 0xDFFF:
+            out.append(f"\\u{ord(character):04x}")
+        else:
+            out.append(character)
+    return "".join(out)
 
 
 def read_bytes_limited(

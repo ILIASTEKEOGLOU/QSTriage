@@ -76,7 +76,10 @@ def test_changelog_matches_the_package_version() -> None:
 def test_development_suffix_is_never_a_release_tag() -> None:
     workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
 
-    assert r'"$requested_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$' in workflow
+    # One exact-tag check, applied on manual dispatch and on tag push.
+    assert workflow.count(r'"$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$') == 1
+    assert 'require_exact_release_tag "$requested_tag"' in workflow
+    assert 'require_exact_release_tag "$GITHUB_REF_NAME"' in workflow
     assert 'test "$GITHUB_REF_NAME" = "v$version"' in workflow
 
 

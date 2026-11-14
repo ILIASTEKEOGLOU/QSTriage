@@ -200,6 +200,144 @@ def test_non_finite_number_is_rejected() -> None:
         verify_pdr_text('{"pdr_version":"0.2","value":NaN}')
 
 
+def _forged_v0_2_text_with_overflowing_number() -> str:
+    """A 0.2 document whose hashes were recomputed over an infinity.
+
+    ``1e400`` overflows to ``inf`` when parsed. The frozen 0.2 hash serializes
+    ``inf`` as ``Infinity``, so hashes recomputed over the parsed value match
+    and every hash check would pass if the number reached hashing.
+    """
+
+    document = json.loads(V0_2_FIXTURE.read_text(encoding="utf-8"))
+    record = document["records"][0]
+    record["decision"]["risk_attention_score"] = float("inf")
+    record["record_integrity"]["record_hash"] = None
+    record["record_integrity"]["record_hash"] = pdr_v0_2_hash(record)
+    document["document_hash"] = None
+    document["document_hash"] = pdr_v0_2_hash(document)
+    text = json.dumps(document, indent=2)
+    assert text.count("Infinity") == 1
+    return text.replace("Infinity", "1e400")
+
+
+def test_forged_v0_2_document_would_pass_every_hash_check() -> None:
+    # Confirms the gap the input check closes: the hashes are consistent.
+    from qstriage.pdr_verify import _verify_v0_2
+
+    parsed_by_plain_json = json.loads(_forged_v0_2_text_with_overflowing_number())
+
+    assert _verify_v0_2(parsed_by_plain_json).passed
+
+
+def test_forged_v0_2_document_with_overflowing_number_is_rejected() -> None:
+    with pytest.raises(PDRVerificationInputError) as caught:
+        verify_pdr_text(_forged_v0_2_text_with_overflowing_number())
+
+    assert str(caught.value) == (
+        "PDR JSON contains a non-finite number at "
+        "$.records[0].decision.risk_attention_score: 1e400 overflows to "
+        "Infinity as an IEEE 754 double. Correct the value at its source and "
+        "generate the PDR again."
+    )
+
+
+@pytest.fixture
+def no_hashing(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Record every hash call; each test asserts the list stays empty."""
+
+    import qstriage.pdr_verify as pdr_verify_module
+
+    calls: list[str] = []
+
+    def record(name: str):
+        def hash_called(_value: object) -> str:
+            calls.append(name)
+            raise AssertionError(f"{name} was called before the input check")
+
+        return hash_called
+
+    for name in ("pdr_v0_2_hash", "pdr_v0_3_hash", "canonical_sha256"):
+        monkeypatch.setattr(pdr_verify_module, name, record(name))
+    return calls
+
+
+@pytest.mark.parametrize("pdr_version", ["0.2", "0.3"])
+@pytest.mark.parametrize(
+    ("spelling", "reason"),
+    [
+        ("1e400", "overflows to Infinity as an IEEE 754 double"),
+        ("-1e400", "overflows to -Infinity as an IEEE 754 double"),
+        ("1E+400", "overflows to Infinity as an IEEE 754 double"),
+        ("NaN", "is not allowed in JSON (RFC 8259 Section 6)"),
+        ("Infinity", "is not allowed in JSON (RFC 8259 Section 6)"),
+        ("-Infinity", "is not allowed in JSON (RFC 8259 Section 6)"),
+    ],
+    ids=["1e400", "-1e400", "1E+400", "NaN", "Infinity", "-Infinity"],
+)
+def test_every_non_finite_number_is_rejected_before_any_hash(
+    no_hashing: list[str], pdr_version: str, spelling: str, reason: str
+) -> None:
+    document = _document()
+    document["pdr_version"] = pdr_version
+    document["records"][0]["decision"]["risk_attention_score"] = 0.5
+    text = json.dumps(document).replace(
+        '"risk_attention_score": 0.5', f'"risk_attention_score": {spelling}', 1
+    )
+
+    with pytest.raises(PDRVerificationInputError) as caught:
+        verify_pdr_text(text)
+
+    message = str(caught.value)
+    assert "$.records[0].decision.risk_attention_score" in message
+    assert f": {spelling} {reason}." in message
+    assert no_hashing == []
+
+
+@pytest.mark.parametrize("pdr_version", ["0.2", "0.3"])
+@pytest.mark.parametrize("container", [list, tuple], ids=["list", "tuple"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")], ids=["nan", "inf", "-inf"])
+def test_non_finite_number_in_a_parsed_document_is_rejected_before_any_hash(
+    no_hashing: list[str], pdr_version: str, container: type, value: float
+) -> None:
+    # verify_pdr_document accepts objects built in Python. Both hash
+    # serializers accept tuples as arrays, so tuples are checked like lists.
+    document = _document()
+    document["pdr_version"] = pdr_version
+    document["records"][1]["evidence_quality"]["limitations"] = container(["ok", value])
+
+    with pytest.raises(PDRVerificationInputError) as caught:
+        verify_pdr_document(document)
+
+    assert f"$.records[1].evidence_quality.limitations[1]: {value!r} is not a finite number." in str(
+        caught.value
+    )
+    assert no_hashing == []
+
+
+def test_both_hash_serializers_accept_tuples_as_arrays() -> None:
+    # Guards the reason tuples are walked: if a serializer stopped accepting
+    # tuples, this test shows the tuple branch may be revisited.
+    assert pdr_v0_2_hash(("a", 1)) == pdr_v0_2_hash(["a", 1])
+    assert canonical_sha256(("a", 1)) == canonical_sha256(["a", 1])
+
+
+def test_location_of_a_dotted_key_differs_from_a_nested_key(no_hashing: list[str]) -> None:
+    dotted = '{"pdr_version":"0.2","a.b":1e400}'
+    nested = '{"pdr_version":"0.2","a":{"b":1e400}}'
+
+    with pytest.raises(PDRVerificationInputError, match=r"at \$\['a\.b'\]: 1e400"):
+        verify_pdr_text(dotted)
+    with pytest.raises(PDRVerificationInputError, match=r"at \$\.a\.b: 1e400"):
+        verify_pdr_text(nested)
+    assert no_hashing == []
+
+
+def test_largest_finite_double_passes_the_input_check() -> None:
+    # The input check passes; verification then stops on the missing fields.
+    with pytest.raises(PDRVerificationInputError, match="'run_id' is missing"):
+        verify_pdr_text('{"pdr_version":"0.2","value":1.7976931348623157e308}')
+
+
 def test_unsupported_version_is_rejected() -> None:
     document = _document()
     document["pdr_version"] = "9.9"

@@ -1,4 +1,7 @@
+import os
 from pathlib import Path
+import shutil
+import subprocess
 
 import pytest
 
@@ -31,6 +34,69 @@ def test_manual_release_requires_an_exact_existing_tag() -> None:
     assert "^v[0-9]+\\.[0-9]+\\.[0-9]+$" in text
     assert 'refs/tags/$requested_tag^{commit}' in text
     assert 'test "$requested_tag" = "v$version"' in text
+
+
+def _source_identity_script(text: str) -> str:
+    marker = "      - name: Verify source and package identity\n"
+    assert text.count(marker) == 1
+    step = text.split(marker, maxsplit=1)[1]
+    script = step.split("        run: |\n", maxsplit=1)[1]
+    lines = []
+    for line in script.splitlines():
+        if line and not line.startswith("          "):
+            break
+        lines.append(line[10:])
+    return "\n".join(lines)
+
+
+def test_both_tag_paths_apply_the_same_exact_tag_check() -> None:
+    script = _source_identity_script(_workflow_text())
+    dispatch, push = script.split('elif [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then', 1)
+
+    assert script.count("^v[0-9]+\\.[0-9]+\\.[0-9]+$") == 1
+    assert 'require_exact_release_tag "$requested_tag"' in dispatch
+    assert 'require_exact_release_tag "$GITHUB_REF_NAME"' in push
+    # The check runs before the tag is resolved or compared on each path.
+    assert dispatch.index("require_exact_release_tag \"$requested_tag\"") < dispatch.index(
+        "refs/tags/$requested_tag^{commit}"
+    )
+    assert push.index('require_exact_release_tag "$GITHUB_REF_NAME"') < push.index(
+        "refs/tags/$GITHUB_REF_NAME^{commit}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash is not available")
+@pytest.mark.parametrize(
+    ("tag", "accepted"),
+    [
+        ("v1.5.0", True),
+        ("v10.20.30", True),
+        ("v1.5.0.dev0", False),
+        ("v1.5.0rc1", False),
+        ("v1.5.0-rc.1", False),
+        ("v1.5", False),
+        ("1.5.0", False),
+        ("v1.5.0\n", False),
+    ],
+)
+def test_exact_tag_check_accepts_only_release_tags(tag: str, accepted: bool) -> None:
+    script = _source_identity_script(_workflow_text())
+    start = script.index("require_exact_release_tag() {")
+    end = script.index("\n}\n", start) + 3
+    function = script[start:end]
+
+    # Preserve trailing whitespace when native Windows Python starts Git Bash.
+    result = subprocess.run(
+        ["bash", "-c", function + 'require_exact_release_tag "$QSTRIAGE_TEST_RELEASE_TAG"'],
+        env={**os.environ, "QSTRIAGE_TEST_RELEASE_TAG": tag},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert (result.returncode == 0) is accepted
+    if not accepted:
+        assert "is not an exact vMAJOR.MINOR.PATCH release tag" in result.stdout
 
 
 def test_release_jobs_use_the_resolved_immutable_source() -> None:

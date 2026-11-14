@@ -4,6 +4,20 @@
 document and reports each check. It reads the file once within a size limit,
 rejects duplicate JSON keys and non-finite numbers, and never writes.
 
+A number is non-finite when it is ``NaN``, ``Infinity`` or ``-Infinity``, or
+a JSON number so large that reading it as an IEEE 754 double overflows to an
+infinity (for example ``1e400``). Such numbers are rejected for every PDR
+version before any hash is computed. This check does not cover numbers that
+round when read, such as ``1e-400`` (read as ``0.0``), or integers, which
+Python keeps exact:
+
+- PDR 0.3: RFC 8785 Section 3.1 requires JSON number data to be expressible
+  as IEEE 754 double values, and Section 3.2.2.3 requires NaN and Infinity to
+  stop canonicalization with an error.
+- PDR 0.2: QSTriage rule. The frozen 0.2 hash would serialize an infinity as
+  ``Infinity``, which RFC 8259 Section 6 does not permit in JSON, so the hash
+  would cover text that is not JSON.
+
 Each PDR contract version is verified under its own rules:
 
 - PDR 0.2 hashes the output of Python ``json.dumps(sort_keys=True,
@@ -23,6 +37,7 @@ import copy
 from dataclasses import dataclass, field
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any, Callable
 
@@ -34,6 +49,9 @@ from qstriage.limits import (
     ResourceLimitError,
     check_json_nesting,
     check_structure,
+    InputPath,
+    format_input_path,
+    mapping_children,
     read_text_limited,
 )
 
@@ -103,9 +121,10 @@ def verify_pdr_text(text: str) -> VerificationResult:
 def parse_pdr_text(text: str) -> Any:
     """Parse PDR JSON after an iterative depth scan, then check the parsed structure.
 
-    Both checks run before any verification step, so copying, hashing, and
-    canonicalization only ever see documents within the depth limit and
-    without unpaired surrogates (legacy 0.2 documents included).
+    All checks run before any verification step, so copying, hashing, and
+    canonicalization only ever see documents within the depth limit, without
+    unpaired surrogates, and with finite numbers only (legacy 0.2 documents
+    included).
     """
 
     try:
@@ -116,7 +135,8 @@ def parse_pdr_text(text: str) -> Any:
         document = json.loads(
             text,
             object_pairs_hook=_object_without_duplicate_keys,
-            parse_constant=_reject_constant,
+            parse_constant=_NonFiniteNumber,
+            parse_float=_parse_float,
         )
     except RecursionError as error:
         raise PDRVerificationInputError(
@@ -128,10 +148,13 @@ def parse_pdr_text(text: str) -> Any:
         check_structure(document, label="PDR JSON", max_depth=MAX_JSON_NESTING_DEPTH)
     except (InputStructureError, ResourceLimitError) as error:
         raise PDRVerificationInputError(str(error)) from error
+    _reject_non_finite_numbers(document)
     return document
 
 
 def verify_pdr_document(document: Any) -> VerificationResult:
+    # Repeated here for documents that did not come through parse_pdr_text.
+    _reject_non_finite_numbers(document)
     _require_structure(document)
     version = document["pdr_version"]
     if version not in SUPPORTED_PDR_VERSIONS:
@@ -293,5 +316,60 @@ def _object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, An
     return result
 
 
-def _reject_constant(value: str) -> Any:
-    raise PDRVerificationInputError(f"PDR JSON contains the non-finite number {value}.")
+class _NonFiniteNumber:
+    """Placeholder for a non-finite JSON number, keeping its spelling.
+
+    The parser records the number instead of raising, so the error can name
+    both the spelling and its location in the document.
+    """
+
+    __slots__ = ("spelling",)
+
+    def __init__(self, spelling: str) -> None:
+        self.spelling = spelling
+
+
+def _parse_float(spelling: str) -> float | _NonFiniteNumber:
+    value = float(spelling)
+    if math.isfinite(value):
+        return value
+    return _NonFiniteNumber(spelling)
+
+
+def _reject_non_finite_numbers(document: Any) -> None:
+    """Stop on the first non-finite number in document order, before any hash."""
+
+    stack: list[tuple[Any, InputPath]] = [(document, ())]
+    while stack:
+        item, path = stack.pop()
+        if isinstance(item, _NonFiniteNumber):
+            raise PDRVerificationInputError(
+                _non_finite_message(path, item.spelling, _spelling_reason(item.spelling))
+            )
+        if isinstance(item, float) and not math.isfinite(item):
+            raise PDRVerificationInputError(
+                _non_finite_message(path, repr(item), "is not a finite number")
+            )
+        if isinstance(item, dict):
+            children: Any = mapping_children(item)
+        elif isinstance(item, (list, tuple)):
+            # Both hash serializers accept tuples as arrays.
+            children = enumerate(item)
+        else:
+            continue
+        stack.extend(reversed([(child, (*path, key)) for key, child in children]))
+
+
+def _spelling_reason(spelling: str) -> str:
+    if spelling in {"NaN", "Infinity", "-Infinity"}:
+        return "is not allowed in JSON (RFC 8259 Section 6)"
+    sign = "-" if spelling.startswith("-") else ""
+    return f"overflows to {sign}Infinity as an IEEE 754 double"
+
+
+def _non_finite_message(path: InputPath, shown: str, reason: str) -> str:
+    return (
+        f"PDR JSON contains a non-finite number at {format_input_path(path)}: "
+        f"{shown} {reason}. Correct the value at its source and generate the "
+        "PDR again."
+    )

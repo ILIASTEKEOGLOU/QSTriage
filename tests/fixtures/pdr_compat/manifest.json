@@ -1,0 +1,65 @@
+{
+  "description": "PDR compatibility corpus. Every PDR here must keep verifying with the hashes it was issued with. Files are stored as ASCII; a Unicode original is stored with ASCII escapes and rebuilt to its exact UTF-8 bytes by the tests. Do not edit, reformat, or regenerate these files.",
+  "files": [
+    {
+      "stored": "v1.2.1-plain.json",
+      "stored_sha256": "d1f4e9b3591db40f2538ec427e8f9b0e35093a4aa6a890f427972dd974d9e605",
+      "rebuild": null,
+      "original_sha256": "d1f4e9b3591db40f2538ec427e8f9b0e35093a4aa6a890f427972dd974d9e605",
+      "pdr_version": "0.2",
+      "checks": 7,
+      "generator": "QSTriage 1.2.1 (tag v1.2.1, 715319d72b5a75ddff88471267e7228f39adae91)"
+    },
+    {
+      "stored": "v1.4.1-plain.json",
+      "stored_sha256": "8770c749f80cfb9f8583a01fb8e913ddcb976572b3a36f6a232c79783781b761",
+      "rebuild": null,
+      "original_sha256": "8770c749f80cfb9f8583a01fb8e913ddcb976572b3a36f6a232c79783781b761",
+      "pdr_version": "0.3",
+      "checks": 8,
+      "generator": "QSTriage 1.4.1 (PyPI)"
+    },
+    {
+      "stored": "v1.2.1-unicode.escaped.json",
+      "stored_sha256": "f818bda55dd59d4b4a4279797c493cb8f2fec0be1073a0faeb021e5bdf0eed8b",
+      "rebuild": "pdr_json",
+      "original_sha256": "2e45d606d5da2e4b0131f6ebc9b7e45943e1cffdc3b9892f303f6bc2123fc098",
+      "pdr_version": "0.2",
+      "checks": 7,
+      "generator": "QSTriage 1.2.1 (tag v1.2.1, 715319d72b5a75ddff88471267e7228f39adae91)"
+    },
+    {
+      "stored": "v1.4.1-unicode.escaped.json",
+      "stored_sha256": "ab3188cd93eb0b1a18ffbb7155ed16dad68b851e277ddc44d56f688fc2e066dd",
+      "rebuild": "pdr_json",
+      "original_sha256": "2c91918a13df3dda429344b243fd50a47f16b6b029ba49adf3313be6e537027e",
+      "pdr_version": "0.3",
+      "checks": 8,
+      "generator": "QSTriage 1.4.1 (PyPI)"
+    },
+    {
+      "stored": "c39127d-unicode.escaped.json",
+      "stored_sha256": "d350caa6f11970b57bac68c978068ffd8d53e4597e2899bd688977abb17e88af",
+      "rebuild": "pdr_json",
+      "original_sha256": "ac164be99e24c21f7ee57b36c5379695351e4f11274b748e9e8da2fd5ee790fb",
+      "pdr_version": "0.3",
+      "checks": 8,
+      "generator": "QSTriage 1.5.0.dev0 (main c39127d32d3fa9b1e133c24301d6aa6b95548cc5)"
+    },
+    {
+      "stored": "unicode.yaml.escaped.json",
+      "stored_sha256": "d0250f885d2c05dab6484345793403f1a290942802b83e8b32a7d8f46adc1356",
+      "rebuild": "json_string",
+      "original_sha256": "f5e147b18642d2e48cc9272a27dcf0d8bbc251cf1dbd3a39ce38935099d6e4a7",
+      "pdr_version": null,
+      "checks": null,
+      "generator": "Source inventory of the three Unicode PDRs (unicode.yaml)"
+    }
+  ],
+  "repository_fixture": {
+    "path": "../pdr_v0_2_sample.json",
+    "sha256": "f8ff7fdbd9afc9cac425f157545bc28028ff0add1f29e297892931ef481f88ec",
+    "pdr_version": "0.2",
+    "checks": 27
+  }
+}
