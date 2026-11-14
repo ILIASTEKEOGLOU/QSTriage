@@ -96,7 +96,7 @@ def test_mcp_validate_rejects_duplicate_key(tmp_path: Path, monkeypatch) -> None
     _duplicate_value_patch(tmp_path)
     monkeypatch.chdir(tmp_path)
 
-    with pytest.raises(ValueError, match="duplicate mapping key 'value'"):
+    with pytest.raises(mcp_server.ToolError, match="duplicate mapping key 'value'"):
         mcp_server.validate_enrichment_patch("imported.yaml", "duplicate.patch.yaml")
 
 

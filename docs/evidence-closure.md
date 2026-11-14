@@ -90,6 +90,17 @@ Every file inside it, including files in subdirectories, is readable through
 the tools. Start the server from the project directory that holds the
 inventories and patches, not from a home or system directory.
 
+A request that cannot be served returns a tool result with `isError: true`
+and the cause, for example `criticality must be low, medium, high, or
+critical.` for an invalid patch value, `YAML is malformed in broken.yaml
+near line 2, column 1: ...` for malformed YAML, or `Cannot read blocked.yaml:
+permission denied.` for a file that cannot be read. Messages name the file as
+the client gave it, never the server's absolute path; any other file access
+failure reads `File access failed.` A message is at most 500 characters: a
+long YAML parser description is shortened to 200 characters, and a long path
+is shortened from the start, so the file name and the cause stay. The MCP SDK may put
+`Error executing tool <name>:` before the message.
+
 ## MCP client workflow
 
 A client of the MCP tools should inspect first, ask only about returned gaps,

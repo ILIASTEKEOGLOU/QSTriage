@@ -74,6 +74,23 @@
 
 ### Fixed
 
+- MCP tool errors now reach the client with their cause under every
+  supported SDK. Expected failures (invalid patch or inventory, malformed
+  YAML, file outside the working directory, unreadable file) are raised as
+  the SDK's `ToolError`. Previously they were raised as `ValueError`, or for
+  malformed YAML not handled at all, which mcp 2.x treats as a crash: the
+  client received only `Error executing tool <name>` and the server logged a
+  traceback. A read failure now names the file as the client gave it
+  (`Cannot read blocked.yaml: permission denied.`); previously the operating
+  system message with the server's absolute path was passed through under
+  mcp 1.x. Malformed YAML names the file, line, and column (`YAML is
+  malformed in broken.yaml near line 2, column 1: ...`). Any other file
+  access failure reads `File access failed.` The QSTriage message stays on
+  one line and within 500 characters, before the prefix the SDK adds. The
+  parser's description of malformed YAML is shortened to 200 characters
+  (ending in `...`) first; then, if the message is still too long, only the
+  path is shortened (keeping its end after `...`), so the file name, the
+  line and column, and the cause are never cut off.
 - RSA key size: one rule, `resolve_key_size` in `qstriage/standards.py`,
   decides the size that scoring and evidence review use. Previously scoring
   read only `key_size_bits` and ignored the size in the identifier, so
