@@ -15,7 +15,13 @@ from qstriage.context import (
 )
 from qstriage.graph import build_dependency_graph, calculate_graph_amplified_blast_radius
 from qstriage.limits import TraversalBudget
-from qstriage.models import AssetEvidenceAssertions, CryptographicAsset, Inventory, RiskLevel
+from qstriage.models import (
+    AssetEvidenceAssertions,
+    CryptographicAsset,
+    Inventory,
+    RiskLevel,
+    cbom_key_size_pairs,
+)
 from qstriage.standards import (
     AlgorithmClassification,
     KeySizeRequirement,
@@ -48,9 +54,9 @@ class ScoringAssumption:
     """One field scored at its worst case.
 
     ``unresolved_context``: a context value is unusable (missing, withheld,
-    not an accepted label, defaulted). ``conflicting_key_size``: the RSA
-    identifier and ``key_size_bits`` state different sizes; the smaller one
-    is scored and ``message`` says what to verify.
+    not an accepted label, defaulted). ``conflicting_key_size``: the stated
+    RSA sizes (identifier, ``key_size_bits``, CBOM size fields) differ; the
+    smallest is scored and ``message`` says what to verify.
     """
 
     field: str
@@ -196,7 +202,9 @@ def score_asset(
 ) -> ScoreResult:
     scored, assumptions = scored_view or scoring_view(asset, asset_evidence)
     classification = classify_algorithm(asset.algorithm)
-    key_size = resolve_key_size(classification, asset.key_size_bits)
+    key_size = resolve_key_size(
+        classification, asset.key_size_bits, cbom_key_size_pairs(asset)
+    )
     assumptions = (*assumptions, *_key_size_assumptions(key_size))
     cryptographic_risk = _cryptographic_risk(
         asset.algorithm,
@@ -274,6 +282,25 @@ def score_asset(
 def _key_size_assumptions(key_size: KeySizeResolution) -> tuple[ScoringAssumption, ...]:
     if not key_size.conflict:
         return ()
+    if key_size.from_cbom:
+        stated = [f"{name}={bits}" for name, bits in key_size.cbom_sizes]
+        if key_size.declared_bits is not None:
+            stated.append(f"key_size_bits={key_size.declared_bits}")
+        problem = "the CBOM size fields disagree"
+        if key_size.identifier_bits is not None:
+            problem += (
+                f"; the algorithm identifier says {key_size.identifier_bits} bits"
+            )
+        return (
+            ScoringAssumption(
+                field="cbom_key_sizes",
+                inventory_value=", ".join(stated),
+                problem=problem,
+                scored_as=f"{key_size.scored_bits} bits",
+                kind=ASSUMPTION_CONFLICTING_KEY_SIZE,
+                message=conflicting_key_size_message(key_size),
+            ),
+        )
     return (
         ScoringAssumption(
             field="key_size_bits",

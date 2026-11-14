@@ -147,14 +147,15 @@ in the backlog; it never lowers one.
 The dependency graph uses the same values, so an unresolved downstream
 criticality also counts at its worst case for the assets that depend on it.
 
-An RSA key size conflict is also scored at its worst case: when the RSA
-identifier and `key_size_bits` state different sizes, the smaller size is
-scored, and the assumption names both values (see
+An RSA key size conflict is also scored at its worst case: when the stated
+sizes differ (the RSA identifier, `key_size_bits`, and the CBOM size fields in
+`cbom_key_sizes`), the smallest is scored, and the assumption names every
+stated value (see
 [Evidence and Context](evidence-and-context.md#key-size-used-for-scoring)).
 
 Every substitution is visible. The score has a basis: `confirmed` when every
-context field the score uses is present and usable and no stated key size
-conflicts with the identifier, `worst case` otherwise.
+context field the score uses is present and usable and all stated key sizes
+agree, `worst case` otherwise.
 `score` and `report` show the basis and name the fields; the report lists each
 field with its value in the inventory, the problem, and the value scored; the
 score export carries `score_basis` and `scoring_assumptions`; the PDR writes

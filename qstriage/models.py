@@ -4,7 +4,19 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    StrictInt,
+    ValidationError,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
+
+from qstriage.canonical_json import MAX_SAFE_INTEGER
 
 from qstriage.limits import (
     MAX_ASSETS,
@@ -44,6 +56,18 @@ class DependencyType(str, Enum):
     telemetry_upload = "telemetry_upload"
 
 
+CBOM_KEY_SIZE_PROPERTIES = ("keySize", "keySizeBits", "keyLength", "publicKeySize")
+
+
+class CbomKeySize(BaseModel):
+    """One size field of a CBOM component, kept as the CBOM stated it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    property: Literal["keySize", "keySizeBits", "keyLength", "publicKeySize"]
+    bits: StrictInt = Field(ge=0, le=MAX_SAFE_INTEGER)
+
+
 class CryptographicAsset(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -54,6 +78,9 @@ class CryptographicAsset(BaseModel):
     protocol: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     algorithm: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     key_size_bits: int | None = Field(default=None, ge=0)
+    cbom_key_sizes: list[CbomKeySize] | None = Field(
+        default=None, min_length=2, max_length=len(CBOM_KEY_SIZE_PROPERTIES)
+    )
     data_class: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     retention_years: int = Field(ge=0)
     exposure: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
@@ -61,6 +88,47 @@ class CryptographicAsset(BaseModel):
     local_blast_radius: RiskLevel
     migration_effort: RiskLevel
     notes: str = Field(default="", max_length=MAX_NOTES_LENGTH)
+
+    @field_validator("cbom_key_sizes")
+    @classmethod
+    def _cbom_key_sizes_record_a_disagreement(
+        cls, value: list[CbomKeySize] | None
+    ) -> list[CbomKeySize] | None:
+        if value is None:
+            return value
+        seen: set[str] = set()
+        for entry in value:
+            if entry.property in seen:
+                raise ValueError(
+                    f"cbom_key_sizes lists {entry.property} more than once. "
+                    "List each CBOM size field once."
+                )
+            seen.add(entry.property)
+        sizes = {entry.bits for entry in value}
+        if len(sizes) == 1:
+            raise ValueError(
+                "cbom_key_sizes records CBOM size fields that disagree, but every "
+                f"listed value is {value[0].bits} bits. Remove cbom_key_sizes and "
+                f"set key_size_bits to {value[0].bits}."
+            )
+        return value
+
+    # No return annotation: pydantic then keeps the model's own
+    # serialization schema (an ``Any`` return would make it ``{}``).
+    @model_serializer(mode="wrap")
+    def _omit_absent_cbom_key_sizes(self, handler: SerializerFunctionWrapHandler):
+        # Inventories without the field keep the hash they had before the
+        # field existed: closure patches and PDR source hashes stay valid.
+        data = handler(self)
+        if self.cbom_key_sizes is None and isinstance(data, dict):
+            data.pop("cbom_key_sizes", None)
+        return data
+
+
+def cbom_key_size_pairs(asset: CryptographicAsset) -> tuple[tuple[str, int], ...]:
+    """The CBOM size fields kept on an asset, as (property, bits) pairs."""
+
+    return tuple((entry.property, entry.bits) for entry in asset.cbom_key_sizes or ())
 
 
 class Dependency(BaseModel):

@@ -313,8 +313,8 @@ def test_report_shows_size_used_and_the_conflict() -> None:
         "(missing or unusable context: 0; conflicting key size: 1)"
     ) in report
     assert (
-        "- Key size used for scoring: 2048 bits, the smaller of two conflicting "
-        "sizes (provisional)"
+        "- Key size used for scoring: 2048 bits, the smallest of the conflicting "
+        "stated sizes (provisional)"
     ) in report
     assert "- Conflicting key size: The algorithm identifier says 2048 bits." in report
     assert (

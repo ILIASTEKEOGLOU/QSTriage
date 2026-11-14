@@ -21,6 +21,7 @@ from qstriage.models import (
     CryptographicAsset,
     Inventory,
     RelationshipEvidenceCompleteness,
+    cbom_key_size_pairs,
 )
 from qstriage.policy import (
     PolicyEvaluationResult,
@@ -35,6 +36,7 @@ from qstriage.standards import (
     KeySizeRequirement,
     classify_algorithm,
     key_size_requirement,
+    resolve_key_size,
 )
 
 
@@ -211,11 +213,12 @@ def unranked_reason(classification: AlgorithmClassification) -> str:
 
 SCORE_BASIS_NOTE = (
     'Score basis: "confirmed" means every context field the score uses is present '
-    "and usable, and no stated key size conflicts with the algorithm identifier. "
+    "and usable, and all stated key sizes agree. "
     '"worst case" means a listed field cannot be used as stated: a context field is '
-    "missing, withheld, not an accepted label, or defaulted on import, or "
-    "key_size_bits differs from the size in the algorithm identifier. Each is "
-    "scored at its most severe value (for a key size conflict, the smaller size), "
+    "missing, withheld, not an accepted label, or defaulted on import, or the "
+    "stated key sizes disagree (the algorithm identifier, key_size_bits, or the "
+    "CBOM size fields). Each is scored at its most severe value (for a key size "
+    "conflict, the smallest stated size), "
     "so missing or conflicting evidence can raise an asset but never bury it. "
     "Supply or correct the listed fields to replace the assumption with the real "
     "value."
@@ -241,7 +244,7 @@ def key_size_used_text(score: ScoreResult, algorithm: str) -> str | None:
     if score.key_size_source == "algorithm_identifier":
         return f"{bits} bits, taken from the algorithm identifier {algorithm}"
     if score.key_size_source == "conflict_smaller":
-        return f"{bits} bits, the smaller of two conflicting sizes (provisional)"
+        return f"{bits} bits, the smallest of the conflicting stated sizes (provisional)"
     return f"{bits} bits, declared in key_size_bits"
 
 
@@ -315,6 +318,9 @@ def evaluate_evidence_quality(
         if field == "key_size_bits":
             if (
                 asset.key_size_bits is None
+                and not resolve_key_size(
+                    classification, None, cbom_key_size_pairs(asset)
+                ).conflict
                 and key_size_requirement(classification) == KeySizeRequirement.required
             ):
                 missing.append("key_size_bits")

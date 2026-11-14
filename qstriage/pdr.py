@@ -219,8 +219,13 @@ class CapturedPDRInput:
 def load_pdr_input(
     source_path: str | Path,
     input_format: str,
+    notices: list[str] | None = None,
 ) -> CapturedPDRInput:
-    """Read one PDR source exactly once, then parse and hash the same bytes."""
+    """Read one PDR source exactly once, then parse and hash the same bytes.
+
+    For a CBOM, ``notices`` collects the import notices (see
+    ``inventory_from_cbom``).
+    """
 
     path = Path(source_path)
     normalized_format = input_format.strip().lower()
@@ -243,7 +248,7 @@ def load_pdr_input(
         )
         source_text = decode_utf8(source_bytes, label="CBOM file")
         cbom = parse_cbom_json(source_text)
-        inventory = inventory_from_cbom(cbom)
+        inventory = inventory_from_cbom(cbom, notices)
         source_type = "cyclonedx_cbom"
         source_version = (
             str(cbom.get("specVersion"))

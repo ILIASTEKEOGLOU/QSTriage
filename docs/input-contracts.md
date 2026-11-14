@@ -74,6 +74,7 @@ The document root is a mapping with three top-level collections:
 | `protocol` | string | Required, non-empty |
 | `algorithm` | string | Required, non-empty; classified by the current standards registry |
 | `key_size_bits` | integer or null | Optional; when present, must be zero or greater |
+| `cbom_key_sizes` | list or absent | Optional; written by `import cbom` when the RSA size fields of a CBOM disagree. 2 to 4 entries, each `property` (one of `keySize`, `keySizeBits`, `keyLength`, `publicKeySize`, each at most once) and `bits` (integer from 0 to 2^53, not a boolean); the listed values must not all be equal. Used only for an RSA algorithm; for any other algorithm it is ignored and does not replace a missing `key_size_bits`. Absent when not needed; an inventory without it serializes and hashes as before |
 | `data_class` | string | Required, non-empty |
 | `retention_years` | integer | Required; must be zero or greater |
 | `exposure` | string | Required, non-empty |
