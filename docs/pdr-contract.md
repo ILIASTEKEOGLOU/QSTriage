@@ -9,7 +9,7 @@ This document describes PDR contract version `0.3` as implemented by `qstriage/p
 - PDR contract version: `0.3`
 - Engine name: `QSTriage`
 - Engine version: the installed QSTriage package version
-- Default policy pack: `nist-pqc-basic` version `0.4`
+- Default policy pack: `nist-pqc-basic` version `0.5`
 - Algorithm registry: the registry bundled with the installed package
 
 PDR versioning is separate from the QSTriage package version. Removing, renaming, or changing the documented meaning of public PDR fields requires a PDR contract-version change. Additive fields can be introduced in a compatible minor evolution when their meaning does not alter existing fields.
@@ -86,6 +86,19 @@ supplied classification data:
 `registry_hash` covers the registry data, not the file bytes, so a formatting
 change to the file does not change it, while any change to an entry does.
 The registry file is rejected if it contains duplicate JSON keys.
+
+Registry version 3 and policy pack 0.5 cite the final NIST IR 8547
+(`NIST-IR-8547`) instead of its initial public draft (`NIST-IR-8547-IPD`);
+classification, scoring, and decisions are unchanged. A PDR generated from
+the same input therefore differs from one generated with registry 2 and
+policy pack 0.4 only in the registry and policy identities, in the
+`standards_applied` lists that name the source, and in the `run_id` and
+hashes that depend on them; `record_id`, `lineage_id`, and every decision
+field stay the same. A PDR issued earlier keeps its recorded identities and
+still verifies, because verification checks the values recorded in the
+document, not the registry or policy pack bundled with the installed
+package. See
+[NIST IR 8547 source update](standards-and-classification.md#nist-ir-8547-source-update).
 
 ## Decision record
 

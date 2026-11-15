@@ -268,7 +268,7 @@ def test_builtin_policy_registry_lists_nist_pqc_basic() -> None:
     packs = list_policy_packs()
 
     assert [pack.policy_pack_id for pack in packs] == ["nist-pqc-basic"]
-    assert packs[0].version == "0.4"
+    assert packs[0].version == "0.5"
     assert packs[0].title == "NIST PQC Basic"
 
 
@@ -471,14 +471,66 @@ def test_builtin_policy_pack_identity_is_pinned() -> None:
     pack = get_policy_pack("nist-pqc-basic")
 
     # Version 0.3 added the PQ/T hybrid certification review rule and the
-    # RFC-10024 reference. Version 0.4 adds requires_human_review to
+    # RFC-10024 reference. Version 0.4 added requires_human_review to
     # standardized_pqc_can_be_retained_with_operational_review and
-    # ml_kem_usage_requires_key_establishment_context. Any other content
-    # change needs a new version.
-    assert pack.version == "0.4"
+    # ml_kem_usage_requires_key_establishment_context (hash
+    # sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639).
+    # Version 0.5 cites the final NIST IR 8547 instead of its initial public
+    # draft; rules behave identically. Any other content change needs a new
+    # version.
+    assert pack.version == "0.5"
     assert pack.policy_pack_hash() == (
-        "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639"
+        "sha256:488598e4c831135d815d7a3ec5f46a66785edfaaba1950c10d19410c1e348fc0"
     )
+
+
+POLICY_PACK_0_4_HASH = (
+    "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639"
+)
+
+
+def test_policy_pack_0_5_differs_from_0_4_only_in_the_ir_8547_reference() -> None:
+    # Restoring the draft reference, its rule citations and the version must
+    # give back the exact 0.4 content, so rules, conditions, effects and
+    # thresholds are unchanged.
+    from qstriage.policy import PolicyPack, get_policy_pack
+
+    data = get_policy_pack("nist-pqc-basic").canonical_dict()
+    [reference] = [
+        item for item in data["standards_references"]
+        if item["reference_id"] == "NIST-IR-8547"
+    ]
+    assert reference == {
+        "reference_id": "NIST-IR-8547",
+        "title": "NIST IR 8547 - Transition to Post-Quantum Cryptography Standards",
+        "version": "final",
+        "notes": "PQC migration planning and inventory guidance.",
+    }
+    citing = [
+        rule["rule_id"] for rule in data["rules"]
+        if "NIST-IR-8547" in rule["references"]
+    ]
+    assert len(citing) == 3
+
+    reference.update(
+        reference_id="NIST-IR-8547-IPD",
+        title=(
+            "NIST IR 8547 IPD \u2014 Transition to Post-Quantum Cryptography "
+            "Standards"
+        ),
+        version="initial-public-draft",
+    )
+    for rule in data["rules"]:
+        rule["references"] = [
+            "NIST-IR-8547-IPD" if item == "NIST-IR-8547" else item
+            for item in rule["references"]
+        ]
+    data["version"] = "0.4"
+    for item in data["standards_references"]:
+        if item["reference_id"] == "QSTRIAGE-SAFETY-POLICY":
+            item["version"] = "0.4"
+
+    assert PolicyPack.model_validate(data).policy_pack_hash() == POLICY_PACK_0_4_HASH
 
 
 def test_policy_evaluator_fires_missing_business_context_for_unknown_data_class() -> None:

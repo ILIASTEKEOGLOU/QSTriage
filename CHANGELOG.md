@@ -247,6 +247,28 @@
 
 ### Changed
 
+- Classical public-key classification now cites the final NIST IR 8547
+  (October 2026) instead of its initial public draft (November 2024). The
+  registry source ID `NIST-IR-8547-IPD` becomes `NIST-IR-8547`, with the
+  sections that support each entry (2.1.1 and 2.1.2; 2.1.2 for DH), in the
+  composite, RSA, DH, and ECC entries. Registry `qstriage-algorithms` moves
+  from version 2 (`sha256:8ceb8492...b84c`) to version 3
+  (`sha256:67a0e6d1...b0d3`). Built-in policy pack `nist-pqc-basic` moves
+  from 0.4 (`sha256:c39286db...a639`) to 0.5 (`sha256:488598e4...8fc0`): its
+  IR 8547 reference and the three rules that cite it use the new ID; rules,
+  conditions, effects, and thresholds are unchanged. Classification, scores,
+  evidence findings, policy rule IDs, and decisions are unchanged, and score
+  exports are identical. Every newly generated PDR, including one without a
+  classical public-key asset, records the new registry and policy identities
+  and the new source ID, so its `run_id`, record hashes, and document hash
+  differ from a PDR generated before this change; record IDs, lineage IDs,
+  and decision fields do not. PDRs issued earlier are not rewritten and still
+  verify. Reports show the new ID in the registry sources line. This change
+  updates provenance only: it does not encode the 2030 and 2035 dates, federal
+  deadlines, or the final report's table thresholds, every registry
+  `deadlines` array stays empty, and `deadline_pressure` stays a QSTriage
+  heuristic. See "NIST IR 8547 source update" in
+  `docs/standards-and-classification.md`.
 - Unresolved context is scored at its worst case. A context field that is
   missing, withheld, not an accepted label, defaulted on a CBOM import, or a
   zero retention nobody confirmed is scored as sensitive (`data_class`),

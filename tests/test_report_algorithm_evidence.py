@@ -13,7 +13,8 @@ def test_report_contains_algorithm_classification_evidence_for_cbom_import() -> 
     assert "Algorithm family: RSA" in report
     assert "Quantum status: quantum_vulnerable" in report
     assert "Registry action: migrate_to_hybrid_or_pqc_path" in report
-    assert "Registry sources: NIST-IR-8547-IPD" in report
+    assert "Registry sources: NIST-IR-8547" in report
+    assert "NIST-IR-8547-IPD" not in report
     assert "Input algorithm: `ML-KEM-768`" in report
     assert "Algorithm family: ML-KEM" in report
     assert "Quantum status: quantum_resistant" in report

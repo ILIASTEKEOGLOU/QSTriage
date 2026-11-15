@@ -8,7 +8,7 @@ from enum import Enum
 from qstriage.algorithm_registry import SchemeType, load_registry, normalize_identifier
 
 
-SOURCE_NIST_IR_8547 = "NIST-IR-8547-IPD"
+SOURCE_NIST_IR_8547 = "NIST-IR-8547"
 SOURCE_FIPS_203 = "NIST-FIPS-203"
 SOURCE_FIPS_204 = "NIST-FIPS-204"
 SOURCE_FIPS_205 = "NIST-FIPS-205"

@@ -7,6 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from qstriage.algorithm_registry import AlgorithmRegistry, load_registry, registry_hash
+from qstriage.canonical_json import canonical_sha256
 from qstriage.standards import (
     ML_DSA_PARAMETER_SETS,
     ML_KEM_PARAMETER_SETS,
@@ -50,7 +51,7 @@ def test_bundled_registry_loads_with_expected_identity() -> None:
 
     assert registry.registry_schema_version == "2"
     assert registry.registry_id == "qstriage-algorithms"
-    assert registry.registry_version == "2"
+    assert registry.registry_version == "3"
     assert registry.signatures == ()
     assert {entry.entry_id for entry in registry.entries} == EXPECTED_ENTRY_IDS
 
@@ -146,6 +147,7 @@ def test_unsupported_schema_version_is_rejected() -> None:
 REGISTRY_HASH_BY_VERSION = {
     "1": "sha256:44a93da463b6a9a0888a67bc23c0e915aa671508fba5c86d6af9c8590a629546",
     "2": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c",
+    "3": "sha256:67a0e6d13363ca78ad69ec5c23d8cfcd68ca0b8be0363dfd2502ac94458db0d3",
 }
 
 
@@ -197,3 +199,61 @@ def test_source_ids_are_listed_once_in_first_seen_order() -> None:
     entry = load_registry().entry("tls-group-x25519mlkem768")
 
     assert entry.source_ids == ("RFC-10024", "NIST-SP-800-227", "NIST-FIPS-203")
+
+
+# Registry version 3 changes only the NIST IR 8547 source of these four
+# entries, from the November 2024 initial public draft to the October 2026
+# final publication (docs/standards-and-classification.md, "NIST IR 8547
+# source update").
+IR_8547_FINAL_SECTIONS = {
+    "classical-public-key-composite": "Sections 2.1.1 and 2.1.2",
+    "rsa": "Sections 2.1.1 and 2.1.2",
+    "dh": "Section 2.1.2",
+    "ecc": "Sections 2.1.1 and 2.1.2",
+}
+IR_8547_DRAFT_SOURCE = {
+    "source_id": "NIST-IR-8547-IPD",
+    "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
+    "section": None,
+    "status": "draft",
+    "date": "2024-11",
+    "excerpt": None,
+}
+
+
+def test_ir_8547_source_is_the_final_publication_in_exactly_four_entries() -> None:
+    raw = _raw_registry()
+    cited = {
+        entry["entry_id"]: source
+        for entry in raw["entries"]
+        for source in entry["sources"]
+        if source["source_id"].startswith("NIST-IR-8547")
+    }
+
+    assert set(cited) == set(IR_8547_FINAL_SECTIONS)
+    for entry_id, section in IR_8547_FINAL_SECTIONS.items():
+        assert cited[entry_id] == {
+            "source_id": "NIST-IR-8547",
+            "title": "Transition to Post-Quantum Cryptography Standards",
+            "section": section,
+            "status": "final",
+            "date": "2026-10",
+            "excerpt": None,
+        }
+
+
+def test_registry_version_3_differs_from_version_2_only_in_the_ir_8547_source() -> None:
+    # Restoring the draft source and the version number must give back the
+    # exact version 2 content, so nothing else in the registry changed.
+    raw = _raw_registry()
+    raw["registry_version"] = "2"
+    for entry in raw["entries"]:
+        if entry["entry_id"] in IR_8547_FINAL_SECTIONS:
+            [index] = [
+                i
+                for i, source in enumerate(entry["sources"])
+                if source["source_id"] == "NIST-IR-8547"
+            ]
+            entry["sources"][index] = dict(IR_8547_DRAFT_SOURCE)
+
+    assert canonical_sha256(raw) == REGISTRY_HASH_BY_VERSION["2"]

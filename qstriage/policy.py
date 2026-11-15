@@ -453,7 +453,7 @@ def _ensure_unique(values: list[str], label: str) -> None:
 
 
 BUILTIN_POLICY_PACK_ID = "nist-pqc-basic"
-BUILTIN_POLICY_PACK_VERSION = "0.4"
+BUILTIN_POLICY_PACK_VERSION = "0.5"
 
 
 def get_policy_pack(policy_pack_id: str = BUILTIN_POLICY_PACK_ID) -> PolicyPack:
@@ -516,12 +516,12 @@ def _nist_pqc_basic_references() -> list[PolicyReference]:
             notes="Transition language for cryptographic algorithms and key lengths.",
         ),
         PolicyReference(
-            reference_id="NIST-IR-8547-IPD",
+            reference_id="NIST-IR-8547",
             title=(
-                "NIST IR 8547 IPD — Transition to Post-Quantum Cryptography "
+                "NIST IR 8547 - Transition to Post-Quantum Cryptography "
                 "Standards"
             ),
-            version="initial-public-draft",
+            version="final",
             notes="PQC migration planning and inventory guidance.",
         ),
         PolicyReference(
@@ -639,7 +639,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
             ),
             recommendation="Review the asset for hybrid or PQC migration planning.",
             references=[
-                "NIST-IR-8547-IPD",
+                "NIST-IR-8547",
                 "NIST-SP-800-131A-REV3-IPD",
                 "QSTRIAGE-SAFETY-POLICY",
             ],
@@ -844,7 +844,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
                 "Prioritize migration review for long-retention sensitive data."
             ),
             references=[
-                "NIST-IR-8547-IPD",
+                "NIST-IR-8547",
                 "QSTRIAGE-SAFETY-POLICY",
             ],
         ),
@@ -876,7 +876,7 @@ def _nist_pqc_basic_rules() -> list[PolicyRule]:
                 "coordination."
             ),
             references=[
-                "NIST-IR-8547-IPD",
+                "NIST-IR-8547",
                 "CISA-QUANTUM-READINESS",
                 "QSTRIAGE-SAFETY-POLICY",
             ],

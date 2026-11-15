@@ -46,7 +46,7 @@ Systems.
 [NSA CNSA 2.0](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSI_CNSA_2.0_FAQ_.PDF)
 sets a separate schedule for those systems. Long-lived data creates pressure
 sooner because
-[ciphertext collected today](https://csrc.nist.gov/pubs/ir/8547/ipd) may remain
+[ciphertext collected today](https://csrc.nist.gov/pubs/ir/8547/final) may remain
 valuable when decryption becomes possible. QSTriage addresses the work between
 inventory and migration: what must be verified, what moves first, and why.
 
