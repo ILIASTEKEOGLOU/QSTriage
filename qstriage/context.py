@@ -287,7 +287,7 @@ def display_value(value: Any) -> str:
 
 
 def closest_label(value: str, labels: tuple[str, ...]) -> str | None:
-    """Return the single accepted label within edit distance 2, if unique."""
+    """Return the accepted label strictly closest to the value, within 2 edits."""
 
     normalized = normalize_context_text(value)
     if not normalized:

@@ -21,7 +21,6 @@ Evidence Closure adds:
 - refusal to overwrite an existing output,
 - stable before-and-after comparison,
 - four path-confined read-only MCP tools,
-- the `qstriage-evidence-closure` repository skill,
 - a reproducible end-to-end demo.
 
 ## End-to-end workflow
@@ -38,9 +37,12 @@ Evidence Closure adds:
 
 Regular assertions identify an asset, allowlisted field, value, state,
 provenance, and optional rationale. Relationship assertions record `none`,
-`partial`, or `known`. Unknown keys, duplicate targets, invalid field values,
-unknown assets, stale source hashes, and relationship claims that contradict
-existing dependencies are rejected.
+`partial`, or `known`. Unknown keys, duplicate targets, values of the wrong
+type or outside the allowed range or enumeration, unknown assets, stale source
+hashes, and relationship claims that contradict existing dependencies are
+rejected. For `data_class` and `exposure` any non-empty string is accepted,
+because the inventory accepts free-text labels; a label that QSTriage does not
+recognize stays unresolved when the patched inventory is assessed.
 
 ## Declared versus verified
 
@@ -86,8 +88,11 @@ surface exposes no apply, write, subprocess, network, discovery, or production
 operation.
 
 The working directory is the directory from which the MCP server is started.
-Every file inside it, including files in subdirectories, is readable through
-the tools. Start the server from the project directory that holds the
+The tools accept any path to an existing regular file inside it, including
+files in subdirectories, and return structured results for supported
+inventories and patches. Anyone who exposes a directory this way should treat
+every inventory and patch in it and in its subdirectories as readable by the
+MCP client. Start the server from the project directory that holds the
 inventories and patches, not from a home or system directory.
 
 A request that cannot be served returns a tool result with `isError: true`

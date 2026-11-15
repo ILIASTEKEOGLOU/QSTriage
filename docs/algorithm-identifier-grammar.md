@@ -119,7 +119,7 @@ standardized identifiers.
 | ECC | Exact `ECC`, `ECDH`, `ECDHE`, `ECDSA`, `P-256`, `P-384`, `P-521`, `CURVE25519`, `X25519`, and `ED25519` tokens, plus anchored `SHA<digest>WITHECDSA` signature names | A marker must be the whole identifier, an exact separator-delimited token or sequence, or one complete supported signature name |
 | Classical composite | Two or more exact separator-delimited public-key role tokens in one supported composite | Composite recognition runs before leaf families |
 
-For composite classification, “two or more” means at least one explicit
+For composite classification, "two or more" means at least one explicit
 key-establishment token and a separate authentication or signature token. A
 TLS RSA key-transport suite such as `TLS_RSA_WITH_AES_128_GCM_SHA256` contains
 only one public-key primitive and therefore remains an RSA leaf. It is not a
@@ -290,7 +290,10 @@ version `0.2`.
 ## Provenance boundary
 
 The exact PQC identifiers are grounded in NIST FIPS 203, FIPS 204, and FIPS
-205. Classical migration posture uses NIST IR 8547 IPD as the current project
-source. QSTriage source identifiers record classification provenance; they do
+205. Classical migration posture uses the initial public draft of NIST IR 8547
+(IPD, November 2024) as the current registry source. NIST published the final
+NIST IR 8547 in October 2026; the registry still cites the draft until its
+sources are updated in a separate change, which also changes the registry
+hash. QSTriage source identifiers record classification provenance; they do
 not claim that a source publication defines QSTriage scores, policy decisions,
 or migration approval.

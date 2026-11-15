@@ -179,8 +179,8 @@ def partition_assessments(assessments: list[AssetAssessment]) -> PartitionedAsse
 
     The ranked list keeps the deterministic risk-attention order of
     ``assess_inventory``. The verify-first list is ordered by risk attention,
-    highest first, then by asset id, so the assets with the most exposure
-    context are verified first.
+    highest first, then by asset id. The order uses the planning score, which
+    for these assets rests on a fallback cryptographic risk.
     """
 
     verification_first = [

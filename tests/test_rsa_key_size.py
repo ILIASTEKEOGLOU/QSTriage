@@ -373,6 +373,14 @@ def test_json_and_csv_exports_carry_size_and_source(tmp_path: Path) -> None:
     assert row["key_size_source"] == "conflict_smaller"
     assert row["cryptographic_risk"] == "9.0"
     assert row["deadline_pressure"] == "5.0"
+    # The CSV assumption column holds the short form; the full sentence is in
+    # the explanation column (docs/usage.md).
+    assert row["scoring_assumptions"] == (
+        "key_size_bits: 4096 (differs from the algorithm identifier, which says "
+        "2048 bits) -> 2048 bits"
+    )
+    assert D2_MESSAGE not in row["scoring_assumptions"]
+    assert D2_MESSAGE in row["explanation"].split(" | ")
 
     [row] = list(
         csv.DictReader(
@@ -637,3 +645,23 @@ def test_pdr_from_cbom_keeps_the_parameter_set_for_spaced_family(
     assert record["observed_state"]["quantum_status"] == "quantum_resistant"
     assert record["decision"]["execution_state"] != "verification_first"
     assert verify_pdr_file(output).passed
+
+
+def test_correcting_the_declared_size_removes_the_conflict_and_the_gate() -> None:
+    # Complete business context, so the conflict is the only gap.
+    before = assess_inventory(_inventory("RSA-2048", 4096))[0]
+    after = assess_inventory(_inventory("RSA-2048", 2048))[0]
+
+    assert before.decision.execution_state.value == "gated"
+    assert [f.code for f in before.evidence_review.findings] == ["conflicting_key_size"]
+    assert [r.value for r in before.decision.verification_requirements] == [
+        "cryptographic_parameters"
+    ]
+    assert before.score.score_basis == "worst_case"
+
+    assert after.decision.execution_state.value == "justified"
+    assert list(after.evidence_review.findings) == []
+    assert list(after.decision.verification_requirements) == []
+    assert after.score.score_basis == "confirmed"
+    assert after.score.key_size_source == "declared"
+    assert after.decision.decision_confidence > before.decision.decision_confidence

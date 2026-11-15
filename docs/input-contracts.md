@@ -25,8 +25,14 @@ After parsing, every key and string value of JSON and YAML input is checked
 for unpaired surrogate code points (U+D800 to U+DFFF), which escape sequences
 such as `\ud800` can produce. They are not valid Unicode text and are
 rejected with the location of the first occurrence, for example
-`$.assets[0].name`. A correctly paired escape such as `\ud83d\ude00` is
-accepted.
+`$.assets[0].name`. The two formats differ for characters outside the Basic
+Multilingual Plane:
+
+- JSON: a correctly paired escape such as `\ud83d\ude00` is decoded into one
+  character and accepted.
+- YAML: the parser keeps the two halves of a paired escape separate, so
+  `"\ud83d\ude00"` is rejected as an unpaired surrogate. Write the character
+  itself, or the YAML eight-digit escape `"\U0001F600"`.
 
 Unknown fields are rejected in the native inventory and configuration models.
 
@@ -39,9 +45,9 @@ Unknown fields are rejected in the native inventory and configuration models.
 | Configuration YAML file | 1 MiB |
 | Enrichment patch YAML file | 10 MiB |
 | PDR JSON file read by `pdr verify` or `pdr diff` (each file) | 64 MiB |
-| Assets per inventory | 1–1,000 |
-| Dependencies per inventory | 0–10,000 |
-| Migration scenarios per inventory | 0–100 |
+| Assets per inventory | 1 to 1,000 |
+| Dependencies per inventory | 0 to 10,000 |
+| Migration scenarios per inventory | 0 to 100 |
 | Asset/scenario simulation results | 20,000 |
 | CycloneDX components | 10,000 |
 | Identifier length | 256 characters |
@@ -51,7 +57,7 @@ Unknown fields are rejected in the native inventory and configuration models.
 | Evidence assertion `rationale` | 4,096 characters |
 | JSON and YAML nesting depth | 64 levels |
 
-The simulation-result budget is calculated as `asset_count × max(1, scenario_count)`.
+The simulation-result budget is calculated as `asset_count * max(1, scenario_count)`.
 
 These are supported-workload boundaries for deterministic local operation, not claims about enterprise-wide discovery capacity.
 
@@ -59,7 +65,7 @@ These are supported-workload boundaries for deterministic local operation, not c
 
 The document root is a mapping with three top-level collections:
 
-- `assets`: required and must contain 1–1,000 items,
+- `assets`: required and must contain 1 to 1,000 items,
 - `dependencies`: optional and defaults to an empty list,
 - `scenarios`: optional and defaults to an empty list.
 
@@ -95,7 +101,7 @@ Values such as `unknown`, `0`, or imported defaults are accepted as data but can
 | `direction` | enum | `inbound`, `outbound`, or `bidirectional` |
 | `dependency_type` | enum | `auth`, `dataflow`, `tls_termination`, `database`, `logging`, `firmware_update`, `api_call`, or `telemetry_upload` |
 | `protocol` | string | Required, non-empty |
-| `weight` | number | Inclusive range 0.0–1.0 |
+| `weight` | number | Inclusive range 0.0 to 1.0 |
 | `criticality` | enum | `low`, `medium`, `high`, or `critical` |
 | `carries_crypto_context` | boolean | Optional; defaults to `false` |
 | `notes` | string | Optional; defaults to an empty string |

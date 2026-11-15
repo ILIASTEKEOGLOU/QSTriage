@@ -2,6 +2,45 @@
 
 ## Unreleased
 
+### Documentation
+
+- Statements corrected after an external claims audit of the documentation,
+  messages, and pull request texts:
+  - README: the NIST IR 8547 timeline now follows the final report (October
+    2026, section 4): quantum-vulnerable public-key cryptography is
+    deprecated after 2030 and disallowed under NIST standards and guidelines
+    after 2035, with earlier deadlines for prioritized U.S. Federal systems.
+    Hybrid names match after identifier normalization; the MCP compare step
+    is the recommended workflow, not an enforced order; CI uses hash-checked
+    locks for the Python 3.11 test job and the dependency audit, while the
+    compatibility jobs resolve dependencies afresh.
+  - PDR contract: the integer range -2^53 to 2^53 inclusive is a QSTriage
+    rule, not an RFC 8785 limit; RFC 7493 section 2.2 names a range one
+    narrower at each end. Unicode noncharacters are accepted and hashed, which
+    places such a PDR outside the I-JSON profile. The v1.4.0 entry below
+    ("Values that RFC 8785 cannot represent, such as integers above 2^53")
+    is corrected by this statement; released entries are not edited.
+  - Scoring rationale: deadline pressure, the score scale, the Verify First
+    rule, the score basis display, which outputs follow a worst-case score,
+    and the confidence label rules (including the CBOM import marker and
+    `cbom_key_sizes`) now match the code.
+  - Usage, evidence and context, Evidence Closure, input contracts, algorithm
+    identifier grammar, and design records: Verify First ordering, the CSV
+    form of `scoring_assumptions`, verified context states, the closest label
+    rule, patch label validation, the MCP directory exposure, JSON versus YAML
+    surrogate escapes, and the NIST IR 8547 draft status are stated as
+    implemented; the `closure validate` warning and the "Why this decision is
+    gated" report section are marked as planned.
+- Messages: the canonical JSON integer error states the QSTriage range; the
+  score explanation for an algorithm QSTriage does not identify says that a
+  fallback cryptographic risk is used; the report method notes say that
+  simulation warnings do not change the score; the empty Verify First section
+  no longer says every algorithm is identified. Score export `explanation`
+  text changes accordingly; scores, decisions, and hashes do not.
+- Typographic characters in documentation and CLI help replaced with ASCII; a
+  contract test keeps tracked documentation and source files ASCII, with
+  named exceptions.
+
 ### Removed
 
 - The repository skill directory, its client configuration file, and their
@@ -118,8 +157,9 @@
   one line and within 500 characters, before the prefix the SDK adds. The
   parser's description of malformed YAML is shortened to 200 characters
   (ending in `...`) first; then, if the message is still too long, only the
-  path is shortened (keeping its end after `...`), so the file name, the
-  line and column, and the cause are never cut off.
+  path is shortened, keeping its end after `...`. The line and column and
+  the cause are never cut off; the end of the path is kept, and with a very
+  long file name the start of the file name itself can be shortened.
 - RSA key size: one rule, `resolve_key_size` in `qstriage/standards.py`,
   decides the size that scoring and evidence review use. Previously scoring
   read only `key_size_bits` and ignored the size in the identifier, so
@@ -220,12 +260,18 @@
   basis column, a count in the executive summary, and a per-asset table of
   field, value in inventory, problem, and value scored; the score export
   carries `score_basis` and `scoring_assumptions`; the PDR writes one
-  `assumptions_made` line per field. Decision fields keep reading the
-  declared values. PDR record hashes change for assets with unresolved
+  `assumptions_made` line per field. Execution state, action type, and
+  evidence findings keep reading their own inputs; outputs that read the
+  score band (verification priority, the high-priority human review
+  condition, the `risk:<band>_attention` reason code, and the PDR field
+  `mission_impact_if_delayed`) follow the substituted score. PDR record
+  hashes change for assets with unresolved
   context. The bundled Evidence Closure demo asset now scores 100.0 at worst
   case before enrichment and 93.0 confirmed after.
 - Assets whose cryptography is not identified (execution state
-  `verification_first`) are no longer ranked. `score` prints them first in a
+  `verification_first`, from algorithm standard status `unknown`) get no
+  backlog rank; their separate list is ordered by risk attention, then asset
+  ID. `score` prints them first in a
   "Verify First: Cryptography Not Identified (not ranked)" table with the
   algorithm field, the reason, and what to do; the ranked backlog follows with
   contiguous ranks. `report` adds a "Verify First" section before "Priority
@@ -254,7 +300,8 @@
   the Evidence Closure demo, and the CBOM test fixtures unchanged.
 - Context messages state the value read, its meaning, the accepted values, and
   the consequence; an unrecognized label is answered with the closest accepted
-  label when exactly one is within two edits.
+  label when one label is strictly closer than all others and one or two edits
+  away.
 - New evidence finding codes: `unmapped_data_class`, `unmapped_exposure`,
   `redacted_data_class`, `redacted_exposure`, and
   `unconfirmed_zero_retention_years` (`retention_years: 0` without an evidence

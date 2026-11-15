@@ -235,8 +235,11 @@ qstriage export scores \
 
 Score contract 0.3 separates assets whose cryptography is not identified from
 the ranking. Such an asset has execution state `verification_first`: its
-algorithm field does not identify an exact algorithm and parameter set, so its
-priority score rests on a guess and it is never ranked.
+algorithm classification has standard status `unknown` (an unrecognized
+identifier, or a recognized family without a supported parameter set), so its
+priority score rests on a guessed algorithm. It gets no backlog rank; the
+verification-first list is ordered by risk attention and then asset ID, and
+each record still carries its planning score.
 
 - JSON is an object with `score_export_version` (`"0.3"`),
   `verification_first` (records with `unranked_reason`), and `ranked`
@@ -249,7 +252,10 @@ Every record carries `score_basis` (`confirmed` or `worst_case`) and
 `scoring_assumptions`, one entry per field scored at its worst case with
 `field`, `inventory_value`, `problem`, `scored_as`, `kind`
 (`unresolved_context` or `conflicting_key_size`), and `message`, the sentence
-also written to the PDR (CSV: one column, entries joined with ` | `).
+also written to the PDR. CSV writes a short form in one column, each entry as
+`field: inventory_value (problem) -> scored_as`, joined with ` | `, without
+`kind` or `message`; the full sentence for each entry is in the CSV
+`explanation` column.
 
 Every record also carries `key_size_bits_scored`, the key size the score used,
 and `key_size_source`: `declared`, `algorithm_identifier` (taken from an RSA
