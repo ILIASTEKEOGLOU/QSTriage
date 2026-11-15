@@ -1,0 +1,1565 @@
+{
+  "pdr_version": "0.3",
+  "run_id": "run:b6d95346cd090bb6",
+  "input_snapshot": {
+    "source_type": "qstriage_inventory",
+    "source_version": null,
+    "source_path": "inventory.yaml",
+    "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+  },
+  "policy_context": {
+    "policy_pack_id": "nist-pqc-basic",
+    "policy_pack_version": "0.4",
+    "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+    "standards_applied": [
+      "NIST-FIPS-203",
+      "NIST-FIPS-204",
+      "NIST-FIPS-205",
+      "NIST-SP-800-131A-REV3-IPD",
+      "NIST-IR-8547-IPD",
+      "NIST-SP-800-227",
+      "RFC-10024",
+      "NIST-CSWP-39-UPDATE-1",
+      "CISA-QUANTUM-READINESS",
+      "CISA-PQC-DISCOVERY-INVENTORY",
+      "QSTRIAGE-SAFETY-POLICY"
+    ]
+  },
+  "registry_context": {
+    "registry_id": "qstriage-algorithms",
+    "registry_version": "2",
+    "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+  },
+  "records": [
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:rsa-conflict",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 1,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "long_retention_sensitive_data_raises_priority",
+          "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority"
+        ],
+        "standards_applied": [
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-131A-REV3-IPD",
+          "QSTRIAGE-SAFETY-POLICY",
+          "CISA-QUANTUM-READINESS"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "quantum_vulnerable_public_key_requires_pqc_migration_review",
+            "severity": "high",
+            "message": "Quantum-vulnerable public-key crypto requires PQC migration review",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "rsa-conflict",
+            "field_path": null,
+            "rationale": "RSA, finite-field DH, and ECC require migration review in a PQC transition context.",
+            "recommendation": "Review the asset for hybrid or PQC migration planning.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "NIST-SP-800-131A-REV3-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "rsa-conflict",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+            "severity": "high",
+            "message": "Public or partner exposure raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review"
+            ],
+            "asset_id": "rsa-conflict",
+            "field_path": null,
+            "rationale": "Externally exposed cryptographic assets carry higher migration and coordination risk.",
+            "recommendation": "Review exposed assets for migration sequencing and stakeholder coordination.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "CISA-QUANTUM-READINESS",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "rsa-conflict",
+        "asset_name": "Rsa Conflict",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "TLS1.3",
+        "algorithm": "RSA-2048",
+        "key_size_bits": 4096,
+        "algorithm_family": "RSA",
+        "primitive": "public_key_encryption_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "scheme_type": "single",
+        "components": [],
+        "certification_component": null
+      },
+      "evidence_quality": {
+        "score": 1.0,
+        "missing_evidence": [],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "rsa-conflict",
+        "evidence_score": 0.75,
+        "confidence_cap": 0.5,
+        "decision_grade": "not_decision_grade",
+        "human_review_required": true,
+        "findings": [
+          {
+            "code": "conflicting_key_size",
+            "category": "cryptographic_context",
+            "severity": "high",
+            "message": "The algorithm identifier says 2048 bits. \"key_size_bits\" says 4096 bits. The planning score uses 2048 bits as a precaution. Verify the RSA modulus size against the source record before proceeding.",
+            "effects": [
+              "decision_grade_blocked",
+              "human_review_required"
+            ],
+            "asset_id": "rsa-conflict",
+            "field_path": "assets[rsa-conflict].key_size_bits",
+            "evidence_state": "declared",
+            "maturity": "minimum_expected",
+            "provenance": "user_declared",
+            "relationship_completeness": null,
+            "human_action": {
+              "description": "Verify the RSA modulus size of asset 'rsa-conflict' against the source record, then correct either the algorithm identifier or key_size_bits so that both state the same size.",
+              "field_path": "assets[rsa-conflict].key_size_bits",
+              "expected_value_type": "integer RSA modulus length in bits",
+              "effect_if_unresolved": "The decision stays gated and the priority score stays provisional at 2048 bits."
+            }
+          }
+        ],
+        "blocking_finding_codes": [
+          "conflicting_key_size"
+        ],
+        "recommended_next_actions": [
+          "Verify the RSA modulus size of asset 'rsa-conflict' against the source record, then correct either the algorithm identifier or key_size_bits so that both state the same size."
+        ]
+      },
+      "decision_confidence": {
+        "score": 0.5,
+        "reason": "Decision confidence is constrained by blocking evidence findings: conflicting_key_size."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "critical"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        },
+        {
+          "type": "cryptographic_risk",
+          "description": "Classical public-key cryptography creates harvest-now-decrypt-later or future forgery exposure depending on use."
+        },
+        {
+          "type": "operational_risk",
+          "description": "Hybrid or PQC handshake changes may affect interoperability, packet size, middleboxes, or constrained paths."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "hybrid_key_establishment_with_ml_kem_768",
+          "standards": [
+            "NIST-FIPS-203"
+          ],
+          "rationale": "Use ML-KEM as the PQC target for key establishment, with hybrid rollout where compatibility risk exists.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        },
+        {
+          "option": "signature_migration_to_ml_dsa_profile",
+          "standards": [
+            "NIST-FIPS-204"
+          ],
+          "rationale": "Use ML-DSA as the primary standardized PQC signature target where signature semantics are confirmed.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 87.0,
+        "risk_attention_band": "critical",
+        "execution_state": "gated",
+        "action_type": "migration_planning",
+        "verification_priority": "high",
+        "verification_requirements": [
+          "cryptographic_parameters"
+        ],
+        "confidence_score": 0.5,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:quantum_vulnerable",
+          "evidence:conflicting_key_size",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+          "policy:quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "confidence:below_decision_grade_threshold",
+          "verification:cryptographic_parameters",
+          "risk:critical_attention"
+        ]
+      },
+      "assumptions_made": [
+        "The algorithm identifier says 2048 bits. \"key_size_bits\" says 4096 bits. The planning score uses 2048 bits as a precaution. Verify the RSA modulus size against the source record before proceeding.",
+        "Evidence review marks this record as not decision-grade until blocking findings are resolved.",
+        "Blocking evidence finding 'conflicting_key_size' prevents decision-grade status."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:5fecebdf001645366c5b353d47399c81a950cd21a28682e47b7690cd2a824a9a"
+      }
+    },
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:dh-2048",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 2,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "long_retention_sensitive_data_raises_priority",
+          "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority"
+        ],
+        "standards_applied": [
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-131A-REV3-IPD",
+          "QSTRIAGE-SAFETY-POLICY",
+          "CISA-QUANTUM-READINESS"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "quantum_vulnerable_public_key_requires_pqc_migration_review",
+            "severity": "high",
+            "message": "Quantum-vulnerable public-key crypto requires PQC migration review",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "dh-2048",
+            "field_path": null,
+            "rationale": "RSA, finite-field DH, and ECC require migration review in a PQC transition context.",
+            "recommendation": "Review the asset for hybrid or PQC migration planning.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "NIST-SP-800-131A-REV3-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "dh-2048",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+            "severity": "high",
+            "message": "Public or partner exposure raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review"
+            ],
+            "asset_id": "dh-2048",
+            "field_path": null,
+            "rationale": "Externally exposed cryptographic assets carry higher migration and coordination risk.",
+            "recommendation": "Review exposed assets for migration sequencing and stakeholder coordination.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "CISA-QUANTUM-READINESS",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "dh-2048",
+        "asset_name": "Dh 2048",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "IPsec",
+        "algorithm": "DH",
+        "key_size_bits": 2048,
+        "algorithm_family": "DH",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "scheme_type": "single",
+        "components": [],
+        "certification_component": null
+      },
+      "evidence_quality": {
+        "score": 1.0,
+        "missing_evidence": [],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "dh-2048",
+        "evidence_score": 1.0,
+        "confidence_cap": 1.0,
+        "decision_grade": "decision_grade",
+        "human_review_required": false,
+        "findings": [],
+        "blocking_finding_codes": [],
+        "recommended_next_actions": []
+      },
+      "decision_confidence": {
+        "score": 0.8,
+        "reason": "Decision confidence is based on available inventory, scoring, and standards context."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "critical"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        },
+        {
+          "type": "cryptographic_risk",
+          "description": "Classical public-key cryptography creates harvest-now-decrypt-later or future forgery exposure depending on use."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "hybrid_key_establishment_with_ml_kem_768",
+          "standards": [
+            "NIST-FIPS-203"
+          ],
+          "rationale": "Use ML-KEM as the PQC target for key establishment, with hybrid rollout where compatibility risk exists.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 85.0,
+        "risk_attention_band": "critical",
+        "execution_state": "justified",
+        "action_type": "migration_planning",
+        "verification_priority": "none",
+        "verification_requirements": [],
+        "confidence_score": 0.8,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:quantum_vulnerable",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+          "policy:quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "risk:critical_attention"
+        ]
+      },
+      "assumptions_made": [
+        "No material evidence assumptions were added by the current PDR rules."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:d47f3d1c4ff6ddcf427f9138a6e4528756c4c4e9c62066d9ef3bbff58ddf5f70"
+      }
+    },
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:composite",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 3,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "long_retention_sensitive_data_raises_priority",
+          "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority"
+        ],
+        "standards_applied": [
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-131A-REV3-IPD",
+          "QSTRIAGE-SAFETY-POLICY",
+          "CISA-QUANTUM-READINESS"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "quantum_vulnerable_public_key_requires_pqc_migration_review",
+            "severity": "high",
+            "message": "Quantum-vulnerable public-key crypto requires PQC migration review",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "composite",
+            "field_path": null,
+            "rationale": "RSA, finite-field DH, and ECC require migration review in a PQC transition context.",
+            "recommendation": "Review the asset for hybrid or PQC migration planning.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "NIST-SP-800-131A-REV3-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "composite",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+            "severity": "high",
+            "message": "Public or partner exposure raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review"
+            ],
+            "asset_id": "composite",
+            "field_path": null,
+            "rationale": "Externally exposed cryptographic assets carry higher migration and coordination risk.",
+            "recommendation": "Review exposed assets for migration sequencing and stakeholder coordination.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "CISA-QUANTUM-READINESS",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "composite",
+        "asset_name": "Composite",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "TLS1.3",
+        "algorithm": "ECDHE_RSA",
+        "key_size_bits": 2048,
+        "algorithm_family": "classical_public_key_composite",
+        "primitive": "key_establishment_and_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "scheme_type": "single",
+        "components": [],
+        "certification_component": null
+      },
+      "evidence_quality": {
+        "score": 1.0,
+        "missing_evidence": [],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "composite",
+        "evidence_score": 1.0,
+        "confidence_cap": 1.0,
+        "decision_grade": "decision_grade",
+        "human_review_required": false,
+        "findings": [],
+        "blocking_finding_codes": [],
+        "recommended_next_actions": []
+      },
+      "decision_confidence": {
+        "score": 0.8,
+        "reason": "Decision confidence is based on available inventory, scoring, and standards context."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "critical"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        },
+        {
+          "type": "cryptographic_risk",
+          "description": "Classical public-key cryptography creates harvest-now-decrypt-later or future forgery exposure depending on use."
+        },
+        {
+          "type": "operational_risk",
+          "description": "Hybrid or PQC handshake changes may affect interoperability, packet size, middleboxes, or constrained paths."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "hybrid_key_establishment_with_ml_kem_768",
+          "standards": [
+            "NIST-FIPS-203"
+          ],
+          "rationale": "Use ML-KEM as the PQC target for key establishment, with hybrid rollout where compatibility risk exists.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        },
+        {
+          "option": "signature_migration_to_ml_dsa_profile",
+          "standards": [
+            "NIST-FIPS-204"
+          ],
+          "rationale": "Use ML-DSA as the primary standardized PQC signature target where signature semantics are confirmed.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 86.0,
+        "risk_attention_band": "critical",
+        "execution_state": "justified",
+        "action_type": "migration_planning",
+        "verification_priority": "none",
+        "verification_requirements": [],
+        "confidence_score": 0.8,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:quantum_vulnerable",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+          "policy:quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "risk:critical_attention"
+        ]
+      },
+      "assumptions_made": [
+        "No material evidence assumptions were added by the current PDR rules."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:b08a42e38aed972e03693f3ea4021bfa67ead7dd27af97e3cfc5824f92991243"
+      }
+    },
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:x25519",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 4,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "long_retention_sensitive_data_raises_priority",
+          "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority"
+        ],
+        "standards_applied": [
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-131A-REV3-IPD",
+          "QSTRIAGE-SAFETY-POLICY",
+          "CISA-QUANTUM-READINESS"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "quantum_vulnerable_public_key_requires_pqc_migration_review",
+            "severity": "high",
+            "message": "Quantum-vulnerable public-key crypto requires PQC migration review",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "x25519",
+            "field_path": null,
+            "rationale": "RSA, finite-field DH, and ECC require migration review in a PQC transition context.",
+            "recommendation": "Review the asset for hybrid or PQC migration planning.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "NIST-SP-800-131A-REV3-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "x25519",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+            "severity": "high",
+            "message": "Public or partner exposure raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review"
+            ],
+            "asset_id": "x25519",
+            "field_path": null,
+            "rationale": "Externally exposed cryptographic assets carry higher migration and coordination risk.",
+            "recommendation": "Review exposed assets for migration sequencing and stakeholder coordination.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "CISA-QUANTUM-READINESS",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "x25519",
+        "asset_name": "X25519",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "SSH",
+        "algorithm": "X25519",
+        "key_size_bits": null,
+        "algorithm_family": "ECC",
+        "primitive": "key_establishment_or_signature",
+        "quantum_status": "quantum_vulnerable",
+        "standard_status": "classical_public_key",
+        "scheme_type": "single",
+        "components": [],
+        "certification_component": null
+      },
+      "evidence_quality": {
+        "score": 1.0,
+        "missing_evidence": [],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "x25519",
+        "evidence_score": 1.0,
+        "confidence_cap": 1.0,
+        "decision_grade": "decision_grade",
+        "human_review_required": false,
+        "findings": [],
+        "blocking_finding_codes": [],
+        "recommended_next_actions": []
+      },
+      "decision_confidence": {
+        "score": 0.8,
+        "reason": "Decision confidence is based on available inventory, scoring, and standards context."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "critical"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        },
+        {
+          "type": "cryptographic_risk",
+          "description": "Classical public-key cryptography creates harvest-now-decrypt-later or future forgery exposure depending on use."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "hybrid_key_establishment_with_ml_kem_768",
+          "standards": [
+            "NIST-FIPS-203"
+          ],
+          "rationale": "Use ML-KEM as the PQC target for key establishment, with hybrid rollout where compatibility risk exists.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        },
+        {
+          "option": "signature_migration_to_ml_dsa_profile",
+          "standards": [
+            "NIST-FIPS-204"
+          ],
+          "rationale": "Use ML-DSA as the primary standardized PQC signature target where signature semantics are confirmed.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 86.0,
+        "risk_attention_band": "critical",
+        "execution_state": "justified",
+        "action_type": "migration_planning",
+        "verification_priority": "none",
+        "verification_requirements": [],
+        "confidence_score": 0.8,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:quantum_vulnerable",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:public_or_partner_exposed_quantum_vulnerable_crypto_raises_priority",
+          "policy:quantum_vulnerable_public_key_requires_pqc_migration_review",
+          "risk:critical_attention"
+        ]
+      },
+      "assumptions_made": [
+        "No material evidence assumptions were added by the current PDR rules."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:a407acd51d8d07c2cd5224ee47998d8ca7feefa4001093dd7d12d427faf68ab0"
+      }
+    },
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:unknown",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 5,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "unknown_algorithm_requires_manual_crypto_review",
+          "long_retention_sensitive_data_raises_priority"
+        ],
+        "standards_applied": [
+          "QSTRIAGE-SAFETY-POLICY",
+          "NIST-IR-8547-IPD"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "unknown_algorithm_requires_manual_crypto_review",
+            "severity": "critical",
+            "message": "Unknown algorithm requires manual crypto review",
+            "effects": [
+              "caps_confidence",
+              "blocks_decision_grade",
+              "requires_human_review"
+            ],
+            "asset_id": "unknown",
+            "field_path": null,
+            "rationale": "An unknown cryptographic algorithm cannot be safely classified for PQC migration.",
+            "recommendation": "Identify the algorithm before producing decision-grade PDRs.",
+            "standards_applied": [
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "unknown",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "unknown",
+        "asset_name": "Unknown",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "custom",
+        "algorithm": "FOOCIPHER-9",
+        "key_size_bits": null,
+        "algorithm_family": "unknown",
+        "primitive": "unknown",
+        "quantum_status": "unknown",
+        "standard_status": "unknown",
+        "scheme_type": "single",
+        "components": [],
+        "certification_component": null
+      },
+      "evidence_quality": {
+        "score": 0.88,
+        "missing_evidence": [
+          "key_size_bits"
+        ],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "unknown",
+        "evidence_score": 0.42,
+        "confidence_cap": 0.4,
+        "decision_grade": "not_decision_grade",
+        "human_review_required": true,
+        "findings": [
+          {
+            "code": "unknown_algorithm",
+            "category": "cryptographic_context",
+            "severity": "critical",
+            "message": "Cryptographic algorithm is unknown or unsupported by the current classifier.",
+            "effects": [
+              "confidence_capped",
+              "decision_grade_blocked",
+              "human_review_required"
+            ],
+            "asset_id": "unknown",
+            "field_path": "assets[unknown].algorithm",
+            "evidence_state": "unknown",
+            "maturity": "minimum_expected",
+            "provenance": "user_declared",
+            "relationship_completeness": null,
+            "human_action": {
+              "description": "Set a recognized algorithm for asset 'unknown'.",
+              "field_path": "assets[unknown].algorithm",
+              "expected_value_type": "recognized cryptographic algorithm identifier",
+              "effect_if_unresolved": "PQC classification cannot be decision-grade."
+            }
+          },
+          {
+            "code": "missing_key_size_bits",
+            "category": "cryptographic_context",
+            "severity": "medium",
+            "message": "Key size is missing for an algorithm where key length materially affects cryptographic risk.",
+            "effects": [
+              "confidence_degraded",
+              "human_review_required"
+            ],
+            "asset_id": "unknown",
+            "field_path": "assets[unknown].key_size_bits",
+            "evidence_state": "no_assertion",
+            "maturity": "minimum_expected",
+            "provenance": "user_declared",
+            "relationship_completeness": null,
+            "human_action": {
+              "description": "Set key_size_bits for asset 'unknown'.",
+              "field_path": "assets[unknown].key_size_bits",
+              "expected_value_type": "integer key length in bits",
+              "effect_if_unresolved": "Confidence remains degraded."
+            }
+          }
+        ],
+        "blocking_finding_codes": [
+          "unknown_algorithm"
+        ],
+        "recommended_next_actions": [
+          "Set a recognized algorithm for asset 'unknown'.",
+          "Set key_size_bits for asset 'unknown'."
+        ]
+      },
+      "decision_confidence": {
+        "score": 0.4,
+        "reason": "Decision confidence is constrained by blocking evidence findings: unknown_algorithm."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "high"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "manual_cryptographic_review_required",
+          "standards": [
+            "QSTRIAGE-SAFETY-POLICY"
+          ],
+          "rationale": "Algorithm is not recognized by the current QSTriage standards registry.",
+          "operational_risk": "high",
+          "requires_human_review": true
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 75.0,
+        "risk_attention_band": "high",
+        "execution_state": "verification_first",
+        "action_type": "manual_crypto_verification",
+        "verification_priority": "high",
+        "verification_requirements": [
+          "cryptographic_identity",
+          "cryptographic_parameters",
+          "policy_resolution"
+        ],
+        "confidence_score": 0.4,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:unknown",
+          "evidence:missing_key_size_bits",
+          "evidence:unknown_algorithm",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:unknown_algorithm_requires_manual_crypto_review",
+          "confidence:below_decision_grade_threshold",
+          "verification:cryptographic_identity",
+          "verification:cryptographic_parameters",
+          "verification:policy_resolution",
+          "risk:high_attention"
+        ]
+      },
+      "assumptions_made": [
+        "Missing key_size_bits lowers evidence quality and decision confidence.",
+        "Evidence review marks this record as not decision-grade until blocking findings are resolved.",
+        "Blocking evidence finding 'unknown_algorithm' prevents decision-grade status."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:268863c9a491235c3d416dc908d059ddf425dbd5bd0bba097c7f34e035f1a44b"
+      }
+    },
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:ml-kem",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 6,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "standardized_pqc_can_be_retained_with_operational_review",
+          "long_retention_sensitive_data_raises_priority",
+          "ml_kem_usage_requires_key_establishment_context"
+        ],
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "QSTRIAGE-SAFETY-POLICY",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "standardized_pqc_can_be_retained_with_operational_review",
+            "severity": "info",
+            "message": "Standardized PQC can be retained with operational review",
+            "effects": [
+              "requires_human_review",
+              "adds_policy_context",
+              "recommends_target_state"
+            ],
+            "asset_id": "ml-kem",
+            "field_path": null,
+            "rationale": "Standardized PQC use should still be tied to operational context, protocol role, and implementation evidence.",
+            "recommendation": "Retain the asset state only after implementation and operational context are reviewed.",
+            "standards_applied": [
+              "NIST-FIPS-203",
+              "NIST-FIPS-204",
+              "NIST-FIPS-205",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "ml-kem",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          },
+          {
+            "rule_id": "ml_kem_usage_requires_key_establishment_context",
+            "severity": "medium",
+            "message": "ML-KEM usage requires key establishment context",
+            "effects": [
+              "requires_human_review",
+              "adds_policy_context",
+              "constrains_migration"
+            ],
+            "asset_id": "ml-kem",
+            "field_path": null,
+            "rationale": "ML-KEM should be evaluated in the context of key establishment, protocol integration, and implementation evidence.",
+            "recommendation": "Confirm the protocol role and implementation context for ML-KEM use.",
+            "standards_applied": [
+              "NIST-FIPS-203",
+              "NIST-SP-800-227",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "ml-kem",
+        "asset_name": "Ml Kem",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "TLS1.3",
+        "algorithm": "ML-KEM-768",
+        "key_size_bits": null,
+        "algorithm_family": "ML-KEM",
+        "primitive": "key_encapsulation",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pqc",
+        "scheme_type": "single",
+        "components": [],
+        "certification_component": null
+      },
+      "evidence_quality": {
+        "score": 1.0,
+        "missing_evidence": [],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "ml-kem",
+        "evidence_score": 1.0,
+        "confidence_cap": 1.0,
+        "decision_grade": "decision_grade",
+        "human_review_required": false,
+        "findings": [],
+        "blocking_finding_codes": [],
+        "recommended_next_actions": []
+      },
+      "decision_confidence": {
+        "score": 0.8,
+        "reason": "Decision confidence is based on available inventory, scoring, and standards context."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "medium"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        },
+        {
+          "type": "operational_risk",
+          "description": "Hybrid or PQC handshake changes may affect interoperability, packet size, middleboxes, or constrained paths."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "retain_ml_kem",
+          "standards": [
+            "NIST-FIPS-203"
+          ],
+          "rationale": "Observed algorithm is already classified as standardized post-quantum cryptography.",
+          "operational_risk": "low",
+          "requires_human_review": false
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 68.0,
+        "risk_attention_band": "medium",
+        "execution_state": "justified",
+        "action_type": "retain_monitor",
+        "verification_priority": "none",
+        "verification_requirements": [],
+        "confidence_score": 0.8,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:standardized_pqc",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:ml_kem_usage_requires_key_establishment_context",
+          "policy:standardized_pqc_can_be_retained_with_operational_review"
+        ]
+      },
+      "assumptions_made": [
+        "No material evidence assumptions were added by the current PDR rules."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:1916dd9153fafee5454186fc9ba7dcc921e714a0fbbbd1e00351e2a1eece1eec"
+      }
+    },
+    {
+      "pdr_version": "0.3",
+      "record_id": "pdr:hyb-x25519",
+      "run_id": "run:b6d95346cd090bb6",
+      "lineage_id": "lineage:6db5095311b7522d",
+      "sequence_number": 7,
+      "engine": {
+        "name": "QSTriage",
+        "version": "1.5.0.dev0"
+      },
+      "input_snapshot": {
+        "source_type": "qstriage_inventory",
+        "source_version": null,
+        "source_path": "inventory.yaml",
+        "source_hash": "sha256:6db5095311b7522d603566dd331f0853706d8d1ce5bbb88d13b0e0c795a452b2"
+      },
+      "policy_context": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "standards_applied": [
+          "NIST-FIPS-203",
+          "NIST-FIPS-204",
+          "NIST-FIPS-205",
+          "NIST-SP-800-131A-REV3-IPD",
+          "NIST-IR-8547-IPD",
+          "NIST-SP-800-227",
+          "RFC-10024",
+          "NIST-CSWP-39-UPDATE-1",
+          "CISA-QUANTUM-READINESS",
+          "CISA-PQC-DISCOVERY-INVENTORY",
+          "QSTRIAGE-SAFETY-POLICY"
+        ]
+      },
+      "registry_context": {
+        "registry_id": "qstriage-algorithms",
+        "registry_version": "2",
+        "registry_hash": "sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c"
+      },
+      "policy_evaluation": {
+        "policy_pack_id": "nist-pqc-basic",
+        "policy_pack_version": "0.4",
+        "policy_pack_hash": "sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639",
+        "applied_rule_ids": [
+          "standardized_pq_t_hybrid_requires_certification_evidence_review",
+          "long_retention_sensitive_data_raises_priority"
+        ],
+        "standards_applied": [
+          "RFC-10024",
+          "NIST-SP-800-227",
+          "NIST-FIPS-203",
+          "NIST-IR-8547-IPD",
+          "QSTRIAGE-SAFETY-POLICY"
+        ],
+        "thresholds_applied": [
+          "long_retention_years"
+        ],
+        "findings": [
+          {
+            "rule_id": "standardized_pq_t_hybrid_requires_certification_evidence_review",
+            "severity": "medium",
+            "message": "Standardized PQ/T hybrid requires certification evidence review",
+            "effects": [
+              "requires_human_review",
+              "adds_policy_context",
+              "recommends_target_state"
+            ],
+            "asset_id": "hyb-x25519",
+            "field_path": null,
+            "rationale": "RFC 10024, Section 5 names the component whose implementation must be certified. An algorithm identifier does not show whether that implementation is certified.",
+            "recommendation": "Obtain evidence that the implementation of the component named in certification_component is certified, and record the review outcome.",
+            "standards_applied": [
+              "RFC-10024",
+              "NIST-SP-800-227",
+              "NIST-FIPS-203"
+            ]
+          },
+          {
+            "rule_id": "long_retention_sensitive_data_raises_priority",
+            "severity": "high",
+            "message": "Long-retention sensitive data raises migration priority",
+            "effects": [
+              "raises_priority",
+              "requires_human_review",
+              "adds_policy_context"
+            ],
+            "asset_id": "hyb-x25519",
+            "field_path": null,
+            "rationale": "Long-lived sensitive data increases harvest-now-decrypt-later migration urgency.",
+            "recommendation": "Prioritize migration review for long-retention sensitive data.",
+            "standards_applied": [
+              "NIST-IR-8547-IPD",
+              "QSTRIAGE-SAFETY-POLICY"
+            ]
+          }
+        ]
+      },
+      "observed_state": {
+        "asset_id": "hyb-x25519",
+        "asset_name": "Hyb X25519",
+        "environment": "production",
+        "asset_type": "service",
+        "protocol": "TLS1.3",
+        "algorithm": "X25519MLKEM768",
+        "key_size_bits": null,
+        "algorithm_family": "pq_t_hybrid_kem",
+        "primitive": "key_establishment",
+        "quantum_status": "quantum_resistant",
+        "standard_status": "standardized_pq_t_hybrid",
+        "scheme_type": "pq_t_hybrid",
+        "components": [
+          "ML-KEM-768",
+          "X25519"
+        ],
+        "certification_component": "ML-KEM-768"
+      },
+      "evidence_quality": {
+        "score": 1.0,
+        "missing_evidence": [],
+        "limitations": []
+      },
+      "evidence_review": {
+        "review_version": "0.1",
+        "asset_id": "hyb-x25519",
+        "evidence_score": 1.0,
+        "confidence_cap": 1.0,
+        "decision_grade": "decision_grade",
+        "human_review_required": false,
+        "findings": [],
+        "blocking_finding_codes": [],
+        "recommended_next_actions": []
+      },
+      "decision_confidence": {
+        "score": 0.8,
+        "reason": "Decision confidence is based on available inventory, scoring, and standards context."
+      },
+      "mission_context": {
+        "business_function": null,
+        "data_class": "customer_pii",
+        "retention_years": 10,
+        "exposure": "public_internet",
+        "mission_impact_if_wrong": "high",
+        "mission_impact_if_delayed": "medium"
+      },
+      "tradeoffs": [
+        {
+          "type": "migration_complexity",
+          "description": "Migration effort is medium; production rollout should be staged if effort is high."
+        },
+        {
+          "type": "operational_risk",
+          "description": "Hybrid or PQC handshake changes may affect interoperability, packet size, middleboxes, or constrained paths."
+        }
+      ],
+      "target_state_suggestion": [
+        {
+          "option": "retain_pq_t_hybrid_kem",
+          "standards": [
+            "RFC-10024",
+            "NIST-SP-800-227",
+            "NIST-FIPS-203"
+          ],
+          "rationale": "X25519MLKEM768 is a PQ/T hybrid key agreement group defined in RFC 10024. Components, in shared-secret order (RFC 10024, Section 4.3): ML-KEM-768, X25519. RFC 10024, Section 5 (informal notes on NIST guidance): \"In contrast, for X25519MLKEM768, the ML-KEM implementation must be certified.\" The identifier does not show whether the ML-KEM-768 implementation is certified. Human review of certification evidence is required.",
+          "operational_risk": "medium",
+          "requires_human_review": true
+        }
+      ],
+      "decision": {
+        "risk_attention_score": 68.0,
+        "risk_attention_band": "medium",
+        "execution_state": "justified",
+        "action_type": "retain_monitor",
+        "verification_priority": "none",
+        "verification_requirements": [],
+        "confidence_score": 0.8,
+        "human_review_required": true,
+        "reason_codes": [
+          "classification:standardized_pq_t_hybrid",
+          "policy:long_retention_sensitive_data_raises_priority",
+          "policy:standardized_pq_t_hybrid_requires_certification_evidence_review"
+        ]
+      },
+      "assumptions_made": [
+        "No material evidence assumptions were added by the current PDR rules."
+      ],
+      "record_integrity": {
+        "previous_record_hash": null,
+        "record_hash": "sha256:5202ffeea6e8fb262c001047144cb50934c885eb62be8b6c44032759ed2704da"
+      }
+    }
+  ],
+  "document_hash": "sha256:d261a306402f4a914f0aa594be0da9594ded8899475b70a2e8cafb6db0aa24d9"
+}

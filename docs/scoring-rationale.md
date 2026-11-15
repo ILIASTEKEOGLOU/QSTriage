@@ -116,7 +116,7 @@ The weights encode a conservative ordering judgment:
 - smaller RSA key sizes rank above larger RSA key sizes
 - unknown algorithms require manual review instead of being treated as safe
 
-This ordering follows the same categories used by the QSTriage standards registry: NIST IR 8547 Initial Public Draft for quantum-vulnerable RSA, finite-field Diffie-Hellman, and elliptic-curve public-key cryptography; FIPS 203, FIPS 204, and FIPS 205 for ML-KEM, ML-DSA, and SLH-DSA; and NIST SP 800-57 Part 1 Revision 5 for classical security-strength context.
+This ordering follows the same categories used by the QSTriage standards registry: NIST IR 8547 (final, October 2026, sections 2.1.1 and 2.1.2) for quantum-vulnerable RSA, finite-field Diffie-Hellman, and elliptic-curve public-key cryptography; FIPS 203, FIPS 204, and FIPS 205 for ML-KEM, ML-DSA, and SLH-DSA; and NIST SP 800-57 Part 1 Revision 5 for classical security-strength context.
 
 These standards do not publish QSTriage numeric scores. They inform the category ordering, not the exact numbers.
 

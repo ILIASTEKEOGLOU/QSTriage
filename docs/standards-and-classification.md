@@ -55,10 +55,10 @@ This boundary is deterministic and deliberately narrow. QSTriage does not use fu
 | ML-DSA | `ML-DSA` | `digital_signature` | `quantum_resistant` | `standardized_pqc` | `acceptable_pqc_signature` | NIST FIPS 204 |
 | SLH-DSA | `SLH-DSA` | `digital_signature` | `quantum_resistant` | `standardized_pqc` | `acceptable_pqc_signature_with_operational_review` | NIST FIPS 205 |
 | RFC 10024 PQ/T hybrid groups (`X25519MLKEM768`, `SecP256r1MLKEM768`, `SecP384r1MLKEM1024`) | `pq_t_hybrid_kem` | `key_establishment` | `quantum_resistant` | `standardized_pq_t_hybrid` | `retain_with_certification_review` | RFC 10024; NIST SP 800-227; NIST FIPS 203 |
-| Classical key/signature composite | `classical_public_key_composite` | `key_establishment_and_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 IPD |
-| RSA | `RSA` | `public_key_encryption_or_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 IPD |
-| Finite-field Diffie-Hellman | `DH` | `key_establishment` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_key_establishment` | NIST IR 8547 IPD |
-| ECC, ECDH/ECDHE, ECDSA, X25519, Ed25519 | `ECC` | `key_establishment_or_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 IPD |
+| Classical key/signature composite | `classical_public_key_composite` | `key_establishment_and_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 |
+| RSA | `RSA` | `public_key_encryption_or_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 |
+| Finite-field Diffie-Hellman | `DH` | `key_establishment` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_key_establishment` | NIST IR 8547 |
+| ECC, ECDH/ECDHE, ECDSA, X25519, Ed25519 | `ECC` | `key_establishment_or_signature` | `quantum_vulnerable` | `classical_public_key` | `migrate_to_hybrid_or_pqc_path` | NIST IR 8547 |
 | AES | `AES` | `symmetric_encryption` | `symmetric_grover_affected` | `standardized_symmetric` | `review_key_strength_not_public_key_migration` | NIST FIPS 197; NIST SP 800-57 Part 1 Rev. 5 |
 | SHA-3 and SHAKE | `SHA-3` | `hash_or_xof` | `not_public_key` | `standardized_hash` | `classify_separately_from_pqc_key_migration` | NIST FIPS 202 |
 | SHA-1 and SHA-2 identifiers | `SHA-1/SHA-2` | `hash` | `not_public_key` | `standardized_hash` | `classify_separately_from_pqc_key_migration` | NIST FIPS 180-4 |
@@ -124,7 +124,7 @@ The cdxgen AES transformation is limited to AES-128, AES-192, or AES-256 with CB
 
 The current registry emits these stable source IDs:
 
-- `NIST-IR-8547-IPD`
+- `NIST-IR-8547`
 - `NIST-FIPS-203`
 - `NIST-FIPS-204`
 - `NIST-FIPS-205`
@@ -137,6 +137,110 @@ The current registry emits these stable source IDs:
 - `QSTRIAGE-SAFETY-POLICY`
 
 Source IDs establish classification provenance. They do not imply that the cited standards publish QSTriage scores, policy rules, or migration approvals.
+
+## NIST IR 8547 source update
+
+Registry version 3 and built-in policy pack 0.5 cite the final NIST IR 8547
+instead of its initial public draft. This section records what changed in the
+source, what QSTriage changed, and what it deliberately did not change.
+
+### Sources
+
+| | Initial public draft | Final |
+|---|---|---|
+| Title | Transition to Post-Quantum Cryptography Standards | Transition to Post-Quantum Cryptography Standards |
+| Date | November 2024 | October 2026 (published 2026-10-27) |
+| Page | https://csrc.nist.gov/pubs/ir/8547/ipd | https://csrc.nist.gov/pubs/ir/8547/final |
+| PDF | https://nvlpubs.nist.gov/nistpubs/ir/2024/NIST.IR.8547.ipd.pdf | https://nvlpubs.nist.gov/nistpubs/ir/2026/NIST.IR.8547.pdf |
+| DOI | - | https://doi.org/10.6028/NIST.IR.8547 |
+| QSTriage source ID | `NIST-IR-8547-IPD` | `NIST-IR-8547` |
+
+The final PDF read for this change has SHA-256
+`3049cdfdd7c20417cf588a3d55ace6e8813982d1499502b7ef69e9593b2dc280`. The draft
+PDF now served by NIST starts with a withdrawal cover sheet (withdrawal date
+October 27, 2026), so its bytes differ from the 2024 file; compare passages by
+section and printed page number, not by PDF page index.
+
+### Registry entries
+
+Only the IR 8547 source of these four entries changed. Each now has
+`status: final`, `date: 2026-10`, the section below, and no excerpt.
+
+| Entry | Section of the final report | What the section says |
+|---|---|---|
+| `classical-public-key-composite` | Sections 2.1.1 and 2.1.2 | Both component kinds, signatures and key establishment, are quantum-vulnerable |
+| `rsa` | Sections 2.1.1 and 2.1.2 | RSA signatures (FIPS 186, 2.1.1) and RSA key establishment (SP 800-56B, 2.1.2) are vulnerable to Shor's algorithm |
+| `dh` | Section 2.1.2 | Finite-field Diffie-Hellman and MQV (SP 800-56A) are vulnerable to Shor's algorithm |
+| `ecc` | Sections 2.1.1 and 2.1.2 | ECDSA and EdDSA (2.1.1) and elliptic-curve Diffie-Hellman and MQV (2.1.2) are vulnerable to Shor's algorithm |
+
+Section 2.1.1 is on printed page 3 and section 2.1.2 on printed page 4. The
+composite entry is a QSTriage classification of names that combine such
+components; the report does not list composite names.
+
+Identifiers, rationale, lifecycle, classification fields, recommendations,
+components, and the empty `deadlines` arrays are unchanged. The publication
+status of a source is separate from an entry's lifecycle.
+
+### What changed between the draft and the final report
+
+- Section 2.1.2 of the final report names the key-establishment schemes of
+  SP 800-56A and SP 800-56B and states that they are vulnerable to Shor's
+  algorithm. The draft section 2.1.2 described the same schemes without that
+  sentence; its section 2.1.1 already named the ECC-based key-establishment
+  schemes of SP 800-56A in the paragraph that states the vulnerability.
+- Tables 2 and 4 (final, printed pages 15 and 16 to 17; draft, pages 13 and
+  14). The draft marked 112-bit security strength "Deprecated after 2030" and
+  "Disallowed after 2035", and 128 bits or more "Disallowed after 2035" only.
+  The final tables give one row per family, for 112 bits of classical security
+  strength or more (128 or more for EdDSA), marked "Deprecated after 2030" and
+  "Disallowed after 2035".
+- Section 4 (final, printed page 13): "NIST will deprecate quantum-vulnerable
+  public-key cryptography after 2030 and disallow its use under NIST standards
+  and guidelines after 2035." The same section says that this window does not
+  alter earlier deadlines for prioritized U.S. Federal systems under EO 14412
+  and OMB M-26-15.
+
+The quotations above use the report's words; the tables write "112 bits or
+more" with a greater-than-or-equal sign.
+
+### Implementation boundary
+
+This change updates provenance only. It does not:
+
+- encode the 2030 and 2035 dates, federal applicability, or the new table
+  thresholds. Every registry `deadlines` array stays empty;
+- change `deadline_pressure`, which is a QSTriage scoring heuristic based on
+  retention, risk, and exposure, not an implementation of the NIST calendar;
+- add algorithms (HQC, FALCON, LMS, XMSS) or change the PQ/T hybrid entries,
+  unknown-algorithm handling, or certification review;
+- change classification, scores, evidence findings, policy rules, or
+  decisions.
+
+### Identities
+
+| | Before | After |
+|---|---|---|
+| Registry `qstriage-algorithms` | version `2`, `sha256:8ceb8492571aab632b89d5d203e98a15bdf8b4f99f2b0aead8674cff4696b84c` | version `3`, `sha256:67a0e6d13363ca78ad69ec5c23d8cfcd68ca0b8be0363dfd2502ac94458db0d3` |
+| Policy pack `nist-pqc-basic` | version `0.4`, `sha256:c39286db56036c5d82118c6e135bc63477d508d0607952ad5077450e4708a639` | version `0.5`, `sha256:488598e4c831135d815d7a3ec5f46a66785edfaaba1950c10d19410c1e348fc0` |
+
+In policy pack 0.5 the reference `NIST-IR-8547` has the title
+"NIST IR 8547 - Transition to Post-Quantum Cryptography Standards" and version
+`final`; the three rules that cited the draft cite it instead. The project
+policy reference `QSTRIAGE-SAFETY-POLICY` carries the pack version and
+therefore changes from `0.4` to `0.5`. Rule IDs, conditions, effects,
+severities, thresholds, and order are unchanged.
+
+A new PDR from the same input keeps its input snapshot, record IDs, lineage
+IDs, and every decision field. Its registry and policy identities, the
+`standards_applied` lists that name the source, its `run_id`, and its hashes
+change; this applies to every new PDR, including one for an inventory without
+any classical public-key asset. PDRs issued earlier are not rewritten and still
+verify. Score exports are unchanged; reports change only in the registry
+sources line.
+
+The fallback target `manual_pqc_target_selection` also cites `NIST-IR-8547`.
+No registry entry reaches it today, because every quantum-vulnerable entry has
+a primitive that contains "key"; it is tested directly.
 
 ## PQ/T hybrid classification and source text
 

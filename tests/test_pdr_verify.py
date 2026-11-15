@@ -441,6 +441,10 @@ def test_registry_reader_rejects_duplicate_keys() -> None:
         )
 
 
+def _migrate_ir_8547(standards: list[str]) -> list[str]:
+    return ["NIST-IR-8547" if item == "NIST-IR-8547-IPD" else item for item in standards]
+
+
 def test_decisions_for_sample_inventory_are_unchanged_since_v0_2() -> None:
     before = json.loads(V0_2_FIXTURE.read_text(encoding="utf-8"))
     # Reuse the snapshot recorded in the fixture. A file-backed snapshot
@@ -466,6 +470,7 @@ def test_decisions_for_sample_inventory_are_unchanged_since_v0_2() -> None:
 
     assert after["input_snapshot"] == before["input_snapshot"]
     assert len(after["records"]) == len(before["records"])
+    migrations = 0
     for old, new in zip(before["records"], after["records"]):
         old_rest = {k: v for k, v in old.items() if k not in provenance_fields}
         new_rest = {k: v for k, v in new.items() if k not in provenance_fields}
@@ -478,4 +483,17 @@ def test_decisions_for_sample_inventory_are_unchanged_since_v0_2() -> None:
                 for k, v in rest["policy_evaluation"].items()
                 if k not in policy_identity
             }
+        # Policy pack 0.5 cites the final NIST IR 8547 instead of its initial
+        # public draft. That source ID is the only change allowed, and only
+        # where a record names the standards a finding or target applies.
+        for finding in old_rest["policy_evaluation"]["findings"]:
+            migrated = _migrate_ir_8547(finding["standards_applied"])
+            migrations += migrated != finding["standards_applied"]
+            finding["standards_applied"] = migrated
+        for suggestion in old_rest["target_state_suggestion"]:
+            migrated = _migrate_ir_8547(suggestion["standards"])
+            migrations += migrated != suggestion["standards"]
+            suggestion["standards"] = migrated
         assert new_rest == old_rest
+
+    assert migrations > 0

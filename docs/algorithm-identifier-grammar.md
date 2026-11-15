@@ -216,8 +216,8 @@ is preferable to an unsupported positive claim.
 
 ## PQ/T hybrid key agreement groups
 
-Registry version 2 classifies exactly three identifiers, the TLS 1.3 group
-names defined in RFC 10024, after the normalization above:
+Since registry version 2, the registry classifies exactly three identifiers,
+the TLS 1.3 group names defined in RFC 10024, after the normalization above:
 
 | Identifier | Components, in shared-secret order | `certification_component` |
 |---|---|---|
@@ -284,16 +284,16 @@ A recognized PQC family with unverified parameters must propagate as:
 - manual cryptographic review in the PDR,
 - no standardized-PQC policy rule and no retain suggestion.
 
-The built-in policy pack remains version `0.2`, and the PDR schema remains
-version `0.2`.
+This behavior was introduced while the built-in policy pack and the PDR schema
+were both at version `0.2`, and it needed no change to either.
 
 ## Provenance boundary
 
 The exact PQC identifiers are grounded in NIST FIPS 203, FIPS 204, and FIPS
-205. Classical migration posture uses the initial public draft of NIST IR 8547
-(IPD, November 2024) as the current registry source. NIST published the final
-NIST IR 8547 in October 2026; the registry still cites the draft until its
-sources are updated in a separate change, which also changes the registry
-hash. QSTriage source identifiers record classification provenance; they do
-not claim that a source publication defines QSTriage scores, policy decisions,
-or migration approval.
+205. Classical migration posture cites the final NIST IR 8547 (October 2026),
+sections 2.1.1 and 2.1.2, as source `NIST-IR-8547`. Registry version 3 replaced
+the initial public draft (November 2024, `NIST-IR-8547-IPD`); see
+[NIST IR 8547 source update](standards-and-classification.md#nist-ir-8547-source-update).
+QSTriage source identifiers record classification provenance; they do not
+claim that a source publication defines QSTriage scores, policy decisions, or
+migration approval.

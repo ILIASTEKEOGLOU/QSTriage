@@ -268,7 +268,6 @@ NON_ASCII_LINES_ALLOWED: dict[str, set[str]] = {
         'title="NIST FIPS 204 \u2014 ML-DSA",',
         'title="NIST FIPS 205 \u2014 SLH-DSA",',
         '"NIST SP 800-131A Rev. 3 IPD \u2014 Transitioning the Use of "',
-        '"NIST IR 8547 IPD \u2014 Transition to Post-Quantum Cryptography "',
         'title="NIST SP 800-227 \u2014 Recommendations for Key-Encapsulation Mechanisms",',
         '"RFC 10024 \u2014 Post-Quantum Traditional (PQ/T) Hybrid Key Agreement "',
         'title="NIST CSWP 39 Update 1 \u2014 Considerations for Achieving Crypto Agility",',

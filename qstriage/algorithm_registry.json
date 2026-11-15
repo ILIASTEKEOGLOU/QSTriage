@@ -1,7 +1,7 @@
 {
   "registry_schema_version": "2",
   "registry_id": "qstriage-algorithms",
-  "registry_version": "2",
+  "registry_version": "3",
   "entries": [
     {
       "entry_id": "ml-kem",
@@ -454,11 +454,11 @@
       "identifier_resolution": "exact_identifier",
       "sources": [
         {
-          "source_id": "NIST-IR-8547-IPD",
-          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
-          "section": null,
-          "status": "draft",
-          "date": "2024-11",
+          "source_id": "NIST-IR-8547",
+          "title": "Transition to Post-Quantum Cryptography Standards",
+          "section": "Sections 2.1.1 and 2.1.2",
+          "status": "final",
+          "date": "2026-10",
           "excerpt": null
         }
       ],
@@ -480,11 +480,11 @@
       "identifier_resolution": "exact_identifier",
       "sources": [
         {
-          "source_id": "NIST-IR-8547-IPD",
-          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
-          "section": null,
-          "status": "draft",
-          "date": "2024-11",
+          "source_id": "NIST-IR-8547",
+          "title": "Transition to Post-Quantum Cryptography Standards",
+          "section": "Sections 2.1.1 and 2.1.2",
+          "status": "final",
+          "date": "2026-10",
           "excerpt": null
         }
       ],
@@ -506,11 +506,11 @@
       "identifier_resolution": "exact_identifier",
       "sources": [
         {
-          "source_id": "NIST-IR-8547-IPD",
-          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
-          "section": null,
-          "status": "draft",
-          "date": "2024-11",
+          "source_id": "NIST-IR-8547",
+          "title": "Transition to Post-Quantum Cryptography Standards",
+          "section": "Section 2.1.2",
+          "status": "final",
+          "date": "2026-10",
           "excerpt": null
         }
       ],
@@ -532,11 +532,11 @@
       "identifier_resolution": "exact_identifier",
       "sources": [
         {
-          "source_id": "NIST-IR-8547-IPD",
-          "title": "Transition to Post-Quantum Cryptography Standards (Initial Public Draft)",
-          "section": null,
-          "status": "draft",
-          "date": "2024-11",
+          "source_id": "NIST-IR-8547",
+          "title": "Transition to Post-Quantum Cryptography Standards",
+          "section": "Sections 2.1.1 and 2.1.2",
+          "status": "final",
+          "date": "2026-10",
           "excerpt": null
         }
       ],
