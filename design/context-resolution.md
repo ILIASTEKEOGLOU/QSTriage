@@ -274,12 +274,12 @@ Until then the decision for this asset stays gated.
 |---|---|
 | `evidence.py` | business-context findings are produced from resolved fields using the table in 3.2 |
 | `assessment.evaluate_evidence_quality` | `missing_evidence` lists the fields whose effect is not `none`; key names unchanged (`data_class`, `retention_years`, `exposure_boundary`, `business_criticality_context`, `blast_radius_context`, `migration_effort_context`) |
-| `closure.py` | gaps come from the resolver; the question for `data_class` and `exposure` lists the accepted labels; `closure validate` warns when a patch value would be `unmapped` (D4) |
+| `closure.py` | gaps come from the resolver; the question for `data_class` and `exposure` lists the accepted labels; planned, not yet implemented (delivery plan 3b-1): `closure validate` warns when a patch value would be `unmapped` (D4) |
 | `review.py` | issues and messages come from the resolver |
 | `policy.py` | `business_context` is `missing` when `data_class`, `exposure` or `retention_years` has effect `block`; the `*_state` facts can also take `verified` and `redacted` |
 | `decision.py` | verification requirements come from resolved fields; field-to-requirement mapping unchanged |
 | `scoring.py` | canonical values from the resolver; confidence label per section 6.1 |
-| report | a "Why this decision is gated" section lists blocking fields and blocking policy rules, read from data the PDR already contains |
+| report | planned, not yet implemented (delivery plan 3b-2): a "Why this decision is gated" section lists blocking fields and blocking policy rules, read from data the PDR already contains |
 
 `context.py` keeps `normalize_context_text` and the alias tables; the
 resolver replaces `normalize_asset_context`.

@@ -167,9 +167,26 @@ Suggestions do not approve deployment. Each suggestion records standards provena
 ## Deterministic identifiers and hashes
 
 PDR 0.3 hashes JSON data in the canonical form defined by RFC 8785 (JSON
-Canonicalization Scheme), encoded as UTF-8, with SHA-256. Any RFC 8785
-implementation can recompute the hashes from the parsed document. Values that
-RFC 8785 cannot represent, such as integers above 2^53, stop PDR generation.
+Canonicalization Scheme), encoded as UTF-8, with SHA-256. RFC 8785 covers the
+serialization of the parsed data: key order, string escaping, and number
+formatting. For a PDR whose data stays within the I-JSON profile that RFC 8785
+assumes, any RFC 8785 implementation can recompute the hashes from the parsed
+document; the two QSTriage rules below say where QSTriage data can differ.
+
+Two QSTriage rules apply to the data itself:
+
+- Integers. QSTriage canonicalization accepts Python integers only from -2^53
+  to 2^53 inclusive; a larger integer stops PDR generation. This is a QSTriage
+  rule, not an RFC 8785 limit: RFC 8785 section 3.1 accepts any number that a
+  binary64 double can express, such as 2^68 (Appendix B). RFC 7493 section 2.2
+  (I-JSON) names -(2^53)+1 to (2^53)-1 as the range in which integers are
+  interoperable; QSTriage also accepts the two ends, -2^53 and 2^53, which a
+  binary64 double represents exactly.
+- Unicode. Strings must not contain unpaired surrogates. Unicode
+  noncharacters, such as U+FDD0, are accepted and hashed as written. RFC 8785
+  section 3.1 asks for data adapted to I-JSON, and RFC 7493 section 2.1
+  excludes noncharacters, so a PDR containing them is outside the I-JSON
+  profile; QSTriage still serializes such strings as RFC 8785 specifies.
 
 - `run_id` is `run:` followed by the first 16 hex characters of the hash of
   `{"source_hash", "policy_pack_hash", "registry_hash", "pdr_version"}`.

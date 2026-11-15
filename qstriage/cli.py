@@ -50,7 +50,7 @@ from qstriage.report import generate_markdown_report
 from qstriage.review import review_decision_context
 
 app = typer.Typer(
-    help="QSTriage — Cryptographic Policy & Justification Engine",
+    help="QSTriage: Cryptographic Policy & Justification Engine",
     no_args_is_help=True,
 )
 

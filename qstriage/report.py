@@ -155,7 +155,8 @@ def generate_markdown_report(inventory: Inventory) -> str:
     lines.append(
         "Scores are explainable planning signals, not absolute measurements. They combine "
         "cryptographic risk, data shelf-life, exposure, criticality, graph-amplified blast "
-        "radius, deadline pressure, migration effort, and simulated PQC impact warnings."
+        "radius, deadline pressure, and migration effort. Simulated PQC impact warnings "
+        "are reported separately and do not change the score."
     )
     lines.append("")
 
@@ -185,7 +186,10 @@ def _render_verify_first(assessments: list[AssetAssessment]) -> list[str]:
     lines = ["## Verify First: Cryptography Not Identified", ""]
 
     if not assessments:
-        lines.append("None. Every asset has an identified algorithm and is ranked below.")
+        lines.append(
+            "None. No asset needs its algorithm identifier verified before ranking; "
+            "every asset is ranked below."
+        )
         lines.append("")
         return lines
 

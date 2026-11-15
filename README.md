@@ -3,7 +3,7 @@
 [![CI](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/ci.yml/badge.svg)](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/ci.yml)
 [![Security](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/security.yml/badge.svg)](https://github.com/ILIASTEKEOGLOU/QSTriage/actions/workflows/security.yml)
 
-**QSTriage — Cryptographic Policy & Justification Engine**
+**QSTriage: Cryptographic Policy & Justification Engine**
 
 Cryptographic migration is not a scanner problem.
 
@@ -34,8 +34,11 @@ QSTriage:
 ## Why now
 
 [NIST's first three PQC standards](https://csrc.nist.gov/projects/post-quantum-cryptography)
-are final, and its transition plan removes quantum-vulnerable algorithms from
-NIST standards by 2035.
+are final. Its transition plan
+([NIST IR 8547](https://csrc.nist.gov/pubs/ir/8547/final), final, October
+2026, section 4) deprecates quantum-vulnerable public-key cryptography after
+2030 and disallows its use under NIST standards and guidelines after 2035;
+earlier deadlines apply to prioritized U.S. Federal systems.
 [Executive Order 14412](https://www.federalregister.gov/documents/2026/06/25/2026-12909/securing-the-nation-against-advanced-cryptographic-attacks)
 sets 2030 and 2031 milestones for PQC key establishment and signatures in U.S.
 Federal high-value assets and high-impact systems, excluding National Security
@@ -115,9 +118,10 @@ status. The v1.2.1 compatibility corpus locks 26 reviewed identifiers to eight
 named public sources.
 
 The three PQ/T hybrid TLS groups defined in RFC 10024 (`X25519MLKEM768`,
-`SecP256r1MLKEM768`, `SecP384r1MLKEM1024`) are classified only by their exact
-names, and every hybrid record requires human review of implementation
-certification. Any other hybrid spelling stays unknown. The registry keeps the
+`SecP256r1MLKEM768`, `SecP384r1MLKEM1024`) are classified only by these names
+after QSTriage identifier normalization (so `x25519mlkem768` matches, and
+`X25519-MLKEM768` does not), and every hybrid record requires human review of
+implementation certification. Any other hybrid spelling stays unknown. The registry keeps the
 cited source text verbatim.
 
 See the
@@ -142,8 +146,10 @@ validated before application, written to a new inventory, and compared through
 the same deterministic assessment pipeline.
 
 The optional MCP surface exposes four read-only, path-confined tools. An MCP
-client may inspect gaps, draft and validate a patch, and compare inventories
-only after the human applies it. The MCP surface cannot apply a patch.
+client may inspect gaps, draft and validate a patch, and compare inventories;
+in the recommended workflow it compares the source and enriched inventories
+after the human applies the reviewed patch. The MCP surface cannot apply a
+patch.
 
 The bundled demo closes seven evidence findings and moves the evidence score
 from `0.00` to `1.00`; the `migration_planning` action moves from `gated` to
@@ -191,18 +197,18 @@ for the complete enforced contract.
 
 ## Documentation
 
-- [Usage Guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/usage.md) — commands, workflows, examples, and configuration
-- [Input Contracts](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/input-contracts.md) — supported inputs, limits, and parsing boundaries
-- [Standards and Classification](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/standards-and-classification.md) — registry and normalization behavior
-- [Algorithm Identifier Grammar](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/algorithm-identifier-grammar.md) — bounded matching rules and fail-closed behavior
-- [Scoring Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/scoring-rationale.md) — prioritization index and interpretation limits
-- [Simulation Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/simulation-rationale.md) — model, warnings, assumptions, and non-claims
-- [Evidence and Context](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/evidence-and-context.md) — normalization, completeness, evidence, and confidence
-- [Evidence Closure](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/evidence-closure.md) — provenance-aware enrichment with human approval
-- [Canonical Decision Model](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/decision-model.md) — action gating, verification, and reason codes
-- [PDR 0.3 Contract](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/pdr-contract.md) — structure, provenance, determinism, and versioning
-- [CBOM Compatibility](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/cbom-compatibility.md) — tested artifact shapes and scanner boundaries
-- [Security Policy](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/SECURITY.md) — reporting and enforced trust boundaries
+- [Usage Guide](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/usage.md) - commands, workflows, examples, and configuration
+- [Input Contracts](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/input-contracts.md) - supported inputs, limits, and parsing boundaries
+- [Standards and Classification](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/standards-and-classification.md) - registry and normalization behavior
+- [Algorithm Identifier Grammar](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/algorithm-identifier-grammar.md) - bounded matching rules and fail-closed behavior
+- [Scoring Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/scoring-rationale.md) - prioritization index and interpretation limits
+- [Simulation Rationale](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/simulation-rationale.md) - model, warnings, assumptions, and non-claims
+- [Evidence and Context](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/evidence-and-context.md) - normalization, completeness, evidence, and confidence
+- [Evidence Closure](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/evidence-closure.md) - provenance-aware enrichment with human approval
+- [Canonical Decision Model](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/decision-model.md) - action gating, verification, and reason codes
+- [PDR 0.3 Contract](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/pdr-contract.md) - structure, provenance, determinism, and versioning
+- [CBOM Compatibility](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/docs/cbom-compatibility.md) - tested artifact shapes and scanner boundaries
+- [Security Policy](https://github.com/ILIASTEKEOGLOU/QSTriage/blob/v1.4.1/SECURITY.md) - reporting and enforced trust boundaries
 
 ## Trust model
 
@@ -210,9 +216,11 @@ Generated files are no-clobber by default, and terminal/Markdown output
 neutralizes untrusted presentation characters. File-backed PDR generation
 parses and hashes the same captured bytes.
 
-The CI and security workflows use read-only repository permissions, immutable
-action references, hashed dependency locks, vulnerability and static-analysis
-checks, and full-history secret scanning. A separate alert workflow runs only
+The CI and security workflows use read-only repository permissions, action
+references pinned to full commit SHAs, vulnerability and static-analysis
+checks, and full-history secret scanning. The Python 3.11 test job installs from a hash-checked lock, and the
+dependency audit checks the hash-checked locks; the compatibility jobs for
+Python 3.12 to 3.14 resolve the declared dependency ranges afresh. A separate alert workflow runs only
 after a scheduled Security run fails on `main`; it holds only `issues: write`,
 runs no repository code, and opens or updates one tracking issue.
 

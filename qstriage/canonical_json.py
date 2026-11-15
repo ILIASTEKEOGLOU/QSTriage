@@ -8,9 +8,11 @@ str, int, float, bool, None) to the canonical UTF-8 form defined by RFC 8785:
 - strings with only the escapes RFC 8785 requires;
 - numbers in the ECMAScript ``Number.prototype.toString`` form.
 
-Values that RFC 8785 cannot represent are rejected: NaN, infinities,
-integers outside the IEEE 754 double range of exact integers, lone
-surrogates, and non-string object keys.
+Rejected: NaN and infinities (RFC 8785 cannot represent them), lone
+surrogates, non-string object keys, and Python integers outside -2^53 to 2^53
+inclusive. The integer range is a QSTriage rule, not an RFC 8785 limit:
+RFC 8785 accepts any number a binary64 double can express. Unicode
+noncharacters are accepted, although RFC 7493 (I-JSON) excludes them.
 """
 
 from __future__ import annotations
@@ -35,7 +37,7 @@ _SHORT_ESCAPES = {
 
 
 class CanonicalizationError(ValueError):
-    """Raised when a value cannot be represented under RFC 8785."""
+    """Raised when a value is outside what QSTriage canonicalizes (see module)."""
 
 
 def canonicalize(value: Any) -> bytes:
@@ -127,7 +129,8 @@ def _string(value: str) -> str:
 def _integer(value: int) -> str:
     if abs(value) > MAX_SAFE_INTEGER:
         raise CanonicalizationError(
-            "Integers must be within the exact IEEE 754 double range."
+            "QSTriage canonicalization accepts Python integers only from -2^53 "
+            "to 2^53 inclusive."
         )
     return str(value)
 

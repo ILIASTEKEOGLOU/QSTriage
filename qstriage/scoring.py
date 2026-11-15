@@ -458,7 +458,8 @@ def _confidence(
         classification
     ) in {KeySizeRequirement.fixed_by_identifier, KeySizeRequirement.not_applicable}
 
-    # Free text in notes never affects the label. The higher label requires
+    # Free text in notes is not evidence. The CBOM import marker in notes can
+    # still mark risk levels as import defaults (context.py). The higher label requires
     # every business context field to be usable (design/context-resolution.md,
     # section 6.1).
     if (
@@ -480,9 +481,20 @@ def _explain(
     recommended_action: str,
     classification: AlgorithmClassification,
 ) -> list[str]:
+    if classification.standard_status == "unknown":
+        crypto_line = (
+            f"The inventory states {asset.algorithm}; QSTriage does not identify the "
+            "exact algorithm and uses the fallback cryptographic risk "
+            f"{breakdown.cryptographic_risk}."
+        )
+    else:
+        crypto_line = (
+            f"Cryptographic risk is {breakdown.cryptographic_risk} for {asset.algorithm}, "
+            "the algorithm stated in the inventory."
+        )
     lines = [
         f"{asset.name} is rated {priority_band} with score {breakdown.total}.",
-        f"Cryptographic risk is {breakdown.cryptographic_risk} because the asset uses {asset.algorithm}.",
+        crypto_line,
         f"Algorithm registry classifies {classification.algorithm_family} as {classification.quantum_status}; registry action is {classification.recommended_action}.",
         f"Shelf-life risk is {breakdown.shelf_life_risk} because data retention is {asset.retention_years} years for {asset.data_class}.",
         f"Graph-amplified blast radius is {breakdown.graph_blast_radius}, reflecting local and downstream dependency impact.",

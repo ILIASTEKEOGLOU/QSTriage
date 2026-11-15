@@ -94,7 +94,7 @@ Status was checked on 2026-10-09.
 | Reference | Status | Used for |
 |---|---|---|
 | NIST FIPS 203, 204, 205 | Final | Existing standardized PQC entries |
-| NIST IR 8547 | Initial public draft (12 Nov 2024); no later version published | Existing `quantum_vulnerable` sources; keep the `-IPD` identifier |
+| NIST IR 8547 | Initial public draft (12 Nov 2024); no later version published when this record was written. NIST published the final report in October 2026. | Existing `quantum_vulnerable` sources; keep the `-IPD` identifier |
 | NIST SP 800-227 | Final, 18 Sep 2025 | Section 4.6: multi-algorithm KEMs and PQ/T hybrids |
 | RFC 10024 | Standards Track, Aug 2026 | Hybrid TLS 1.3 groups `X25519MLKEM768`, `SecP256r1MLKEM768`, `SecP384r1MLKEM1024` |
 | RFC 9794 | Informational, Jun 2025 | Terminology for PQ/T hybrid schemes |

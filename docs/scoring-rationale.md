@@ -26,7 +26,7 @@ It combines seven factors:
 - deadline pressure
 - migration effort
 
-The score is mainly useful for ranking assets inside the same inventory. An asset whose algorithm field does not identify an exact algorithm and parameter set (execution state `verification_first`) is not ranked: `score`, `report`, and `export scores` list it separately under "Verify First", because its score would rest on a guessed algorithm. It should be read together with the asset explanation, evidence review, dependency completeness, decision context review, simulation warnings, and PDR confidence.
+The score is mainly useful for ranking assets inside the same inventory. An asset whose algorithm classification has standard status `unknown` (an unrecognized identifier, or a recognized family without a supported parameter set) has execution state `verification_first` and gets no backlog rank: `score`, `report`, and `export scores` list it separately under "Verify First", ordered by risk attention and then asset ID, because its score rests on a guessed algorithm. The score exports still carry its planning score. It should be read together with the asset explanation, evidence review, dependency completeness, decision context review, simulation warnings, and PDR confidence.
 
 ## What the score is not
 
@@ -40,9 +40,9 @@ A QSTriage score is not:
 - a substitute for cryptographic architecture review
 - a substitute for business-owner validation
 
-A high score means “review and plan earlier.” It does not mean “change production immediately.”
+A high score means "review and plan earlier." It does not mean "change production immediately."
 
-A low score means “lower priority under the current evidence.” It does not mean “safe forever.”
+A low score means "lower priority under the current evidence." It does not mean "safe forever."
 
 ## Score components
 
@@ -62,7 +62,7 @@ Unknown algorithms are treated conservatively and require manual review.
 
 Shelf-life risk reflects how long protected data may need to remain confidential or trustworthy.
 
-Longer retention increases planning pressure, especially for sensitive data. This supports “harvest now, decrypt later” planning, but it does not claim that decryption is currently possible.
+Longer retention increases planning pressure, especially for sensitive data. This supports "harvest now, decrypt later" planning, but it does not claim that decryption is currently possible.
 
 ### Exposure risk
 
@@ -84,7 +84,12 @@ If no QSTriage dependencies are declared, this part of the score is limited. CBO
 
 ### Deadline pressure
 
-Deadline pressure increases when long-retention data and quantum-vulnerable public-key cryptography appear together.
+Deadline pressure is 5 points when `retention_years` is at least 10 and the
+cryptographic risk component is at least 8.0; quantum-vulnerable RSA with a
+modulus above 3072 bits scores 7.0 and does not reach this step. Otherwise it
+is 3 points when `retention_years` is at least 5 and the exposure is public or
+partner, and 1 point in every other case. It reads the cryptographic risk
+already computed for the asset, so both components use the same key size.
 
 It is a planning heuristic, not a prediction of when a cryptographic break will happen.
 
@@ -98,7 +103,7 @@ This does not mean the asset is less important. It means the safer next step may
 
 The components are summed and scaled into a 0-100 range.
 
-The scaling step exists for readability. It carries no independent risk meaning. Changing only the scaling factor would not change the relative ranking between assets.
+The scaling step exists for readability. It carries no independent risk meaning. The sum is multiplied by 2, capped to 0-100, and rounded to two decimals. Changing only the scaling factor keeps the order of the raw sums, but the cap and the rounding can then make assets with different raw sums show the same score.
 
 ## Where the weights come from
 
@@ -156,15 +161,20 @@ stated value (see
 Every substitution is visible. The score has a basis: `confirmed` when every
 context field the score uses is present and usable and all stated key sizes
 agree, `worst case` otherwise.
-`score` and `report` show the basis and name the fields; the report lists each
+`score` shows the basis and the substituted fields for ranked assets; the
+report shows them for every asset, Verify First included, and lists each
 field with its value in the inventory, the problem, and the value scored; the
 score export carries `score_basis` and `scoring_assumptions`; the PDR writes
 one line per field in `assumptions_made`. Supplying the real values replaces
 the assumption. The bundled Evidence Closure demo asset scores 100.0 at worst
 case with six fields unresolved and 93.0 confirmed after enrichment.
 
-The substitution affects only the score and its band. Execution state, action,
-evidence findings, and human review keep reading the declared values.
+The substitution changes the score and its band, and every output that reads
+the band: verification priority, the high-priority human review condition,
+the `risk:<band>_attention` reason code, and the PDR field
+`mission_impact_if_delayed`. Execution state, action type, and evidence
+findings keep reading their own inputs (evidence, policy, confidence, and the
+declared migration effort).
 
 ## Relationship to evidence review
 
@@ -190,11 +200,26 @@ review.
 | Label | Condition | Base value |
 |---|---|---|
 | `medium-high` | the key length is known and every business context field (`data_class`, `exposure`, `retention_years`, `criticality`, `local_blast_radius`, `migration_effort`) is usable | 0.80 |
-| `medium` | the key length is known and a business context field is unknown, unrecognized or `redacted`, `retention_years` is 0, or a value is a CBOM import default | 0.65 |
+| `medium` | the key length is known and a business context field is unknown, unrecognized or `redacted`, `retention_years` is 0 without an evidence assertion, or a value is a CBOM import default | 0.65 |
 | `low` | the key length is unknown | 0.45 |
 
-The default decision-grade threshold is 0.75. The `notes` field does not
-affect the label. Whether a field is usable is decided by the context resolver
+The key length is known when `key_size_bits` is stated, when the algorithm
+identifier fixes it (such as `RSA-2048`), or when the primitive has no key
+(such as a hash). `cbom_key_sizes` does not make it known: a bare `RSA` whose
+CBOM size fields disagree has the label `low`. When the identifier fixes the
+key length, as with `RSA-2048`, the score label is `medium-high` if all
+business context fields are usable and `medium` otherwise. The label is
+separate from the decision confidence cap: a size conflict caps decision
+confidence at 0.50 and the decision is `gated`. For example, with complete
+business context and no other evidence gap, the final decision confidence is
+0.45 for the bare `RSA` and 0.50 for `RSA-2048`. Other gaps can lower it
+further: for the same assets imported directly from a CBOM, with business
+context still at its import defaults, it is 0.00 in both cases.
+
+The default decision-grade threshold is 0.75. Free text in `notes` is not
+evidence and does not affect the label; the one exception is the CBOM import
+marker that `import cbom` writes into `notes`, which identifies an imported
+asset whose `medium` risk levels are import defaults. Whether a field is usable is decided by the context resolver
 described in the Evidence and Context guide; an evidence assertion resolves a
 CBOM import default.
 

@@ -73,8 +73,8 @@ Each unresolved state has one effect:
 Each finding message states the value read, what it means, the accepted values,
 and what happens until the field is resolved. Invisible characters in a value
 are shown as `<U+XXXX>`. For an unrecognized label, the message names the
-closest accepted label when exactly one is within two edits; QSTriage never
-replaces the value itself.
+closest accepted label when one label is strictly closer than all others and
+one or two edits away; QSTriage never replaces the value itself.
 
 ### Data sensitivity
 
@@ -116,8 +116,10 @@ For every asset:
 - `retention_years: 0` without an evidence assertion is unresolved: `defaulted`
   for a CBOM import, `missing` otherwise; 0 means the data is not retained, and
   an assertion records that this is intended,
-- non-zero `retention_years` is treated as declared,
-- `criticality`, `local_blast_radius`, and `migration_effort` are treated as declared for native inventories.
+- non-zero `retention_years` is declared, or verified when a verified
+  evidence assertion applies,
+- `criticality`, `local_blast_radius`, and `migration_effort` are declared for
+  native inventories, or verified when a verified evidence assertion applies.
 
 For CBOM-imported assets, the importer defaults `criticality`, `local_blast_radius`, and `migration_effort` to `medium`. Those values are marked `defaulted` until an evidence assertion confirms them.
 

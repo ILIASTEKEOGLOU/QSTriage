@@ -41,7 +41,7 @@ For an asset and scenario:
 estimated_handshake_bytes =
     protocol_baseline_bytes
     + pqc_profile_overhead_bytes
-    + (outgoing_crypto_dependency_count × 80)
+    + (outgoing_crypto_dependency_count * 80)
 ```
 
 This is a planning estimate, not a measured wire size.

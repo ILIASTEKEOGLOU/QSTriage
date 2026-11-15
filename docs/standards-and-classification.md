@@ -41,9 +41,9 @@ Before registry matching, QSTriage:
 
 Examples:
 
-- `ml_kem 768` → `ML-KEM-768`
-- `ECDHE_RSA` → `ECDHE-RSA`
-- `finite-field DH` → `FINITE-FIELD-DH`
+- `ml_kem 768` -> `ML-KEM-768`
+- `ECDHE_RSA` -> `ECDHE-RSA`
+- `finite-field DH` -> `FINITE-FIELD-DH`
 
 This boundary is deterministic and deliberately narrow. QSTriage does not use fuzzy matching, NLP, or approximate ontology expansion. An unrecognized identifier remains unknown.
 

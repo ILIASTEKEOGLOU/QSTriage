@@ -240,7 +240,10 @@ def test_report_states_when_no_asset_needs_verification_first() -> None:
     report = generate_markdown_report(load_inventory(SAMPLE))
 
     assert "## Verify First: Cryptography Not Identified" in report
-    assert "None. Every asset has an identified algorithm and is ranked below." in report
+    assert (
+        "None. No asset needs its algorithm identifier verified before ranking; "
+        "every asset is ranked below."
+    ) in report
     assert report.index("## Verify First") < report.index("## Priority Backlog")
     assert "- Assets to verify first (cryptography not identified, not ranked): 0" in report
 
